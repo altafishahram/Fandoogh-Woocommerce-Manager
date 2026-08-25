@@ -1,0 +1,14 @@
+{
+  "id": "/manager/",
+  "name": "مدیر فندوق",
+  "short_name": "فندوق",
+  "description": "پوستهٔ مدیریت فندوق برای وردپرس",
+  "lang": "fa-IR",
+  "dir": "rtl",
+  "start_url": "/manager/",
+  "scope": "/manager/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#2b5fd8",
+  "background_color": "#f5f7fb"
+}
