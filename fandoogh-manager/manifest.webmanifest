@@ -9,6 +9,6 @@
   "scope": "/manager/",
   "display": "standalone",
   "orientation": "any",
-  "theme_color": "#2b5fd8",
+  "theme_color": "#0f766e",
   "background_color": "#f5f7fb"
 }

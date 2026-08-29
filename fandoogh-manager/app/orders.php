@@ -685,11 +685,75 @@ function orders_search_term( $value ) {
 
 	$term = trim( sanitize_text_field( (string) $value ) );
 	$term = ltrim( $term, '#' );
+	$term = orders_normalize_search_text( $term );
 	if ( function_exists( 'mb_substr' ) ) {
 		return mb_substr( $term, 0, 80 );
 	}
 
 	return substr( $term, 0, 80 );
+}
+
+/**
+ * Normalize the limited order-search fields before comparing them. This
+ * keeps Arabic/Persian keyboard variants and order numbers equivalent without
+ * exposing another query language to the endpoint.
+ *
+ * @param mixed $value Candidate search text.
+ * @return string
+ */
+function orders_normalize_search_text( $value ) {
+	if ( ! is_scalar( $value ) ) {
+		return '';
+	}
+
+	$text = trim( (string) $value );
+	$text = str_replace( array( 'ي', 'ى', 'ك', 'ۀ', 'ة' ), array( 'ی', 'ی', 'ک', 'ه', 'ه' ), $text );
+	$text = preg_replace( '/[\x{064B}-\x{065F}\x{0670}\x{06D6}-\x{06ED}\x{0640}\x{200C}\x{200D}\x{200E}\x{200F}\x{FEFF}]/u', '', $text );
+	$text = preg_replace_callback(
+		'/[۰-۹٠-٩]/u',
+		function ( $match ) {
+			$persian = '۰۱۲۳۴۵۶۷۸۹';
+			$arabic  = '٠١٢٣٤٥٦٧٨٩';
+			$digit   = strpos( $persian, $match[0] );
+			if ( false === $digit ) {
+				$digit = strpos( $arabic, $match[0] );
+			}
+			return false === $digit ? $match[0] : (string) $digit;
+		},
+		$text
+	);
+	$text = preg_replace( '/\s+/u', ' ', $text );
+
+	return function_exists( 'mb_strtolower' ) ? mb_strtolower( trim( $text ), 'UTF-8' ) : strtolower( trim( $text ) );
+}
+
+/**
+ * Match only the order identity and customer fields promised by the manager
+ * search box. WooCommerce's helper can return broad matches on some versions;
+ * this allowlisted second pass keeps a number search exact and predictable.
+ *
+ * @param \WC_Order $order WooCommerce order.
+ * @param string    $term Normalized search term.
+ * @return bool
+ */
+function orders_order_matches_search( $order, $term ) {
+	if ( ! is_object( $order ) || '' === $term ) {
+		return false;
+	}
+
+	$fields = array();
+	foreach ( array( 'get_id', 'get_order_number', 'get_billing_first_name', 'get_billing_last_name', 'get_billing_email', 'get_billing_phone', 'get_shipping_first_name', 'get_shipping_last_name' ) as $method ) {
+		if ( method_exists( $order, $method ) ) {
+			try {
+				$fields[] = $order->{$method}();
+			} catch ( \Throwable $exception ) {
+				// Ignore a field that is unavailable in this WooCommerce version.
+			}
+		}
+	}
+
+	$haystack = implode( ' ', array_map( __NAMESPACE__ . '\\orders_normalize_search_text', $fields ) );
+	return false !== strpos( $haystack, $term );
 }
 
 /**
@@ -705,20 +769,67 @@ function orders_search_ids( $term ) {
 		return array();
 	}
 
-	if ( ! function_exists( 'wc_order_search' ) ) {
-		return orders_error( 'fandoogh_orders_search_unavailable', __( 'جست‌وجوی سفارش در نسخهٔ فعلی WooCommerce در دسترس نیست.', 'fandoogh-manager' ), 503 );
+	$found = array();
+	if ( function_exists( 'wc_order_search' ) ) {
+		try {
+			$found = wc_order_search( $term );
+		} catch ( \Throwable $exception ) {
+			$found = array();
+		}
+		if ( is_wp_error( $found ) ) {
+			$found = array();
+		}
+	}
+	if ( empty( $found ) && function_exists( 'wc_get_orders' ) ) {
+		try {
+			$found = wc_get_orders(
+				array(
+					'limit'  => 500,
+					'return' => 'ids',
+					'search' => $term,
+					'status' => array_keys( orders_allowed_statuses() ),
+				)
+			);
+		} catch ( \Throwable $exception ) {
+			return orders_error( 'fandoogh_orders_search_failed', __( 'جست‌وجوی سفارش انجام نشد.', 'fandoogh-manager' ), 500 );
+		}
+		if ( is_wp_error( $found ) ) {
+			return orders_error( 'fandoogh_orders_search_failed', __( 'جست‌وجوی سفارش انجام نشد.', 'fandoogh-manager' ), 500 );
+		}
 	}
 
-	try {
-		$found = wc_order_search( $term );
-	} catch ( \Throwable $exception ) {
-		return orders_error( 'fandoogh_orders_search_failed', __( 'جست‌وجوی سفارش انجام نشد.', 'fandoogh-manager' ), 500 );
+	$normalized_term = orders_normalize_search_text( $term );
+	if ( empty( $found ) && function_exists( 'wc_get_orders' ) ) {
+		// A few WooCommerce data stores do not implement customer-name search
+		// consistently. Keep the fallback bounded and use CRUD getters for the
+		// final comparison instead of querying post storage directly.
+		try {
+			$found = wc_get_orders(
+				array(
+					'limit'  => 500,
+					'return' => 'objects',
+					'order'  => 'DESC',
+					'orderby' => 'date',
+					'status' => array_keys( orders_allowed_statuses() ),
+				)
+			);
+		} catch ( \Throwable $exception ) {
+			$found = array();
+		}
 	}
-
-	$ids = array();
-	foreach ( (array) $found as $order_id ) {
-		$order_id = absint( $order_id );
-		if ( $order_id > 0 ) {
+	$ids             = array();
+	foreach ( (array) $found as $candidate ) {
+		$order_id = is_object( $candidate ) && method_exists( $candidate, 'get_id' ) ? absint( $candidate->get_id() ) : absint( $candidate );
+		$matches = false;
+		if ( $order_id > 0 && function_exists( 'wc_get_order' ) ) {
+			try {
+				$order = is_object( $candidate ) && method_exists( $candidate, 'get_id' ) ? $candidate : wc_get_order( $order_id );
+				$matches = orders_order_matches_search( $order, $normalized_term );
+			} catch ( \Throwable $exception ) {
+				$matches = false;
+			}
+		}
+		if ( $order_id > 0 && $matches ) {
 			$ids[ $order_id ] = $order_id;
 		}
 	}
@@ -1309,6 +1420,7 @@ function list_orders( $request ) {
 	}
 
 	$search_limited = false;
+	$skip_query     = false;
 	if ( '' !== $search ) {
 		$search_ids = orders_search_ids( $search );
 		if ( is_wp_error( $search_ids ) ) {
@@ -1317,14 +1429,24 @@ function list_orders( $request ) {
 		$search_limited = count( $search_ids ) > 500;
 		$args['include'] = array_slice( $search_ids, 0, 500 );
 		if ( empty( $args['include'] ) ) {
-			$args['include'] = array( 0 );
+			// Some WooCommerce data stores treat include=[0] as no include
+			// constraint and return the full collection. Skip the query instead.
+			$skip_query = true;
 		}
 	}
 
-	try {
-		$results = wc_get_orders( $args );
-	} catch ( \Throwable $exception ) {
-		return orders_error( 'fandoogh_orders_query_failed', __( 'خواندن فهرست سفارش‌ها انجام نشد.', 'fandoogh-manager' ), 500 );
+	if ( $skip_query ) {
+		$results = (object) array(
+			'orders'        => array(),
+			'total'         => 0,
+			'max_num_pages' => 0,
+		);
+	} else {
+		try {
+			$results = wc_get_orders( $args );
+		} catch ( \Throwable $exception ) {
+			return orders_error( 'fandoogh_orders_query_failed', __( 'خواندن فهرست سفارش‌ها انجام نشد.', 'fandoogh-manager' ), 500 );
+		}
 	}
 
 	if ( ! is_object( $results ) || ! isset( $results->orders, $results->total, $results->max_num_pages ) ) {

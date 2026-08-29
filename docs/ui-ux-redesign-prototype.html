@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <title>پروتوتایپ طراحی جدید فندوق</title>
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-strong: #115e59;
+      --primary-soft: #e9f7f5;
+      --primary-wash: #f4fbfa;
+      --ink: #173b39;
+      --muted: #6a8581;
+      --muted-strong: #486661;
+      --surface: #ffffff;
+      --canvas: #f5faf9;
+      --border: #dcece9;
+      --line: #edf4f2;
+      --success: #087f5b;
+      --success-soft: #eaf8f2;
+      --warning: #a16207;
+      --warning-soft: #fff8e7;
+      --danger: #b42318;
+      --danger-soft: #fff0ee;
+      --info: #175cd3;
+      --info-soft: #eef4ff;
+      --radius-lg: 22px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --shadow-sm: 0 4px 16px rgba(20, 72, 67, .06);
+      --shadow-md: 0 16px 40px rgba(20, 72, 67, .1);
+      --font: "FandooghLocal", Tahoma, "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--canvas); }
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: var(--font);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+      outline: 3px solid #61bdb4;
+      outline-offset: 3px;
+    }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+    svg { display: block; }
+    .ui-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .prototype-shell { display: grid; grid-template-columns: minmax(0, 1fr) 272px; min-height: 100vh; }
+
+    .sidebar {
+      grid-column: 2;
+      position: sticky;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 28px 20px 20px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 30px; }
+    .brand-mark { display: grid; width: 44px; height: 44px; place-items: center; color: #fff; background: var(--primary); border-radius: 15px 15px 15px 5px; box-shadow: 0 8px 18px rgba(15,118,110,.2); font-weight: 900; }
+    .brand-copy { display: grid; line-height: 1.35; }
+    .brand-copy strong { font-size: 1.05rem; }
+    .brand-copy small { color: var(--muted); font-size: .72rem; }
+    .nav-label { margin: 0 8px 8px; color: var(--muted); font-size: .7rem; font-weight: 800; }
+    .side-nav { display: grid; gap: 5px; }
+    .nav-button { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 0 13px; color: var(--muted-strong); background: transparent; border: 1px solid transparent; border-radius: 12px; text-align: right; transition: background .16s ease, color .16s ease, transform .16s ease; }
+    .nav-button:hover { color: var(--primary-strong); background: var(--primary-wash); transform: translateX(-2px); }
+    .nav-button.is-active { color: var(--primary-strong); background: var(--primary-soft); border-color: #cce9e5; font-weight: 800; }
+    .nav-button .ui-icon { flex: 0 0 auto; }
+    .sidebar-foot { display: grid; gap: 10px; margin-top: auto; padding-top: 25px; }
+    .help-card { padding: 14px; color: var(--primary-strong); background: var(--primary-wash); border: 1px solid #d7efec; border-radius: var(--radius-md); }
+    .help-card strong { display: block; font-size: .8rem; }
+    .help-card p { margin: 4px 0 10px; color: var(--muted-strong); font-size: .7rem; line-height: 1.6; }
+    .help-card button { width: 100%; min-height: 40px; color: var(--primary-strong); background: #fff; border: 1px solid #cce9e5; border-radius: 9px; font-size: .72rem; font-weight: 800; }
+
+    .workspace { grid-column: 1; min-width: 0; }
+    .topbar { display: flex; align-items: center; gap: 22px; min-height: 82px; padding: 0 38px; background: rgba(255,255,255,.86); border-bottom: 1px solid var(--border); backdrop-filter: blur(12px); }
+    .topbar-title { display: grid; gap: 1px; min-width: 155px; }
+    .topbar-title small { color: var(--muted); font-size: .7rem; }
+    .topbar-title strong { font-size: 1rem; }
+    .global-search { position: relative; flex: 1; max-width: 460px; margin-inline: auto; }
+    .global-search input { width: 100%; min-height: 44px; padding: 0 44px 0 16px; color: var(--ink); background: #f8fcfb; border: 1px solid var(--border); border-radius: 12px; }
+    .global-search .ui-icon { position: absolute; top: 12px; right: 15px; color: var(--muted); pointer-events: none; }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .icon-button { position: relative; display: grid; width: 44px; height: 44px; place-items: center; color: var(--muted-strong); background: #fff; border: 1px solid var(--border); border-radius: 12px; }
+    .icon-button:hover { color: var(--primary); border-color: #b8ded9; background: var(--primary-wash); }
+    .notification-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; background: #ef6b5d; border: 2px solid #fff; border-radius: 50%; }
+    .user-chip { display: flex; align-items: center; gap: 9px; padding-inline-start: 10px; }
+    .avatar { display: grid; width: 38px; height: 38px; place-items: center; color: #fff; background: var(--primary); border-radius: 50%; font-weight: 900; }
+    .user-chip div { display: grid; line-height: 1.35; }
+    .user-chip strong { font-size: .78rem; }
+    .user-chip small { color: var(--muted); font-size: .66rem; }
+    .main { width: min(1420px, 100%); margin: 0 auto; padding: 38px; }
+
+    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+    .eyebrow { margin: 0 0 5px; color: var(--primary); font-size: .72rem; font-weight: 900; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 7px; font-size: clamp(1.65rem, 2.7vw, 2.35rem); letter-spacing: -.04em; line-height: 1.25; }
+    h2 { margin-bottom: 3px; font-size: 1.05rem; }
+    h3 { margin-bottom: 2px; font-size: .9rem; }
+    .lead { max-width: 620px; margin-bottom: 0; color: var(--muted); font-size: .82rem; }
+    .head-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 11px; font-size: .76rem; font-weight: 800; }
+    .button-primary { color: #fff; background: var(--primary); border: 1px solid var(--primary); box-shadow: 0 5px 12px rgba(15,118,110,.16); }
+    .button-primary:hover { background: var(--primary-strong); }
+    .button-secondary { color: var(--primary-strong); background: #fff; border: 1px solid var(--border); }
+    .button-secondary:hover { border-color: #b8ded9; background: var(--primary-wash); }
+    .button-danger { color: var(--danger); background: #fff; border: 1px solid #f3c3bd; }
+    .status-pill { display: inline-flex; align-items: center; width: fit-content; min-height: 27px; padding: 0 9px; border-radius: 999px; font-size: .67rem; font-weight: 800; white-space: nowrap; }
+    .status-success { color: var(--success); background: var(--success-soft); }
+    .status-warning { color: var(--warning); background: var(--warning-soft); }
+    .status-info { color: var(--info); background: var(--info-soft); }
+    .status-danger { color: var(--danger); background: var(--danger-soft); }
+    .surface { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+
+    .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .metric-card { position: relative; overflow: hidden; padding: 18px; }
+    .metric-card::after { position: absolute; width: 90px; height: 90px; content: ""; left: -32px; bottom: -40px; background: var(--primary-soft); border-radius: 50%; }
+    .metric-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: .7rem; }
+    .metric-icon { display: grid; width: 35px; height: 35px; place-items: center; color: var(--primary); background: var(--primary-soft); border-radius: 10px; }
+    .metric-value { display: block; margin-top: 13px; color: var(--ink); font-size: 1.35rem; line-height: 1.2; }
+    .metric-trend { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; color: var(--success); font-size: .68rem; font-weight: 800; }
+    .overview-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr); gap: 18px; margin-bottom: 18px; }
+    .panel { padding: 21px; }
+    .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 19px; }
+    .panel-head p { margin: 4px 0 0; color: var(--muted); font-size: .7rem; }
+    .period-select, .filter-select { min-height: 38px; padding: 0 10px; color: var(--muted-strong); background: #fff; border: 1px solid var(--border); border-radius: 9px; font-size: .7rem; }
+    .chart-wrap { min-height: 242px; padding-top: 4px; }
+    .chart { width: 100%; height: 225px; }
+    .chart-grid { stroke: #e7f0ee; stroke-dasharray: 4 6; stroke-width: 1; }
+    .chart-area { fill: url(#areaFill); opacity: .9; }
+    .chart-line { fill: none; stroke: var(--primary); stroke-linecap: round; stroke-linejoin: round; stroke-width: 3.5; }
+    .chart-point { fill: #fff; stroke: var(--primary); stroke-width: 3; }
+    .chart-legend { display: flex; align-items: center; gap: 14px; margin-top: 4px; color: var(--muted); font-size: .68rem; }
+    .legend-item { display: inline-flex; align-items: center; gap: 5px; }
+    .legend-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; }
+    .legend-dot-soft { background: #a6d9d2; }
+    .action-list { display: grid; gap: 10px; }
+    .action-item { display: flex; align-items: center; gap: 11px; padding: 11px 12px; background: var(--primary-wash); border: 1px solid #e3f2ef; border-radius: 13px; }
+    .action-item .metric-icon { width: 32px; height: 32px; }
+    .action-item div { flex: 1; min-width: 0; }
+    .action-item strong { display: block; font-size: .76rem; }
+    .action-item small { display: block; margin-top: 1px; color: var(--muted); font-size: .65rem; }
+    .action-item .ui-icon:last-child { color: var(--muted); }
+
+    .section-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 18px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .74rem; }
+    th { padding: 0 10px 12px; color: var(--muted); font-size: .68rem; font-weight: 800; text-align: right; white-space: nowrap; }
+    td { padding: 13px 10px; border-top: 1px solid var(--line); vertical-align: middle; white-space: nowrap; }
+    tbody tr:hover { background: var(--primary-wash); }
+    .order-number { color: var(--primary-strong); font-weight: 900; }
+    .order-customer { display: grid; gap: 1px; }
+    .order-customer small { color: var(--muted); font-size: .65rem; }
+    .amount { direction: ltr; color: var(--ink); font-weight: 900; }
+    .product-rank { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); }
+    .product-rank:first-of-type { border-top: 0; }
+    .rank-number { display: grid; width: 30px; height: 30px; place-items: center; color: var(--primary); background: var(--primary-soft); border-radius: 9px; font-size: .72rem; font-weight: 900; }
+    .product-rank strong { display: block; font-size: .75rem; }
+    .product-rank small { display: block; color: var(--muted); font-size: .64rem; }
+    .product-rank .amount { font-size: .7rem; }
+
+    .hidden { display: none !important; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .toolbar .search { flex: 1 1 260px; }
+    .search { min-height: 44px; padding: 0 14px; color: var(--ink); background: #fff; border: 1px solid var(--border); border-radius: 11px; }
+    .product-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .product-card { overflow: hidden; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); }
+    .product-thumb { display: grid; min-height: 145px; place-items: center; color: var(--primary); background: linear-gradient(135deg, #ecf9f6, #f7fcfb); }
+    .product-thumb .ui-icon { width: 42px; height: 42px; color: #85c8c0; }
+    .product-content { padding: 15px; }
+    .product-content h3 { margin-bottom: 4px; }
+    .product-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 9px 0 13px; color: var(--muted); font-size: .68rem; }
+    .product-meta .amount { color: var(--ink); }
+    .product-actions { display: flex; gap: 8px; }
+    .product-actions .button { flex: 1; min-height: 40px; padding: 0 10px; font-size: .68rem; }
+    .empty { padding: 45px 20px; color: var(--muted); text-align: center; }
+    .empty .ui-icon { width: 34px; height: 34px; margin: 0 auto 10px; color: #80c5bd; }
+
+    .editor-panel { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; }
+    .form-card { padding: 20px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .field { display: grid; gap: 6px; color: var(--muted-strong); font-size: .7rem; font-weight: 800; }
+    .field input, .field select, .field textarea { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); background: #fff; border: 1px solid var(--border); border-radius: 10px; font-weight: 500; }
+    .field textarea { min-height: 116px; padding-block: 10px; resize: vertical; }
+    .field.full { grid-column: 1 / -1; }
+    .editor-aside { display: grid; align-content: start; gap: 14px; }
+    .check-card { padding: 17px; }
+    .check-card h3 { margin-bottom: 12px; }
+    .check { display: flex; align-items: center; gap: 8px; padding: 8px 0; color: var(--muted-strong); border-top: 1px solid var(--line); font-size: .7rem; }
+    .check:first-of-type { border-top: 0; }
+    .check .ui-icon { flex: 0 0 auto; color: var(--success); }
+    .editor-actions { display: flex; justify-content: flex-start; gap: 9px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+
+    .mobile-nav { display: none; }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(13, 47, 44, .35); }
+    .modal { width: min(720px, 100%); max-height: min(760px, 92vh); overflow: auto; padding: 24px; background: #fff; border: 1px solid var(--border); border-radius: 22px; box-shadow: var(--shadow-md); }
+    .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+    .modal-head p { margin: 4px 0 0; color: var(--muted); font-size: .72rem; }
+    .close-button { display: grid; width: 40px; height: 40px; place-items: center; color: var(--muted-strong); background: #fff; border: 1px solid var(--border); border-radius: 10px; }
+    .toast { position: fixed; left: 24px; bottom: 24px; z-index: 30; display: flex; align-items: center; gap: 9px; padding: 13px 16px; color: var(--success); background: #fff; border: 1px solid #bde4d4; border-radius: 12px; box-shadow: var(--shadow-md); font-size: .75rem; font-weight: 800; }
+
+    @media (max-width: 1080px) {
+      .prototype-shell { grid-template-columns: minmax(0, 1fr) 228px; }
+      .topbar, .main { padding-inline: 24px; }
+      .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 780px) {
+      .prototype-shell { display: block; }
+      .sidebar { display: none; }
+      .topbar { min-height: 72px; padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
+      .topbar-title { min-width: 0; flex: 1; }
+      .topbar-title small { display: none; }
+      .global-search { order: 5; flex: 0 0 100%; max-width: none; }
+      .topbar-actions { gap: 6px; }
+      .user-chip div { display: none; }
+      .main { padding: 24px 16px calc(88px + env(safe-area-inset-bottom, 0px)); }
+      .page-head { align-items: stretch; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+      .head-actions { width: 100%; }
+      .head-actions .button { flex: 1; }
+      .overview-grid, .section-grid, .editor-panel { grid-template-columns: minmax(0, 1fr); }
+      .product-grid { grid-template-columns: minmax(0, 1fr); }
+      .form-grid { grid-template-columns: minmax(0, 1fr); }
+      .field.full { grid-column: auto; }
+      .mobile-nav { position: fixed; right: 0; bottom: 0; left: 0; z-index: 10; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); background: rgba(255,255,255,.96); border-top: 1px solid var(--border); box-shadow: 0 -8px 24px rgba(20,72,67,.08); backdrop-filter: blur(14px); }
+      .mobile-nav button { display: grid; justify-items: center; gap: 2px; min-height: 52px; padding: 5px; color: var(--muted); background: transparent; border: 0; border-radius: 11px; font-size: .68rem; }
+      .mobile-nav button.is-active { color: var(--primary); background: var(--primary-soft); font-weight: 800; }
+      .mobile-nav small { font-size: .64rem; }
+      .table-wrap { margin-inline: -10px; padding-inline: 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="prototype-shell">
+    <aside class="sidebar" aria-label="ناوبری prototype">
+      <div class="brand"><span class="brand-mark">ف</span><span class="brand-copy"><strong>فندوق</strong><small>مدیریت سادهٔ فروشگاه</small></span></div>
+      <p class="nav-label">مدیریت فروشگاه</p>
+      <nav class="side-nav">
+        <button class="nav-button is-active" type="button" data-view="dashboard" aria-current="page"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 10 8-6 8 6v9H4Z"/><path d="M9 19v-5h6v5"/></svg><span>داشبورد</span></button>
+        <button class="nav-button" type="button" data-view="products"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg><span>محصولات</span></button>
+        <button class="nav-button" type="button" data-view="orders"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg><span>سفارش‌ها</span></button>
+        <button class="nav-button" type="button" data-view="customers"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5.5 19c.7-3.1 2.8-4.7 6.5-4.7s5.8 1.6 6.5 4.7"/></svg><span>مشتریان</span></button>
+        <button class="nav-button" type="button" data-view="reports"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V10M12 19V5M19 19v-8"/><path d="M3.5 19.5h17"/></svg><span>گزارش‌ها</span></button>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="help-card"><strong>همه‌چیز تحت کنترل است</strong><p>از همین صفحه وضعیت فروشگاه را سریع بررسی کنید.</p><button type="button" data-toast="راهنمای سریع آماده می‌شود">راهنمای سریع</button></div>
+        <button class="nav-button" type="button" data-toast="از حساب کاربری خارج شدید"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H5v14h5M14 8l4 4-4 4M8 12h10"/></svg><span>خروج</span></button>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-title"><small>فروشگاه من / مدیریت</small><strong id="currentPageTitle">نمای کلی فروشگاه</strong></div>
+        <div class="global-search"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.2 4.2"/></svg><label class="sr-only" for="globalSearch">جست‌وجو</label><input id="globalSearch" type="search" placeholder="جست‌وجوی سفارش، محصول یا مشتری" autocomplete="off"></div>
+        <div class="topbar-actions"><button class="icon-button" type="button" aria-label="اعلان‌ها" data-toast="اعلان جدیدی ندارید"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 6 2.2 6.2 2.2 7.3H4.3C4.3 16.2 6.5 16 6.5 10Z"/><path d="M9.5 20h5"/></svg><span class="notification-dot"></span></button><button class="icon-button" type="button" aria-label="کمک" data-toast="راهنما در حال آماده‌سازی است"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.3a2.4 2.4 0 1 1 4 1.8c-1.2.8-1.7 1.2-1.7 2.5M12 16.8h.01"/></svg></button><div class="user-chip"><div><strong>مریم احمدی</strong><small>مدیر فروشگاه</small></div><span class="avatar">م</span></div></div>
+      </header>
+
+      <main class="main">
+        <section class="page-section" data-page="dashboard">
+          <div class="page-head"><div><p class="eyebrow">شنبه، ۲۳ شهریور ۱۴۰۳</p><h1>خوش آمدید، مریم</h1><p class="lead">وضعیت امروز فروشگاه را در یک نگاه ببینید و سریع به کارهای مهم برسید.</p></div><div class="head-actions"><button class="button button-secondary" type="button" data-toast="گزارش آماده می‌شود"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>گزارش فروش</button><button class="button button-primary" type="button" data-view-action="products" data-open-editor="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>محصول جدید</button></div></div>
+          <div class="metric-grid">
+            <article class="surface metric-card"><div class="metric-top"><span>فروش امروز</span><span class="metric-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M6 4h12v16H6z"/><path d="M9 12h6M9 15h4"/></svg></span></div><strong class="metric-value">۲۴٬۸۵۰٬۰۰۰ تومان</strong><span class="metric-trend">↑ ۱۲٪ نسبت به دیروز</span></article>
+            <article class="surface metric-card"><div class="metric-top"><span>سفارش‌های امروز</span><span class="metric-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg></span></div><strong class="metric-value">۳۶</strong><span class="metric-trend">↑ ۸٪ نسبت به دیروز</span></article>
+            <article class="surface metric-card"><div class="metric-top"><span>در انتظار ارسال</span><span class="metric-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h11v11H4zM15 10h3l2 3v4h-5z"/><circle cx="8" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/></svg></span></div><strong class="metric-value">۱۲</strong><span class="metric-trend" style="color:var(--warning)">نیازمند پیگیری امروز</span></article>
+            <article class="surface metric-card"><div class="metric-top"><span>موجودی کم</span><span class="metric-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v13H4z"/><path d="m4 7 3-3h10l3 3M9 12h6"/></svg></span></div><strong class="metric-value">۷ محصول</strong><span class="metric-trend" style="color:var(--danger)">نیازمند بررسی</span></article>
+          </div>
+          <div class="overview-grid">
+            <article class="surface panel"><div class="panel-head"><div><h2>روند فروش</h2><p>مجموع فروش در ۳۰ روز اخیر</p></div><select class="period-select" aria-label="بازهٔ زمانی"><option>۳۰ روز اخیر</option><option>۷ روز اخیر</option><option>امسال</option></select></div><div class="chart-wrap"><svg class="chart" viewBox="0 0 720 240" role="img" aria-label="نمودار روند فروش"><defs><linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe9e3" stop-opacity=".65"/><stop offset="1" stop-color="#e9f7f5" stop-opacity=".1"/></linearGradient></defs><path class="chart-grid" d="M24 35H700M24 92H700M24 149H700M24 206H700"/><path class="chart-area" d="M24 192 C110 170 130 178 190 142 S290 110 350 136 S450 80 510 105 S620 58 700 72 V206 H24Z"/><path class="chart-line" d="M24 192 C110 170 130 178 190 142 S290 110 350 136 S450 80 510 105 S620 58 700 72"/><circle class="chart-point" cx="190" cy="142" r="5"/><circle class="chart-point" cx="350" cy="136" r="5"/><circle class="chart-point" cx="510" cy="105" r="5"/><circle class="chart-point" cx="700" cy="72" r="5"/></svg></div><div class="chart-legend"><span class="legend-item"><i class="legend-dot"></i>فروش</span><span class="legend-item"><i class="legend-dot legend-dot-soft"></i>مقایسه با ماه قبل</span><button class="button button-secondary" type="button" style="margin-inline-start:auto;min-height:34px;padding:0 10px;font-size:.66rem" data-toast="داده‌های نمودار به‌صورت جدول نمایش داده شد">مشاهدهٔ داده‌ها</button></div></article>
+            <article class="surface panel"><div class="panel-head"><div><h2>کارهای پیشنهادی</h2><p>سه کار برای شروع سریع‌تر</p></div><span class="status-pill status-success">آماده</span></div><div class="action-list"><button class="action-item" type="button" data-view-action="products" data-open-editor="true"><span class="metric-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4"/></svg></span><div><strong>اولین محصول را اضافه کنید</strong><small>کاتالوگ شما هنوز جای رشد دارد</small></div><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button><button class="action-item" type="button" data-view-action="orders"><span class="metric-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg></span><div><strong>۱۲ سفارش را پیگیری کنید</strong><small>در انتظار ارسال مشتریان</small></div><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button><button class="action-item" type="button" data-toast="راهنمای اتصال آماده می‌شود"><span class="metric-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 19 7v5c0 4.3-2.7 6.8-7 8-4.3-1.2-7-3.7-7-8V7l7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><div><strong>اتصال فروشگاه کامل است</strong><small>همهٔ سرویس‌ها در دسترس هستند</small></div><span class="status-pill status-success">متصل</span></button></div></article>
+          </div>
+          <div class="section-grid"><article class="surface panel"><div class="panel-head"><div><h2>آخرین سفارش‌ها</h2><p>آخرین فعالیت‌های فروشگاه</p></div><button class="button button-secondary" type="button" data-view-action="orders" style="min-height:36px;padding:0 11px;font-size:.68rem">مشاهدهٔ همه</button></div><div class="table-wrap"><table><thead><tr><th>سفارش</th><th>مشتری</th><th>وضعیت</th><th>مبلغ</th></tr></thead><tbody><tr><td class="order-number">#۱۰۲۸</td><td><span class="order-customer"><strong>سارا کریمی</strong><small>امروز، ۱۲:۴۰</small></span></td><td><span class="status-pill status-warning">در انتظار ارسال</span></td><td class="amount">۸۹۰٬۰۰۰ تومان</td></tr><tr><td class="order-number">#۱۰۲۷</td><td><span class="order-customer"><strong>علی رضایی</strong><small>امروز، ۱۱:۱۵</small></span></td><td><span class="status-pill status-success">تکمیل‌شده</span></td><td class="amount">۱٬۴۵۰٬۰۰۰ تومان</td></tr><tr><td class="order-number">#۱۰۲۶</td><td><span class="order-customer"><strong>نگار محمدی</strong><small>امروز، ۰۹:۳۰</small></span></td><td><span class="status-pill status-info">در حال پردازش</span></td><td class="amount">۵۴۰٬۰۰۰ تومان</td></tr></tbody></table></div></article><article class="surface panel"><div class="panel-head"><div><h2>پرفروش‌ترین محصولات</h2><p>بر اساس تعداد فروش این ماه</p></div><button class="button button-secondary" type="button" data-view-action="products" style="min-height:36px;padding:0 11px;font-size:.68rem">کاتالوگ</button></div><div class="product-rank"><span class="rank-number">۱</span><div><strong>ست لیوان سرامیکی</strong><small>۸۴ عدد فروش</small></div><span class="amount">۷٬۵۶۰٬۰۰۰</span></div><div class="product-rank"><span class="rank-number">۲</span><div><strong>ماگ طرح برگ</strong><small>۵۹ عدد فروش</small></div><span class="amount">۴٬۱۳۰٬۰۰۰</span></div><div class="product-rank"><span class="rank-number">۳</span><div><strong>بشقاب دست‌ساز</strong><small>۴۱ عدد فروش</small></div><span class="amount">۳٬۲۸۰٬۰۰۰</span></div></article></div>
+        </section>
+
+        <section class="page-section hidden" data-page="products"><div class="page-head"><div><p class="eyebrow">کاتالوگ فروشگاه</p><h1>محصولات</h1><p class="lead">محصولات را سریع پیدا کنید، وضعیت موجودی را ببینید و با کمترین کلیک ویرایش کنید.</p></div><div class="head-actions"><button class="button button-secondary" type="button" data-toast="فیلترهای بیشتر آماده می‌شود"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>فیلتر بیشتر</button><button class="button button-primary" type="button" data-open-editor="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>محصول جدید</button></div></div><div class="surface panel"><div class="toolbar"><input class="search" id="productQuery" type="search" placeholder="جست‌وجوی نام یا SKU..." aria-label="جست‌وجوی محصولات"><select class="filter-select" id="productStatus"><option value="all">همهٔ وضعیت‌ها</option><option value="publish">منتشرشده</option><option value="draft">پیش‌نویس</option><option value="low">موجودی کم</option></select><select class="filter-select" id="productSort"><option value="popular">پرفروش‌ترین</option><option value="name">نام محصول</option><option value="price">قیمت</option></select><span id="productCount" class="status-pill status-info">۶ محصول</span></div><div class="product-grid" id="productGrid"><article class="product-card" data-status="publish" data-name="ست لیوان سرامیکی" data-sku="FN-102"><div class="product-thumb"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h10v11a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4V5Z"/><path d="M16 8h2a2 2 0 0 1 0 4h-2M8 3h6"/></svg></div><div class="product-content"><h3>ست لیوان سرامیکی</h3><div class="product-meta"><span dir="ltr">SKU: FN-102</span><strong class="amount">۸۹۰٬۰۰۰ تومان</strong></div><span class="status-pill status-success">موجود · ۲۴ عدد</span><div class="product-actions"><button class="button button-secondary" type="button" data-open-editor="true">ویرایش</button><button class="button button-secondary" type="button" data-toast="جزئیات محصول باز می‌شود">جزئیات</button></div></div></article><article class="product-card" data-status="low" data-name="ماگ طرح برگ" data-sku="FN-088"><div class="product-thumb"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h10v11a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4V5Z"/><path d="M16 8h2a2 2 0 0 1 0 4h-2M8 3h6"/></svg></div><div class="product-content"><h3>ماگ طرح برگ</h3><div class="product-meta"><span dir="ltr">SKU: FN-088</span><strong class="amount">۵۹۰٬۰۰۰ تومان</strong></div><span class="status-pill status-warning">موجودی کم · ۴ عدد</span><div class="product-actions"><button class="button button-secondary" type="button" data-open-editor="true">ویرایش</button><button class="button button-secondary" type="button" data-toast="جزئیات محصول باز می‌شود">جزئیات</button></div></div></article><article class="product-card" data-status="draft" data-name="بشقاب دست‌ساز" data-sku="FN-071"><div class="product-thumb"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 4v2"/></svg></div><div class="product-content"><h3>بشقاب دست‌ساز</h3><div class="product-meta"><span dir="ltr">SKU: FN-071</span><strong class="amount">۷۹۰٬۰۰۰ تومان</strong></div><span class="status-pill status-info">پیش‌نویس</span><div class="product-actions"><button class="button button-secondary" type="button" data-open-editor="true">ویرایش</button><button class="button button-secondary" type="button" data-toast="جزئیات محصول باز می‌شود">جزئیات</button></div></div></article></div></div></section>
+
+        <section class="page-section hidden" data-page="orders"><div class="page-head"><div><p class="eyebrow">فروش و ارسال</p><h1>سفارش‌ها</h1><p class="lead">سفارش‌های مهم را در یک جدول خوانا ببینید و وضعیت هرکدام را بدون ورود به صفحهٔ جدا تغییر دهید.</p></div><div class="head-actions"><button class="button button-secondary" type="button" data-toast="خروجی سفارش‌ها آماده می‌شود"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>خروجی</button></div></div><div class="surface panel"><div class="toolbar"><input class="search" type="search" placeholder="شماره سفارش یا نام مشتری" aria-label="جست‌وجوی سفارش‌ها"><select class="filter-select"><option>همهٔ وضعیت‌ها</option><option>در انتظار ارسال</option><option>در حال پردازش</option><option>تکمیل‌شده</option></select><select class="filter-select"><option>۳۰ روز اخیر</option><option>۷ روز اخیر</option><option>امسال</option></select><button class="button button-secondary" type="button" data-toast="فیلترها اعمال شدند">اعمال فیلتر</button></div><div class="table-wrap"><table><thead><tr><th>شماره سفارش</th><th>مشتری</th><th>تاریخ</th><th>وضعیت</th><th>مبلغ</th><th>عملیات</th></tr></thead><tbody><tr><td class="order-number">#۱۰۲۸</td><td>سارا کریمی</td><td>۲۳ شهریور، ۱۲:۴۰</td><td><span class="status-pill status-warning">در انتظار ارسال</span></td><td class="amount">۸۹۰٬۰۰۰ تومان</td><td><button class="button button-secondary" style="min-height:36px;padding:0 10px;font-size:.67rem" type="button" data-toast="جزئیات سفارش باز می‌شود">مشاهده</button></td></tr><tr><td class="order-number">#۱۰۲۷</td><td>علی رضایی</td><td>۲۳ شهریور، ۱۱:۱۵</td><td><span class="status-pill status-success">تکمیل‌شده</span></td><td class="amount">۱٬۴۵۰٬۰۰۰ تومان</td><td><button class="button button-secondary" style="min-height:36px;padding:0 10px;font-size:.67rem" type="button" data-toast="جزئیات سفارش باز می‌شود">مشاهده</button></td></tr><tr><td class="order-number">#۱۰۲۶</td><td>نگار محمدی</td><td>۲۳ شهریور، ۰۹:۳۰</td><td><span class="status-pill status-info">در حال پردازش</span></td><td class="amount">۵۴۰٬۰۰۰ تومان</td><td><button class="button button-secondary" style="min-height:36px;padding:0 10px;font-size:.67rem" type="button" data-toast="جزئیات سفارش باز می‌شود">مشاهده</button></td></tr></tbody></table></div></div></section>
+
+        <section class="page-section hidden" data-page="customers"><div class="page-head"><div><p class="eyebrow">رابطه با مشتری</p><h1>مشتریان</h1><p class="lead">مشتریان فعال و ارزش خرید آن‌ها را با اطلاعات ضروری و بدون شلوغی ببینید.</p></div></div><div class="surface panel"><div class="toolbar"><input class="search" type="search" placeholder="نام، ایمیل یا شماره مشتری" aria-label="جست‌وجوی مشتریان"><span class="status-pill status-success">۲۴۸ مشتری فعال</span></div><div class="table-wrap"><table><thead><tr><th>مشتری</th><th>آخرین سفارش</th><th>تعداد سفارش</th><th>ارزش خرید</th><th>وضعیت</th></tr></thead><tbody><tr><td>سارا کریمی</td><td>امروز</td><td>۱۲</td><td class="amount">۹٬۸۰۰٬۰۰۰ تومان</td><td><span class="status-pill status-success">وفادار</span></td></tr><tr><td>علی رضایی</td><td>امروز</td><td>۵</td><td class="amount">۳٬۴۰۰٬۰۰۰ تومان</td><td><span class="status-pill status-info">فعال</span></td></tr></tbody></table></div></div></section>
+
+        <section class="page-section hidden" data-page="reports"><div class="page-head"><div><p class="eyebrow">تصمیم‌گیری با داده</p><h1>گزارش‌ها</h1><p class="lead">نمایش خلاصه و قابل فهم از فروش، سفارش‌ها و محصولات پرفروش.</p></div><div class="head-actions"><select class="period-select" aria-label="بازهٔ گزارش"><option>این ماه</option><option>ماه قبل</option><option>امسال</option></select></div></div><div class="metric-grid"><article class="surface metric-card"><div class="metric-top"><span>فروش خالص</span><span class="metric-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19 9 13l4 3 7-9"/></svg></span></div><strong class="metric-value">۱۸۵ میلیون</strong><span class="metric-trend">↑ ۱۸٪ رشد</span></article><article class="surface metric-card"><div class="metric-top"><span>میانگین سفارش</span><span class="metric-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span></div><strong class="metric-value">۷۸۰ هزار</strong><span class="metric-trend">↑ ۶٪ رشد</span></article><article class="surface metric-card"><div class="metric-top"><span>نرخ تکمیل</span><span class="metric-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8 12 2.5 2.5L16 9"/></svg></span></div><strong class="metric-value">۸۶٪</strong><span class="metric-trend">پایدار</span></article><article class="surface metric-card"><div class="metric-top"><span>مشتری جدید</span><span class="metric-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3"/><path d="M4 19c.7-3.1 2.7-4.7 6-4.7M18 12v6M15 15h6"/></svg></span></div><strong class="metric-value">۴۲ نفر</strong><span class="metric-trend">↑ ۹٪ رشد</span></article></div><div class="surface panel"><div class="panel-head"><div><h2>دادهٔ قابل بررسی</h2><p>در اجرای واقعی، همین layout با API فروشگاه پر می‌شود.</p></div><span class="status-pill status-info">نمونهٔ طراحی</span></div><div class="empty"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"/><path d="m7 15 3-3 3 2 5-6"/></svg><strong>این بخش برای تأیید visual direction ساخته شده است</strong><p>بعد از تأیید، داده‌های واقعی و رفتارهای پروژه به آن متصل می‌شوند.</p></div></div></section>
+
+        <section class="page-section hidden" data-page="editor"><div class="page-head"><div><p class="eyebrow">ویرایشگر محصول</p><h1>ساخت محصول بدون پیچیدگی</h1><p class="lead">اطلاعات اصلی را اول وارد کنید؛ تنظیمات پیشرفته در مرحلهٔ بعدی قرار دارند.</p></div></div><div class="editor-panel"><form class="surface form-card" onsubmit="return false"><div class="panel-head"><div><h2>اطلاعات اصلی</h2><p>نام، قیمت و موجودی محصول</p></div><span class="status-pill status-info">مرحله ۱ از ۲</span></div><div class="form-grid"><label class="field" for="editorName">نام محصول<input id="editorName" type="text" value="ست لیوان سرامیکی" required></label><label class="field" for="editorSku">SKU<input id="editorSku" type="text" value="FN-102" dir="ltr"></label><label class="field" for="editorPrice">قیمت عادی<input id="editorPrice" type="text" value="۸۹۰٬۰۰۰" inputmode="decimal"></label><label class="field" for="editorStatus">وضعیت<select id="editorStatus"><option>منتشرشده</option><option>پیش‌نویس</option></select></label><label class="field full" for="editorShort">توضیح کوتاه<textarea id="editorShort">یک ست کاربردی برای میز صبحانهٔ روزمره.</textarea></label></div><div class="editor-actions"><button class="button button-secondary" type="button" data-view-action="products">انصراف</button><button class="button button-primary" type="button" data-toast="محصول برای مرحلهٔ بعد ذخیره شد">ادامه به تنظیمات</button></div></form><aside class="editor-aside"><div class="surface check-card"><h3>چک‌لیست انتشار</h3><div class="check"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8 12 2.5 2.5L16 9"/></svg>نام محصول تکمیل شده</div><div class="check"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8 12 2.5 2.5L16 9"/></svg>قیمت وارد شده</div><div class="check"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8 12 2.5 2.5L16 9"/></svg>تصویر شاخص انتخاب شده</div><div class="check"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v5M12 16.5h.01"/></svg>دسته‌بندی پیشنهاد نشده است</div></div><div class="surface check-card"><h3>راهنمای این مرحله</h3><p style="margin:0;color:var(--muted);font-size:.72rem">فیلدهای ضروری را کوتاه نگه داشته‌ایم تا ساخت محصول سریع و قابل فهم بماند.</p></div></aside></div></section>
+      </main>
+    </div>
+  </div>
+
+  <nav class="mobile-nav" aria-label="ناوبری موبایل"><button class="is-active" type="button" data-view="dashboard"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 10 8-6 8 6v9H4Z"/><path d="M9 19v-5h6v5"/></svg><small>خانه</small></button><button type="button" data-view="products"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4"/></svg><small>محصولات</small></button><button type="button" data-view="orders"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg><small>سفارش‌ها</small></button><button type="button" data-view="customers"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5.5 19c.7-3.1 2.8-4.7 6.5-4.7s5.8 1.6 6.5 4.7"/></svg><small>مشتریان</small></button></nav>
+  <div class="modal-backdrop hidden" id="editorModal" role="presentation"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><h2 id="modalTitle">ساخت محصول</h2><p>نسخهٔ سریع editor برای بررسی تجربهٔ کاربری</p></div><button class="close-button" type="button" aria-label="بستن editor" data-close-modal><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="form-grid"><label class="field full" for="modalProductName">نام محصول<input id="modalProductName" type="text" placeholder="مثلاً ست فنجان صبحانه"></label><label class="field" for="modalProductPrice">قیمت<input id="modalProductPrice" type="text" placeholder="مثلاً ۸۹۰۰۰۰"></label><label class="field" for="modalProductType">نوع محصول<select id="modalProductType"><option>محصول ساده</option><option>محصول متغیر</option></select></label></div><div class="editor-actions"><button class="button button-secondary" type="button" data-close-modal>انصراف</button><button class="button button-primary" type="button" data-save-modal>ذخیرهٔ نمونه</button></div></div></div>
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8 12 2.5 2.5L16 9"/></svg><span id="toastText"></span></div>
+
+  <script>
+    (function () {
+      "use strict";
+      var pageTitles = { dashboard: "نمای کلی فروشگاه", products: "محصولات", orders: "سفارش‌ها", customers: "مشتریان", reports: "گزارش‌ها", editor: "ساخت محصول" };
+      var navButtons = Array.prototype.slice.call(document.querySelectorAll("[data-view]"));
+      var sections = Array.prototype.slice.call(document.querySelectorAll("[data-page]"));
+      var title = document.getElementById("currentPageTitle");
+      var modal = document.getElementById("editorModal");
+      var toast = document.getElementById("toast");
+      var toastText = document.getElementById("toastText");
+      var toastTimer;
+
+      function showToast(message) {
+        toastText.textContent = message;
+        toast.classList.remove("hidden");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(function () { toast.classList.add("hidden"); }, 2600);
+      }
+      function openEditor() {
+        modal.classList.remove("hidden");
+        document.getElementById("modalProductName").focus();
+      }
+      function closeEditor() {
+        modal.classList.add("hidden");
+      }
+      function setView(view) {
+        if (!pageTitles[view]) view = "dashboard";
+        sections.forEach(function (section) { section.classList.toggle("hidden", section.getAttribute("data-page") !== view); });
+        navButtons.forEach(function (button) {
+          var active = button.getAttribute("data-view") === view;
+          button.classList.toggle("is-active", active);
+          if (active) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current");
+        });
+        title.textContent = pageTitles[view];
+        if (window.history && window.history.replaceState) window.history.replaceState({ view: view }, "", "#" + view);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      navButtons.forEach(function (button) { button.addEventListener("click", function () { setView(button.getAttribute("data-view")); }); });
+      document.querySelectorAll("[data-view-action]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          setView(button.getAttribute("data-view-action"));
+          if (button.getAttribute("data-open-editor") === "true") window.setTimeout(openEditor, 160);
+        });
+      });
+      document.querySelectorAll("[data-open-editor]").forEach(function (button) {
+        if (button.hasAttribute("data-view-action")) return;
+        button.addEventListener("click", openEditor);
+      });
+      document.querySelectorAll("[data-toast]").forEach(function (button) { button.addEventListener("click", function () { showToast(button.getAttribute("data-toast")); }); });
+      document.querySelectorAll("[data-close-modal]").forEach(function (button) { button.addEventListener("click", closeEditor); });
+      document.querySelector("[data-save-modal]").addEventListener("click", function () { closeEditor(); showToast("محصول نمونه ذخیره شد؛ آمادهٔ اتصال به API است"); });
+      modal.addEventListener("click", function (event) { if (event.target === modal) closeEditor(); });
+      document.addEventListener("keydown", function (event) { if (event.key === "Escape" && !modal.classList.contains("hidden")) closeEditor(); });
+      var query = document.getElementById("productQuery");
+      var status = document.getElementById("productStatus");
+      var count = document.getElementById("productCount");
+      function filterProducts() {
+        if (!query) return;
+        var q = query.value.trim().toLocaleLowerCase();
+        var selected = status.value;
+        var visible = 0;
+        document.querySelectorAll("#productGrid .product-card").forEach(function (card) {
+          var matchesText = !q || (card.dataset.name + " " + card.dataset.sku).toLocaleLowerCase().indexOf(q) !== -1;
+          var matchesStatus = selected === "all" || card.dataset.status === selected;
+          card.classList.toggle("hidden", !(matchesText && matchesStatus));
+          if (matchesText && matchesStatus) visible += 1;
+        });
+        count.textContent = visible + " محصول";
+      }
+      if (query) { query.addEventListener("input", filterProducts); status.addEventListener("change", filterProducts); }
+      var initialView = window.location.hash ? window.location.hash.slice(1) : "dashboard";
+      setView(pageTitles[initialView] ? initialView : "dashboard");
+    }());
+  </script>
+</body>
+</html>

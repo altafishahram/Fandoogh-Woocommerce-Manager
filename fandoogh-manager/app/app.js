@@ -76,6 +76,10 @@
     authBusy: false,
     csrfToken: "",
     activeSection: "dashboard",
+    globalSearch: {
+      results: [],
+      activeIndex: -1
+    },
     sidebarTrigger: null,
     user: {
       displayName: "مدیر فروشگاه",
@@ -94,6 +98,8 @@
       status: "secure",
       items: [],
       filteredItems: [],
+      searchTimer: null,
+      loadRequestId: 0,
       filters: {
         query: "",
         type: "any",
@@ -132,6 +138,7 @@
       total: 0,
       totalPages: 0,
       searchTimer: null,
+      loadRequestId: 0,
       detailOrders: [],
       detailOrdersStatus: "idle",
       detailOrdersPage: 1,
@@ -147,7 +154,8 @@
       total: 0,
       totalPages: 0,
       summary: null,
-      searchTimer: null
+      searchTimer: null,
+      loadRequestId: 0
     },
     coupons: {
       status: "secure",
@@ -157,7 +165,9 @@
       total: 0,
       totalPages: 0,
       editorId: null,
-      editorDirty: false
+      editorDirty: false,
+      searchTimer: null,
+      loadRequestId: 0
     },
     reviews: {
       status: "secure",
@@ -166,7 +176,9 @@
       statusFilter: "all",
       page: 1,
       total: 0,
-      totalPages: 0
+      totalPages: 0,
+      searchTimer: null,
+      loadRequestId: 0
     },
     variations: {
       parentId: null,
@@ -233,6 +245,7 @@
     elements.sidebarScrim = document.getElementById("sidebarScrim");
     elements.mobileMenuToggle = document.getElementById("mobileMenuToggle");
     elements.globalSearch = document.getElementById("globalSearch");
+    elements.globalSearchResults = document.getElementById("globalSearchResults");
     elements.topbarUserName = document.getElementById("topbarUserName");
     elements.topbarUserRole = document.getElementById("topbarUserRole");
     elements.topbarUserAvatar = document.getElementById("topbarUserAvatar");
@@ -282,10 +295,25 @@
     elements.analyticsCustomersCount = document.getElementById("analyticsCustomersCount");
     elements.analyticsContent = document.getElementById("analyticsContent");
     elements.analyticsStatusList = document.getElementById("analyticsStatusList");
+    elements.analyticsStatusDonut = document.getElementById("analyticsStatusDonut");
+    elements.analyticsStatusDonutTotal = document.getElementById("analyticsStatusDonutTotal");
     elements.analyticsProductList = document.getElementById("analyticsProductList");
     elements.analyticsNote = document.getElementById("analyticsNote");
     elements.dashboardRange = document.getElementById("dashboardRange");
+    elements.dashboardKpiGrid = document.getElementById("dashboardKpiGrid");
+    elements.dashboardKpiRevenue = document.getElementById("dashboardKpiRevenue");
+    elements.dashboardKpiRevenuePeriod = document.getElementById("dashboardKpiRevenuePeriod");
+    elements.dashboardKpiOrders = document.getElementById("dashboardKpiOrders");
+    elements.dashboardKpiOrdersPeriod = document.getElementById("dashboardKpiOrdersPeriod");
+    elements.dashboardKpiCustomers = document.getElementById("dashboardKpiCustomers");
+    elements.dashboardKpiCustomersPeriod = document.getElementById("dashboardKpiCustomersPeriod");
+    elements.dashboardKpiProducts = document.getElementById("dashboardKpiProducts");
+    elements.dashboardKpiProductsPeriod = document.getElementById("dashboardKpiProductsPeriod");
     elements.dashboardSalesPanel = document.getElementById("dashboardSalesPanel");
+    elements.dashboardOrderStatusPanel = document.getElementById("dashboardOrderStatusPanel");
+    elements.dashboardStatusList = document.getElementById("dashboardStatusList");
+    elements.dashboardStatusDonut = document.getElementById("dashboardStatusDonut");
+    elements.dashboardStatusDonutTotal = document.getElementById("dashboardStatusDonutTotal");
     elements.dashboardRecentOrders = document.getElementById("dashboardRecentOrders");
     elements.dashboardTopProducts = document.getElementById("dashboardTopProducts");
     elements.dashboardSalesChart = document.getElementById("dashboardSalesChart");
@@ -401,6 +429,7 @@
     elements.categoriesGrid = document.getElementById("categoriesGrid");
     elements.orderSearch = document.getElementById("orderSearch");
     elements.orderStatusFilter = document.getElementById("orderStatusFilter");
+    elements.orderStatusChips = document.getElementById("orderStatusChips");
     elements.orderDateFrom = document.getElementById("orderDateFrom");
     elements.orderDateTo = document.getElementById("orderDateTo");
     elements.orderMinTotal = document.getElementById("orderMinTotal");
@@ -409,6 +438,7 @@
     elements.orderPaymentMethod = document.getElementById("orderPaymentMethod");
     elements.orderShippingMethod = document.getElementById("orderShippingMethod");
     elements.orderFilterToggle = document.getElementById("toggleOrderFilters");
+    elements.orderFilterBackdrop = document.getElementById("orderFilterBackdrop");
     elements.orderFilterPanel = document.getElementById("orderFilterPanel");
     elements.closeOrderFilters = document.getElementById("closeOrderFilters");
     elements.applyOrderFilters = document.getElementById("applyOrderFilters");
@@ -575,6 +605,40 @@
     }
 
     return normalized;
+  }
+
+  // Search values can come from Persian/Arabic keyboards, copied text, or
+  // WooCommerce fields with invisible formatting marks. Normalize the value
+  // once so every search box treats equivalent text and digits identically.
+  function normalizeSearchText(value) {
+    var normalized = String(value === null || typeof value === "undefined" ? "" : value);
+    if (typeof normalized.normalize === "function") {
+      normalized = normalized.normalize("NFKC");
+    }
+
+    return toEnglishDigits(normalized)
+      .replace(/[يى]/g, "ی")
+      .replace(/ك/g, "ک")
+      .replace(/[ۀة]/g, "ه")
+      .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "")
+      .replace(/[\u0640\u200C\u200D\u200E\u200F\uFEFF]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/^#+/, "")
+      .toLocaleLowerCase();
+  }
+
+  function searchTextIncludes(values, query) {
+    var normalizedQuery = normalizeSearchText(query);
+    if (!normalizedQuery) {
+      return true;
+    }
+
+    var list = Array.isArray(values) ? values : [values];
+    var haystack = list.map(function (value) {
+      return normalizeSearchText(value);
+    }).filter(Boolean).join(" ");
+    return haystack.indexOf(normalizedQuery) !== -1;
   }
 
   function toPersianDigits(value) {
@@ -1318,6 +1382,7 @@
     var sourceEndpoints = source.endpoints && typeof source.endpoints === "object" ? source.endpoints : {};
     var sourceAnalytics = source.analytics && typeof source.analytics === "object" ? source.analytics : {};
     var sourceCurrency = source.currency && typeof source.currency === "object" ? source.currency : {};
+    var sourceIcons = source.icons && typeof source.icons === "object" ? source.icons : {};
     var defaultBrand = DEFAULT_CONFIG.brand;
 
     return {
@@ -1340,6 +1405,7 @@
         code: safeText(sourceCurrency.code, DEFAULT_CONFIG.currency.code, 12).toUpperCase(),
         label: safeText(sourceCurrency.label, DEFAULT_CONFIG.currency.label, 32)
       },
+      icons: normalizeIconMap(sourceIcons),
       api: {
         pairUrl: safeApiUrl(sourceApi.pair || sourceApi.pair_url || sourceEndpoints.pair || source.pair_url),
         meUrl: safeApiUrl(sourceApi.me || sourceApi.me_url || sourceEndpoints.me || source.me_url),
@@ -1361,10 +1427,53 @@
     };
   }
 
+  function normalizeIconMap(source) {
+    var normalized = {};
+    if (!source || typeof source !== "object") {
+      return normalized;
+    }
+
+    Object.keys(source).forEach(function (key) {
+      if (!/^[a-z][a-z0-9-]{1,39}$/.test(key)) {
+        return;
+      }
+
+      var url = safeAssetUrl(source[key]);
+      if (url) {
+        normalized[key] = url;
+      }
+    });
+
+    return normalized;
+  }
+
+  function applyConfiguredIcons() {
+    var iconMap = state.config && state.config.icons && typeof state.config.icons === "object" ? state.config.icons : {};
+    if (!Object.keys(iconMap).length) {
+      return;
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll("svg[data-icon-name]"), function (svg) {
+      var iconName = svg.getAttribute("data-icon-name") || "";
+      var iconUrl = iconMap[iconName];
+      if (!iconUrl) {
+        return;
+      }
+
+      var icon = document.createElement("span");
+      icon.className = (svg.getAttribute("class") || "ui-icon") + " ui-icon-asset";
+      icon.setAttribute("aria-hidden", "true");
+      icon.dataset.iconName = iconName;
+      icon.style.setProperty("--ui-icon-url", "url(\"" + iconUrl + "\")");
+      svg.replaceWith(icon);
+    });
+  }
+
   function applyConfig(config) {
     var brand = config.brand;
     state.config = config;
     state.analytics.enabled = Boolean(config.analytics && config.analytics.enabled);
+    applyConfiguredIcons();
 
     root.style.setProperty("--brand-primary", brand.primary);
     root.style.setProperty("--brand-primary-strong", brand.primaryStrong);
@@ -1594,8 +1703,10 @@
     Array.prototype.forEach.call(document.querySelectorAll("[data-nav-section]"), function (panel) {
       var isAnalyticsPanel = panel.id === "analyticsPanel";
       var isDashboardSalesPanel = panel.id === "dashboardSalesPanel";
+      var isDashboardKpiGrid = panel.id === "dashboardKpiGrid";
+      var isDashboardStatusPanel = panel.id === "dashboardOrderStatusPanel";
       var analyticsAccess = hasAnalyticsAccess();
-      panel.hidden = !sectionIncludes(panel, state.activeSection) || ((isAnalyticsPanel || isDashboardSalesPanel) && !analyticsAccess);
+      panel.hidden = !sectionIncludes(panel, state.activeSection) || ((isAnalyticsPanel || isDashboardSalesPanel || isDashboardKpiGrid || isDashboardStatusPanel) && !analyticsAccess);
     });
 
     Array.prototype.forEach.call(document.querySelectorAll(".sidebar-nav-item, .mobile-nav-item"), function (item) {
@@ -1611,6 +1722,7 @@
     if (elements.globalSearch) {
       elements.globalSearch.value = "";
     }
+    closeGlobalSearchResults();
   }
 
   function closeSidebar() {
@@ -1687,29 +1799,419 @@
     scrollToSectionStart();
   }
 
-  function navigateFromGlobalSearch() {
-    if (!elements.globalSearch) return;
-    var query = elements.globalSearch.value.trim().toLocaleLowerCase();
-    if (!query) return;
-    var destinations = [
+  function globalSearchGroups() {
+    return [
+      {
+        section: "orders",
+        items: state.orders.items,
+        fields: function (item) { return [item.id, item.number, item.customer, item.customerEmail, item.customerPhone, item.paymentMethod]; },
+        title: function (item) { return "سفارش " + formatOrderNumber(item.number || item.id); },
+        meta: function (item) { return item.customer || item.customerEmail || "سفارش‌های فروشگاه"; }
+      },
+      {
+        section: "products",
+        items: state.products.items,
+        fields: function (item) { return [item.id, item.name, item.sku, item.stock, item.status]; },
+        title: function (item) { return item.name || "محصول بدون نام"; },
+        meta: function (item) { return item.sku ? "SKU: " + item.sku : "محصولات"; }
+      },
+      {
+        section: "customers",
+        items: state.customers.items,
+        fields: function (item) { return [item.id, item.display, item.username, item.email, item.phone, item.firstName, item.lastName]; },
+        title: function (item) { return item.display || item.username || "مشتری بدون نام"; },
+        meta: function (item) { return item.email || item.username || "مشتریان"; }
+      },
+      {
+        section: "inventory",
+        items: state.inventory.items,
+        fields: function (item) { return [item.id, item.name, item.sku, item.stockStatus, item.stockStatusLabel]; },
+        title: function (item) { return item.name || "محصول بدون نام"; },
+        meta: function (item) { return item.sku ? "SKU: " + item.sku : "موجودی"; }
+      },
+      {
+        section: "categories",
+        items: state.categories.items,
+        fields: function (item) { return [item.id, item.name, item.slug]; },
+        title: function (item) { return item.name || "دسته‌بندی بدون نام"; },
+        meta: function (item) { return item.slug ? "slug: " + item.slug : "دسته‌بندی‌ها"; }
+      },
+      {
+        section: "coupons",
+        items: state.coupons.items,
+        fields: function (item) { return [item.id, item.code, item.description]; },
+        title: function (item) { return item.code || "کوپن بدون کد"; },
+        meta: function (item) { return item.description || "کوپن‌ها"; }
+      },
+      {
+        section: "reviews",
+        items: state.reviews.items,
+        fields: function (item) { return [item.id, item.productName, item.author, item.content]; },
+        title: function (item) { return item.productName || "دیدگاه محصول"; },
+        meta: function (item) { return item.author || "دیدگاه‌ها"; }
+      }
+    ];
+  }
+
+  function globalSearchSectionDestinations() {
+    return [
       { section: "dashboard", terms: ["داشبورد", "خانه", "home"] },
-      { section: "orders", terms: ["سفارش", "فروش", "order"] },
-      { section: "products", terms: ["محصول", "کالا", "product"] },
+      { section: "orders", terms: ["سفارش", "سفارش‌ها", "سفارشات", "فروش", "order", "orders"] },
+      { section: "products", terms: ["محصول", "محصولات", "کالا", "product", "products"] },
       { section: "inventory", terms: ["موجودی", "انبار", "stock", "inventory"] },
-      { section: "categories", terms: ["دسته", "taxonomy", "category"] },
-      { section: "customers", terms: ["مشتری", "customer"] },
-      { section: "coupons", terms: ["کوپن", "تخفیف", "coupon", "discount"] },
-      { section: "reviews", terms: ["دیدگاه", "نظر", "review"] },
-      { section: "analytics", terms: ["گزارش", "تحلیل", "فروش", "analytics"] },
+      { section: "categories", terms: ["دسته", "دسته‌بندی", "دسته‌بندی‌ها", "taxonomy", "category", "categories"] },
+      { section: "customers", terms: ["مشتری", "مشتریان", "customer", "customers"] },
+      { section: "coupons", terms: ["کوپن", "کوپن‌ها", "تخفیف", "coupon", "coupons", "discount"] },
+      { section: "reviews", terms: ["دیدگاه", "دیدگاه‌ها", "نظر", "review", "reviews"] },
+      { section: "analytics", terms: ["گزارش", "گزارش‌ها", "گزارشات", "تحلیل", "فروش", "analytics"] },
       { section: "security", terms: ["امنیت", "دستگاه", "نشست", "security"] }
     ];
-    var destination = destinations.filter(function (item) {
-      return item.terms.some(function (term) { return term.indexOf(query) !== -1 || query.indexOf(term) !== -1; });
-    })[0];
+  }
+
+  function globalSearchSectionLabel(section) {
+    return {
+      dashboard: "داشبورد",
+      orders: "سفارش‌ها",
+      products: "محصولات",
+      inventory: "موجودی",
+      categories: "دسته‌بندی‌ها",
+      customers: "مشتریان",
+      coupons: "کوپن‌ها",
+      reviews: "دیدگاه‌ها",
+      analytics: "گزارش‌ها",
+      security: "امنیت و دسترسی"
+    }[section] || "پنل مدیریت";
+  }
+
+  function globalSearchRecordDestination(query) {
+    var groups = globalSearchGroups();
+    for (var index = 0; index < groups.length; index += 1) {
+      var group = groups[index];
+      if ((group.items || []).some(function (item) {
+        return searchTextIncludes(group.fields(item), query);
+      })) {
+        return { section: group.section, filter: true };
+      }
+    }
+    return null;
+  }
+
+  function globalSearchSectionDestination(query) {
+    var destinations = globalSearchSectionDestinations();
+    var normalizedQuery = normalizeSearchText(query);
+    if (!normalizedQuery) {
+      return null;
+    }
+
+    return destinations.filter(function (item) {
+      return item.terms.some(function (term) {
+        var normalizedTerm = normalizeSearchText(term);
+        return normalizedTerm === normalizedQuery || (normalizedQuery.length >= 2 && normalizedTerm.indexOf(normalizedQuery) === 0);
+      });
+    })[0] || null;
+  }
+
+  function globalSearchPrefixedDestination(query) {
+    var normalizedQuery = normalizeSearchText(query);
+    if (!normalizedQuery) {
+      return null;
+    }
+    return globalSearchSectionDestinations().filter(function (item) {
+      return item.terms.some(function (term) {
+        var normalizedTerm = normalizeSearchText(term);
+        return normalizedTerm && normalizedQuery.indexOf(normalizedTerm + " ") === 0;
+      });
+    })[0] || null;
+  }
+
+  function globalSearchFallbackDestination(query) {
+    var normalizedQuery = normalizeSearchText(query);
+    var destination = globalSearchSectionDestination(query);
     if (destination) {
-      navigateToSection(destination.section);
+      return { section: destination.section, filter: false };
+    }
+    destination = globalSearchPrefixedDestination(query);
+    if (destination) {
+      return { section: destination.section, filter: true };
+    }
+    if (/^\d+$/.test(normalizedQuery)) {
+      return { section: "orders", filter: true };
+    }
+    if (normalizedQuery.indexOf("@") !== -1) {
+      return { section: "customers", filter: true };
+    }
+    return { section: searchableSectionForGlobalSearch(), filter: true };
+  }
+
+  function globalSearchResultsForQuery(query) {
+    var results = [];
+    var sectionDestination = globalSearchSectionDestination(query);
+    if (sectionDestination) {
+      results.push({
+        kind: "section",
+        section: sectionDestination.section,
+        filter: false,
+        title: "رفتن به " + globalSearchSectionLabel(sectionDestination.section),
+        meta: "نمایش این بخش از پنل مدیریت"
+      });
+    }
+
+    var prefixedDestination = globalSearchPrefixedDestination(query);
+    if (!sectionDestination && prefixedDestination) {
+      results.push({
+        kind: "search",
+        section: prefixedDestination.section,
+        filter: true,
+        title: "جست‌وجوی اطلاعات در " + globalSearchSectionLabel(prefixedDestination.section),
+        meta: "عبارت بعد از نام بخش به‌عنوان فیلتر جست‌وجو می‌شود"
+      });
+    }
+
+    globalSearchGroups().forEach(function (group) {
+      (group.items || []).forEach(function (item) {
+        if (results.length >= 8 || !searchTextIncludes(group.fields(item), query)) {
+          return;
+        }
+        results.push({
+          kind: "record",
+          section: group.section,
+          filter: true,
+          title: group.title(item),
+          meta: group.meta(item)
+        });
+      });
+    });
+
+    if (!results.length) {
+      var fallback = globalSearchFallbackDestination(query);
+      results.push({
+        kind: "search",
+        section: fallback.section,
+        filter: fallback.filter,
+        title: "جست‌وجوی «" + query + "» در " + globalSearchSectionLabel(fallback.section),
+        meta: "برای نمایش نتیجه‌ها انتخاب کنید یا Enter بزنید"
+      });
+    }
+
+    return results.slice(0, 8);
+  }
+
+  function globalSearchQueryForSection(section, query) {
+    var rawQuery = String(query === null || typeof query === "undefined" ? "" : query).trim();
+    var normalizedQuery = normalizeSearchText(rawQuery);
+    if (!normalizedQuery) {
+      return rawQuery;
+    }
+    var destination = globalSearchPrefixedDestination(rawQuery);
+    if (!destination || destination.section !== section) {
+      return rawQuery;
+    }
+
+    var sectionTerms = destination.terms || [];
+    for (var index = 0; index < sectionTerms.length; index += 1) {
+      var normalizedTerm = normalizeSearchText(sectionTerms[index]);
+      if (normalizedTerm && normalizedQuery.indexOf(normalizedTerm + " ") === 0) {
+        return normalizedQuery.slice(normalizedTerm.length).trim();
+      }
+    }
+    return rawQuery;
+  }
+
+  function closeGlobalSearchResults() {
+    state.globalSearch.results = [];
+    state.globalSearch.activeIndex = -1;
+    if (elements.globalSearchResults) {
+      elements.globalSearchResults.hidden = true;
+      while (elements.globalSearchResults.firstChild) {
+        elements.globalSearchResults.removeChild(elements.globalSearchResults.firstChild);
+      }
+    }
+    if (elements.globalSearch) {
+      elements.globalSearch.setAttribute("aria-expanded", "false");
+    }
+  }
+
+  function setGlobalSearchActiveIndex(index) {
+    if (!elements.globalSearchResults) {
+      return;
+    }
+    var buttons = elements.globalSearchResults.querySelectorAll("[data-global-search-index]");
+    if (!buttons.length) {
+      state.globalSearch.activeIndex = -1;
+      return;
+    }
+    var normalizedIndex = Number(index);
+    if (!isFinite(normalizedIndex)) normalizedIndex = -1;
+    if (normalizedIndex >= buttons.length) normalizedIndex = 0;
+    if (normalizedIndex < -1) normalizedIndex = buttons.length - 1;
+    state.globalSearch.activeIndex = normalizedIndex;
+    Array.prototype.forEach.call(buttons, function (button, buttonIndex) {
+      var selected = buttonIndex === normalizedIndex;
+      button.classList.toggle("is-active", selected);
+      button.setAttribute("aria-selected", String(selected));
+    });
+  }
+
+  function renderGlobalSearchResults() {
+    if (!elements.globalSearch || !elements.globalSearchResults) {
+      return;
+    }
+    var query = elements.globalSearch.value.trim();
+    if (!normalizeSearchText(query)) {
+      closeGlobalSearchResults();
+      return;
+    }
+
+    var results = globalSearchResultsForQuery(query);
+    state.globalSearch.results = results;
+    state.globalSearch.activeIndex = -1;
+    while (elements.globalSearchResults.firstChild) {
+      elements.globalSearchResults.removeChild(elements.globalSearchResults.firstChild);
+    }
+
+    results.forEach(function (result, index) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "global-search-result";
+      button.setAttribute("role", "option");
+      button.setAttribute("aria-selected", "false");
+      button.setAttribute("data-global-search-index", String(index));
+      button.appendChild(createTextElement("strong", "global-search-result-title", result.title));
+      button.appendChild(createTextElement("span", "global-search-result-meta", result.meta + " · " + globalSearchSectionLabel(result.section)));
+      elements.globalSearchResults.appendChild(button);
+    });
+    elements.globalSearchResults.hidden = false;
+    elements.globalSearch.setAttribute("aria-expanded", "true");
+  }
+
+  function moveGlobalSearchSelection(offset) {
+    if (!elements.globalSearchResults || elements.globalSearchResults.hidden) {
+      renderGlobalSearchResults();
+    }
+    if (!state.globalSearch.results.length) {
+      return;
+    }
+    var current = state.globalSearch.activeIndex;
+    if (current < 0) {
+      current = offset > 0 ? 0 : state.globalSearch.results.length - 1;
+    } else {
+      current = (current + offset + state.globalSearch.results.length) % state.globalSearch.results.length;
+    }
+    setGlobalSearchActiveIndex(current);
+  }
+
+  function openGlobalSearchResult(result, query) {
+    if (!result || !result.section) {
+      return;
+    }
+    navigateToSection(result.section);
+    if (result.filter) {
+      applyGlobalSearchToSection(result.section, query || elements.globalSearch.value.trim());
+    }
+    closeGlobalSearchResults();
+    if (elements.globalSearch) {
       elements.globalSearch.value = "";
     }
+  }
+
+  function searchableSectionForGlobalSearch() {
+    var inputs = {
+      products: elements.productSearch,
+      categories: elements.categorySearch,
+      orders: elements.orderSearch,
+      customers: elements.customerSearch,
+      inventory: elements.inventorySearch,
+      coupons: elements.couponSearch,
+      reviews: elements.reviewSearch
+    };
+    return inputs[state.activeSection] ? state.activeSection : "products";
+  }
+
+  function applyGlobalSearchToSection(section, query) {
+    var inputMap = {
+      products: elements.productSearch,
+      categories: elements.categorySearch,
+      orders: elements.orderSearch,
+      customers: elements.customerSearch,
+      inventory: elements.inventorySearch,
+      coupons: elements.couponSearch,
+      reviews: elements.reviewSearch
+    };
+    var sectionQuery = globalSearchQueryForSection(section, query);
+    var input = inputMap[section];
+    if (input) {
+      input.value = sectionQuery;
+    }
+
+    if (section === "products") {
+      scheduleProductSearch();
+    } else if (section === "categories") {
+      renderCategoryResults();
+    } else if (section === "orders") {
+      scheduleOrderSearch();
+    } else if (section === "customers") {
+      scheduleCustomerSearch();
+    } else if (section === "inventory") {
+      scheduleInventorySearch();
+    } else if (section === "coupons") {
+      scheduleCouponSearch();
+    } else if (section === "reviews") {
+      scheduleReviewSearch();
+    }
+  }
+
+  function navigateFromGlobalSearch() {
+    if (!elements.globalSearch) return;
+    var query = elements.globalSearch.value.trim();
+    if (!normalizeSearchText(query)) return;
+
+    var selectedIndex = state.globalSearch.activeIndex;
+    var selectedResult = selectedIndex >= 0 ? state.globalSearch.results[selectedIndex] : state.globalSearch.results[0];
+    if (selectedResult) {
+      openGlobalSearchResult(selectedResult, query);
+      return;
+    }
+
+    var destination = globalSearchRecordDestination(query) || globalSearchFallbackDestination(query);
+    openGlobalSearchResult(destination, query);
+    elements.globalSearch.value = "";
+  }
+
+  function handleGlobalSearchKeydown(event) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      moveGlobalSearchSelection(1);
+      return;
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      moveGlobalSearchSelection(-1);
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeGlobalSearchResults();
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      navigateFromGlobalSearch();
+    }
+  }
+
+  function bindSearchInput(input, handler) {
+    if (!input || typeof handler !== "function") {
+      return;
+    }
+    input.addEventListener("input", handler);
+    input.addEventListener("search", handler);
+    input.addEventListener("change", handler);
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        handler();
+      }
+    });
   }
 
   function showView(viewName) {
@@ -1907,6 +2409,19 @@
 
     if (!state.authenticated) {
       state.user.scopes = {};
+      closeGlobalSearchResults();
+      [state.products, state.customers, state.inventory, state.coupons, state.reviews].forEach(function (collection) {
+        if (collection.searchTimer) {
+          window.clearTimeout(collection.searchTimer);
+          collection.searchTimer = null;
+        }
+        collection.loadRequestId += 1;
+      });
+      if (state.orders.searchTimer) {
+        window.clearTimeout(state.orders.searchTimer);
+        state.orders.searchTimer = null;
+      }
+      state.orders.loadRequestId += 1;
       state.products.items = [];
       state.products.filteredItems = [];
       state.products.editorImages = [];
@@ -1954,12 +2469,14 @@
       closeProductEditor(true);
       closeCategoryEditor();
       closeOrderDetail();
+      closeOrderFilterPanel();
       closeCustomerDetail();
       closeCouponEditor();
       setProductsState("secure", "برای دریافت محصولات، ابتدا اتصال امن مدیر باید برقرار شود.");
       setCategoriesState("secure", "برای مدیریت دسته‌بندی‌ها، ابتدا اتصال امن مدیر را برقرار کنید.");
       setCustomersState("secure", "برای مشاهدهٔ مشتریان، ابتدا اتصال امن مدیر را برقرار کنید.");
       setOrdersState("secure", "برای مشاهدهٔ سفارش‌ها، ابتدا اتصال امن مدیر باید برقرار شود.");
+      renderOrderStatusOptions();
       setInventoryState("secure", "برای مدیریت موجودی ابتدا اتصال امن مدیر را برقرار کنید.");
       setCouponsState("secure", "برای مدیریت کوپن‌ها ابتدا اتصال امن مدیر را برقرار کنید.");
       setReviewsState("secure", "برای مدیریت دیدگاه‌ها ابتدا اتصال امن مدیر را برقرار کنید.");
@@ -2277,19 +2794,38 @@
     });
   }
 
-  function renderProductResults() {
-    if (state.products.status !== "ready" && state.products.status !== "empty") {
+  function scheduleProductSearch() {
+    if (!elements.productSearch) {
       return;
     }
 
-    var query = elements.productSearch.value.trim().toLocaleLowerCase();
+    state.products.filters.query = elements.productSearch.value.trim();
+    if (state.products.searchTimer) {
+      window.clearTimeout(state.products.searchTimer);
+    }
+
+    // Keep the current page responsive while typing, then ask the API for
+    // the complete matching set so products outside the first page are found.
+    renderProductResults();
+    var query = state.products.filters.query;
+    state.products.searchTimer = window.setTimeout(function () {
+      state.products.searchTimer = null;
+      loadProducts(query);
+    }, 350);
+  }
+
+  function renderProductResults() {
+    if (state.products.status !== "ready" && state.products.status !== "empty" && !state.products.items.length) {
+      return;
+    }
+
+    var query = normalizeSearchText(elements.productSearch.value);
     var type = elements.productTypeFilter.value || "any";
     var status = elements.productStatusFilter.value || "any";
     var sort = elements.productSort.value || "updated";
-    state.products.filters = { query: query, type: type, status: status, sort: sort };
+    state.products.filters = { query: elements.productSearch.value.trim(), type: type, status: status, sort: sort };
     var filteredItems = state.products.items.filter(function (product) {
-      var haystack = [product.name, product.sku, product.stock].join(" ").toLocaleLowerCase();
-      return (!query || haystack.indexOf(query) !== -1) &&
+      return searchTextIncludes([product.id, product.name, product.sku, product.stock, product.status], query) &&
         (type === "any" || product.type === type) &&
         (status === "any" || product.status === status);
     });
@@ -3773,7 +4309,7 @@
     });
   }
 
-  function loadProducts() {
+  function loadProducts(searchTerm) {
     if (!state.authenticated) {
       setProductsState("secure", "برای دریافت محصولات، ابتدا اتصال امن مدیر باید برقرار شود.");
       return Promise.resolve();
@@ -3785,14 +4321,37 @@
       return Promise.resolve();
     }
 
+    var search = typeof searchTerm === "string" ? searchTerm.trim() : state.products.filters.query.trim();
+    var requestId = state.products.loadRequestId + 1;
+    state.products.loadRequestId = requestId;
+    var requestUrl;
+    try {
+      requestUrl = new URL(productsUrl, window.location.href);
+      requestUrl.searchParams.set("page", "1");
+      requestUrl.searchParams.set("per_page", "50");
+      if (search) {
+        requestUrl.searchParams.set("search", normalizeSearchText(search));
+      }
+    } catch (error) {
+      setProductsState("error", "نشانی API محصولات در پیکربندی سایت معتبر نیست.");
+      return Promise.resolve();
+    }
+
     setProductsState("loading");
 
-    return fetchJsonWithTimeout(productsUrl).then(function (payload) {
+    return fetchJsonWithTimeout(requestUrl.toString()).then(function (payload) {
+      if (requestId !== state.products.loadRequestId) {
+        return false;
+      }
       state.products.items = extractProducts(payload);
       state.products.status = "ready";
       renderProductResults();
       renderDashboardSummary();
+      return true;
     }).catch(function (error) {
+      if (requestId !== state.products.loadRequestId) {
+        return false;
+      }
       if (error && error.status === 401) {
         setAuthenticated(false, "");
         showView("pairing");
@@ -4162,9 +4721,9 @@
       return;
     }
 
-    var query = elements.categorySearch.value.trim().toLocaleLowerCase();
+    var query = normalizeSearchText(elements.categorySearch.value);
     var filteredItems = state.categories.items.filter(function (category) {
-      return !query || [category.name, category.slug].join(" ").toLocaleLowerCase().indexOf(query) !== -1;
+      return searchTextIncludes([category.id, category.name, category.slug, category.description], query);
     });
     state.categories.filteredItems = filteredItems;
 
@@ -4395,6 +4954,10 @@
     var shouldOpen = Boolean(isOpen);
     elements.orderFilterPanel.hidden = !shouldOpen;
     elements.orderFilterToggle.setAttribute("aria-expanded", String(shouldOpen));
+    if (elements.orderFilterBackdrop) {
+      elements.orderFilterBackdrop.hidden = !shouldOpen;
+    }
+    document.body.classList.toggle("order-filter-open", shouldOpen);
 
     if (shouldOpen && elements.orderDateFrom) {
       window.setTimeout(function () {
@@ -4414,6 +4977,18 @@
 
   function closeOrderFilterPanel() {
     setOrderFilterPanelOpen(false);
+  }
+
+  function selectOrderStatus(status) {
+    var normalizedStatus = String(status || "any").replace(/^wc-/, "");
+    state.orders.filters.status = normalizedStatus || "any";
+    state.orders.page = 1;
+    if (elements.orderStatusFilter) {
+      elements.orderStatusFilter.value = state.orders.filters.status;
+    }
+    renderOrderQuickStatusFilters();
+    closeOrderFilterPanel();
+    loadOrders(1);
   }
 
   function normalizeOrder(value) {
@@ -4506,41 +5081,67 @@
     items.forEach(function (order) {
       var card = document.createElement("article");
       card.className = "order-card";
-      card.appendChild(createTextElement("h3", "order-card-id", "سفارش #" + formatDisplayId(order.number || order.id)));
+      card.dataset.status = orderStatusKey(order.statusValue) || "unknown";
+      card.setAttribute("role", "button");
+      card.tabIndex = 0;
+      card.setAttribute("aria-label", "مشاهدهٔ جزئیات سفارش شماره " + formatDisplayId(order.number || order.id));
+
+      var header = document.createElement("div");
+      header.className = "order-card-header";
+      var heading = document.createElement("div");
+      heading.className = "order-card-heading";
+      heading.appendChild(createTextElement("h3", "order-card-id", "سفارش #" + formatDisplayId(order.number || order.id)));
       var statusBadge = createTextElement("span", "order-card-status", order.status);
       statusBadge.dataset.status = orderStatusKey(order.statusValue);
-      card.appendChild(statusBadge);
+      heading.appendChild(statusBadge);
+      header.appendChild(heading);
+
+      var meta = document.createElement("div");
+      meta.className = "order-card-meta";
+      meta.appendChild(createTextElement("p", "order-card-date", order.date));
+      header.appendChild(meta);
+      card.appendChild(header);
 
       var details = document.createElement("div");
       details.className = "order-card-details";
       details.appendChild(createTextElement("p", "order-card-customer", order.customer));
       details.appendChild(createTextElement("p", "order-card-total", formatDisplayAmount(order.total)));
-      details.appendChild(createTextElement("p", "order-card-date", order.date));
       details.appendChild(createTextElement("p", "order-card-items", formatDisplayNumber(order.itemCount) + " قلم"));
-      if (order.paymentMethod) {
-        details.appendChild(createTextElement("p", "order-card-payment", "پرداخت: " + order.paymentMethod));
-      }
       card.appendChild(details);
 
-      var detailButton = document.createElement("button");
-      detailButton.type = "button";
-      detailButton.className = "secondary-button compact-button product-edit-button";
-      detailButton.textContent = "جزئیات و ارسال";
-      detailButton.addEventListener("click", function () {
-        state.orders.detailTrigger = detailButton;
+      function openOrderDetails() {
+        state.orders.detailTrigger = card;
         loadOrderDetail(order.id);
+      }
+
+      card.addEventListener("click", openOrderDetails);
+      card.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openOrderDetails();
+        }
       });
-      card.appendChild(detailButton);
       elements.ordersGrid.appendChild(card);
     });
   }
 
   function renderOrderResults() {
-    if (state.orders.status !== "ready" && state.orders.status !== "empty") {
+    if (state.orders.status !== "ready" && state.orders.status !== "empty" && !state.orders.items.length) {
       return;
     }
 
-    var filteredItems = state.orders.items.slice();
+    var query = normalizeSearchText(state.orders.filters.search);
+    var filteredItems = state.orders.items.filter(function (order) {
+      return searchTextIncludes([
+        order.id,
+        order.number,
+        order.customer,
+        order.customerEmail,
+        order.customerPhone,
+        order.paymentMethod,
+        order.paymentStatus
+      ], query);
+    });
     state.orders.filteredItems = filteredItems;
 
     if (!filteredItems.length) {
@@ -4559,31 +5160,73 @@
   }
 
   function renderOrderQuickStatusFilters() {
-    if (!elements.orderStatusFilter) {
+    var selected = String(state.orders.filters.status || "any").replace(/^wc-/, "");
+    if (elements.orderStatusFilter) {
+      elements.orderStatusFilter.value = selected;
+    }
+    if (!elements.orderStatusChips) {
+      return;
+    }
+
+    Array.prototype.forEach.call(elements.orderStatusChips.querySelectorAll("[data-order-status]"), function (chip) {
+      var isSelected = chip.getAttribute("data-order-status") === selected;
+      chip.classList.toggle("is-active", isSelected);
+      chip.setAttribute("aria-pressed", String(isSelected));
+    });
+  }
+
+  function renderOrderStatusOptions() {
+    if (!elements.orderStatusFilter && !elements.orderStatusChips) {
       return;
     }
 
     var selected = String(state.orders.filters.status || "any").replace(/^wc-/, "");
-    elements.orderStatusFilter.value = selected;
+    if (elements.orderStatusFilter) {
+      while (elements.orderStatusFilter.options.length > 1) {
+        elements.orderStatusFilter.remove(1);
+      }
+    }
+
+    if (elements.orderStatusChips) {
+      while (elements.orderStatusChips.firstChild) {
+        elements.orderStatusChips.removeChild(elements.orderStatusChips.firstChild);
+      }
+      elements.orderStatusChips.appendChild(createOrderStatusChip("any", "همه"));
+    }
+
+    Object.keys(state.orders.statuses).forEach(function (statusKey) {
+      var optionValue = orderStatusKey(statusKey);
+      if (!optionValue) {
+        return;
+      }
+      var optionLabel = safeText(state.orders.statuses[statusKey], optionValue, 80);
+      if (elements.orderStatusFilter) {
+        var option = document.createElement("option");
+        option.value = optionValue;
+        option.textContent = optionLabel;
+        elements.orderStatusFilter.appendChild(option);
+      }
+      if (elements.orderStatusChips && !elements.orderStatusChips.querySelector('[data-order-status="' + optionValue + '"]')) {
+        elements.orderStatusChips.appendChild(createOrderStatusChip(optionValue, optionLabel));
+      }
+    });
+    if (elements.orderStatusFilter) {
+      elements.orderStatusFilter.value = selected;
+    }
+    renderOrderQuickStatusFilters();
   }
 
-  function renderOrderStatusOptions() {
-    if (!elements.orderStatusFilter) {
-      return;
-    }
-
-    var selected = state.orders.filters.status || "any";
-    while (elements.orderStatusFilter.options.length > 1) {
-      elements.orderStatusFilter.remove(1);
-    }
-    Object.keys(state.orders.statuses).forEach(function (statusKey) {
-      var option = document.createElement("option");
-      option.value = statusKey.replace(/^wc-/, "");
-      option.textContent = safeText(state.orders.statuses[statusKey], option.value, 80);
-      elements.orderStatusFilter.appendChild(option);
+  function createOrderStatusChip(status, label) {
+    var chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "orders-status-chip";
+    chip.dataset.orderStatus = status;
+    chip.setAttribute("aria-pressed", "false");
+    chip.textContent = label;
+    chip.addEventListener("click", function () {
+      selectOrderStatus(status);
     });
-    elements.orderStatusFilter.value = selected === "any" ? "any" : String(selected).replace(/^wc-/, "");
-    renderOrderQuickStatusFilters();
+    return chip;
   }
 
   function readOrderFiltersFromForm() {
@@ -4655,7 +5298,7 @@
         url.searchParams.set("status", filters.status);
       }
       if (includeFilters) {
-        if (filters.search) url.searchParams.set("search", filters.search);
+        if (filters.search) url.searchParams.set("search", normalizeSearchText(filters.search));
         if (filters.dateFrom) url.searchParams.set("date_from", filters.dateFrom);
         if (filters.dateTo) url.searchParams.set("date_to", filters.dateTo);
         if (filters.minTotal) url.searchParams.set("min_total", filters.minTotal);
@@ -4699,7 +5342,16 @@
     state.orders.filters.search = orderInputValue(elements.orderSearch);
     state.orders.page = 1;
     if (state.orders.searchTimer) window.clearTimeout(state.orders.searchTimer);
-    state.orders.searchTimer = window.setTimeout(function () { loadOrders(1); }, 350);
+    renderOrderResults();
+    var query = normalizeSearchText(state.orders.filters.search);
+    if (query && query.length < 2) {
+      state.orders.searchTimer = null;
+      return;
+    }
+    state.orders.searchTimer = window.setTimeout(function () {
+      state.orders.searchTimer = null;
+      loadOrders(1);
+    }, 350);
   }
 
   function orderResourceUrl(orderId) {
@@ -5919,6 +6571,12 @@
       return Promise.resolve();
     }
 
+    var normalizedSearch = normalizeSearchText(state.orders.filters.search);
+    if (normalizedSearch && normalizedSearch.length < 2) {
+      renderOrderResults();
+      return Promise.resolve();
+    }
+
     var requestId = state.orders.loadRequestId + 1;
     state.orders.loadRequestId = requestId;
     var pageSize = getOrdersPageSize();
@@ -6068,10 +6726,21 @@
   }
 
   function renderCustomerResults() {
-    if (state.customers.status !== "ready" && state.customers.status !== "empty") {
+    if (state.customers.status !== "ready" && state.customers.status !== "empty" && !state.customers.items.length) {
       return;
     }
-    state.customers.filteredItems = state.customers.items.slice();
+    var query = normalizeSearchText(state.customers.search);
+    state.customers.filteredItems = state.customers.items.filter(function (customer) {
+      return searchTextIncludes([
+        customer.id,
+        customer.display,
+        customer.username,
+        customer.email,
+        customer.phone,
+        customer.firstName,
+        customer.lastName
+      ], query);
+    });
     if (!state.customers.filteredItems.length) {
       setCustomersState("empty", state.customers.search ? "مشتری‌ای با این عبارت پیدا نشد." : "هنوز مشتری‌ای برای نمایش وجود ندارد.");
       renderCustomersPagination();
@@ -6106,7 +6775,7 @@
       url.searchParams.set("page", String(Math.max(1, Number(page || 1))));
       url.searchParams.set("per_page", "20");
       if (state.customers.search) {
-        url.searchParams.set("search", state.customers.search);
+        url.searchParams.set("search", normalizeSearchText(state.customers.search));
       }
       return url.toString();
     } catch (error) {
@@ -6120,7 +6789,9 @@
     if (state.customers.searchTimer) {
       window.clearTimeout(state.customers.searchTimer);
     }
+    renderCustomerResults();
     state.customers.searchTimer = window.setTimeout(function () {
+      state.customers.searchTimer = null;
       loadCustomers(1);
     }, 350);
   }
@@ -6333,15 +7004,24 @@
       setCustomersState("error", "نشانی API مشتریان در پیکربندی سایت موجود نیست.");
       return Promise.resolve();
     }
+    var requestId = state.customers.loadRequestId + 1;
+    state.customers.loadRequestId = requestId;
     setCustomersState("loading");
     return fetchJsonWithTimeout(customersUrl).then(function (payload) {
+      if (requestId !== state.customers.loadRequestId) {
+        return false;
+      }
       state.customers.items = extractCustomers(payload);
       state.customers.page = payload && payload.meta && Number(payload.meta.page) > 0 ? Number(payload.meta.page) : state.customers.page;
       state.customers.total = payload && payload.meta ? Number(payload.meta.total || 0) : state.customers.items.length;
       state.customers.totalPages = payload && payload.meta ? Number(payload.meta.total_pages || 0) : (state.customers.items.length ? 1 : 0);
       state.customers.status = "ready";
       renderCustomerResults();
+      return true;
     }).catch(function (error) {
+      if (requestId !== state.customers.loadRequestId) {
+        return false;
+      }
       if (error && error.status === 401) {
         setAuthenticated(false, "");
         showView("pairing");
@@ -6373,9 +7053,15 @@
     var enabled = configured && hasAnalyticsAccess();
     state.analytics.enabled = configured;
     state.analytics.status = stateName;
-    elements.analyticsPanel.hidden = !enabled;
+    elements.analyticsPanel.hidden = !enabled || state.activeSection !== "analytics";
     if (elements.dashboardSalesPanel) {
-      elements.dashboardSalesPanel.hidden = !enabled;
+      elements.dashboardSalesPanel.hidden = !enabled || state.activeSection !== "dashboard";
+    }
+    if (elements.dashboardKpiGrid) {
+      elements.dashboardKpiGrid.hidden = !enabled || state.activeSection !== "dashboard";
+    }
+    if (elements.dashboardOrderStatusPanel) {
+      elements.dashboardOrderStatusPanel.hidden = !enabled || state.activeSection !== "dashboard";
     }
     Array.prototype.forEach.call(document.querySelectorAll('[data-nav-target="analytics"]'), function (item) {
       item.hidden = !enabled;
@@ -6461,6 +7147,116 @@
     return formatDisplayAmount(String(value || "0") + " " + formatCurrencyLabel(currencyLabel || "تومان"));
   }
 
+  function renderDashboardKpis() {
+    if (!elements.dashboardKpiGrid) {
+      return;
+    }
+
+    var data = state.analytics.data && typeof state.analytics.data === "object" ? state.analytics.data : null;
+    var rangeLabel = data && data.range ? formatDisplayText(data.range.label) : "در بازهٔ انتخابی";
+    var orderCount = data && data.orders ? data.orders.total : (state.orders.total || state.orders.items.length);
+    var customerCount = data && data.customers ? data.customers.unique : (state.customers.total || state.customers.items.length);
+    var productCount = data && data.products ? data.products.total : state.products.items.length;
+
+    if (elements.dashboardKpiRevenue) {
+      elements.dashboardKpiRevenue.textContent = data && data.sales ? analyticsAmount(data.sales.gross, data.currency && data.currency.label) : "—";
+    }
+    if (elements.dashboardKpiRevenuePeriod) {
+      elements.dashboardKpiRevenuePeriod.textContent = data ? rangeLabel : "پس از فعال‌سازی تحلیل";
+    }
+    if (elements.dashboardKpiOrders) {
+      elements.dashboardKpiOrders.textContent = formatDisplayNumber(orderCount);
+    }
+    if (elements.dashboardKpiOrdersPeriod) {
+      elements.dashboardKpiOrdersPeriod.textContent = data ? rangeLabel : "فهرست فعلی سفارش‌ها";
+    }
+    if (elements.dashboardKpiCustomers) {
+      elements.dashboardKpiCustomers.textContent = formatDisplayNumber(customerCount);
+    }
+    if (elements.dashboardKpiCustomersPeriod) {
+      elements.dashboardKpiCustomersPeriod.textContent = data ? rangeLabel : "فهرست مشتریان";
+    }
+    if (elements.dashboardKpiProducts) {
+      elements.dashboardKpiProducts.textContent = formatDisplayNumber(productCount);
+    }
+    if (elements.dashboardKpiProductsPeriod) {
+      elements.dashboardKpiProductsPeriod.textContent = data ? "در کاتالوگ این بازه" : "کاتالوگ فعلی فروشگاه";
+    }
+  }
+
+  function analyticsStatusColor(index) {
+    var colors = ["#0f766e", "#f59e0b", "#3b82f6", "#ef4444", "#8b5cf6", "#ec4899", "#64748b"];
+    return colors[index % colors.length];
+  }
+
+  function renderStatusDistribution(data, list, donut, donutTotal) {
+    var statuses = data && data.orders && Array.isArray(data.orders.statuses) ? data.orders.statuses : [];
+    var total = data && data.orders ? Math.max(0, Number(data.orders.total) || 0) : 0;
+    var segments = [];
+    var cursor = 0;
+
+    if (donutTotal) {
+      donutTotal.textContent = formatDisplayNumber(total);
+    }
+
+    statuses.forEach(function (status, index) {
+      var count = Math.max(0, Number(status.count) || 0);
+      if (total <= 0 || count <= 0 || cursor >= 100) {
+        return;
+      }
+      var end = Math.min(100, cursor + (count / total) * 100);
+      segments.push(analyticsStatusColor(index) + " " + cursor + "% " + end + "%");
+      cursor = end;
+    });
+
+    if (donut) {
+      if (segments.length && cursor < 100) {
+        segments.push("#e5e7eb " + cursor + "% 100%");
+      }
+      donut.style.setProperty("--analytics-donut-gradient", segments.length ? "conic-gradient(" + segments.join(", ") + ")" : "conic-gradient(#e5e7eb 0 100%)");
+      donut.setAttribute("aria-label", "توزیع وضعیت سفارش‌ها؛ جمع کل " + formatDisplayNumber(total));
+    }
+
+    if (!list) {
+      return;
+    }
+
+    while (list.firstChild) {
+      list.removeChild(list.firstChild);
+    }
+
+    if (!statuses.length) {
+      list.appendChild(createTextElement("p", "analytics-note", "در این بازه سفارشی ثبت نشده است."));
+      return;
+    }
+
+    statuses.forEach(function (status, index) {
+      var count = Math.max(0, Number(status.count) || 0);
+      var percent = total > 0 ? Math.round((count / total) * 100) : 0;
+      var row = document.createElement("div");
+      row.className = "analytics-status-row";
+      row.style.setProperty("--analytics-status-color", analyticsStatusColor(index));
+
+      var heading = document.createElement("div");
+      heading.className = "analytics-status-heading";
+      var labelWrap = document.createElement("span");
+      labelWrap.className = "analytics-status-label-wrap";
+      var marker = document.createElement("i");
+      marker.className = "analytics-status-dot";
+      marker.setAttribute("aria-hidden", "true");
+      labelWrap.appendChild(marker);
+      labelWrap.appendChild(createTextElement("span", "analytics-status-label", status.label));
+      var valueWrap = document.createElement("span");
+      valueWrap.className = "analytics-status-value";
+      valueWrap.appendChild(createTextElement("strong", "", formatDisplayNumber(count)));
+      valueWrap.appendChild(createTextElement("small", "", formatDisplayNumber(percent) + "٪"));
+      heading.appendChild(labelWrap);
+      heading.appendChild(valueWrap);
+      row.appendChild(heading);
+      list.appendChild(row);
+    });
+  }
+
   function renderAnalytics(data) {
     var currencyLabel = data.currency.label || "تومان";
     elements.analyticsGrossSales.textContent = analyticsAmount(data.sales.gross, currencyLabel);
@@ -6469,32 +7265,8 @@
     elements.analyticsCustomersCount.textContent = formatDisplayNumber(data.customers.unique);
     elements.analyticsRangeLabel.textContent = formatDisplayText(data.range.label);
 
-    while (elements.analyticsStatusList.firstChild) {
-      elements.analyticsStatusList.removeChild(elements.analyticsStatusList.firstChild);
-    }
-
-    var orderTotal = Math.max(1, data.orders.total);
-    data.orders.statuses.forEach(function (status) {
-      var row = document.createElement("div");
-      row.className = "analytics-status-row";
-      var heading = document.createElement("div");
-      heading.className = "analytics-status-heading";
-      heading.appendChild(createTextElement("span", "", status.label));
-      heading.appendChild(createTextElement("strong", "", formatDisplayNumber(status.count)));
-      var track = document.createElement("div");
-      track.className = "analytics-status-track";
-      var fill = document.createElement("span");
-      fill.className = "analytics-status-fill";
-      fill.style.setProperty("--analytics-percent", Math.min(100, (status.count / orderTotal) * 100) + "%");
-      track.appendChild(fill);
-      row.appendChild(heading);
-      row.appendChild(track);
-      elements.analyticsStatusList.appendChild(row);
-    });
-
-    if (!data.orders.statuses.length) {
-      elements.analyticsStatusList.appendChild(createTextElement("p", "analytics-note", "در این بازه سفارشی ثبت نشده است."));
-    }
+    renderStatusDistribution(data, elements.analyticsStatusList, elements.analyticsStatusDonut, elements.analyticsStatusDonutTotal);
+    renderStatusDistribution(data, elements.dashboardStatusList, elements.dashboardStatusDonut, elements.dashboardStatusDonutTotal);
 
     while (elements.analyticsProductList.firstChild) {
       elements.analyticsProductList.removeChild(elements.analyticsProductList.firstChild);
@@ -6536,6 +7308,8 @@
 
   function renderDashboardSummary() {
     updatePendingOrderBadges();
+    renderDashboardKpis();
+    renderStatusDistribution(state.analytics.data, elements.dashboardStatusList, elements.dashboardStatusDonut, elements.dashboardStatusDonutTotal);
     if (!elements.dashboardRecentOrders || !elements.dashboardTopProducts) {
       return;
     }
@@ -6721,7 +7495,7 @@
       Object.keys(params || {}).forEach(function (key) {
         var value = params[key];
         if (value !== null && typeof value !== "undefined" && String(value) !== "") {
-          url.searchParams.set(key, String(value));
+          url.searchParams.set(key, key === "search" ? normalizeSearchText(value) : String(value));
         }
       });
       return url.toString();
@@ -6824,11 +7598,18 @@
     }[status] || "وضعیت نامشخص";
   }
 
+  function filteredInventoryItems() {
+    var query = normalizeSearchText(state.inventory.filters.search);
+    return state.inventory.items.filter(function (item) {
+      return searchTextIncludes([item.id, item.name, item.sku, item.stockStatus, item.stockStatusLabel], query);
+    });
+  }
+
   function renderInventoryResults() {
     while (elements.inventoryGrid.firstChild) {
       elements.inventoryGrid.removeChild(elements.inventoryGrid.firstChild);
     }
-    state.inventory.items.forEach(function (item) {
+    filteredInventoryItems().forEach(function (item) {
       var card = document.createElement("article");
       card.className = "inventory-card";
       card.appendChild(createTextElement("h3", "inventory-card-title", item.name));
@@ -6932,6 +7713,26 @@
     });
   }
 
+  function scheduleInventorySearch() {
+    if (!elements.inventorySearch) {
+      return;
+    }
+
+    state.inventory.filters.search = elements.inventorySearch.value.trim();
+    if (state.inventory.searchTimer) {
+      window.clearTimeout(state.inventory.searchTimer);
+    }
+    renderInventoryResults();
+    if (state.authenticated && state.inventory.items.length && (state.inventory.status === "ready" || state.inventory.status === "empty")) {
+      var inventoryMatches = filteredInventoryItems();
+      setInventoryState(inventoryMatches.length ? "ready" : "empty", inventoryMatches.length ? "" : "محصولی با این عبارت در این صفحه پیدا نشد.");
+    }
+    state.inventory.searchTimer = window.setTimeout(function () {
+      state.inventory.searchTimer = null;
+      loadInventory(1);
+    }, 350);
+  }
+
   function loadInventory(page) {
     if (!state.authenticated) {
       setInventoryState("secure", "برای مدیریت موجودی ابتدا اتصال امن مدیر را برقرار کنید.");
@@ -6948,22 +7749,31 @@
       setInventoryState("error", "نشانی API موجودی در پیکربندی سایت موجود نیست.");
       return Promise.resolve();
     }
+    var requestId = state.inventory.loadRequestId + 1;
+    state.inventory.loadRequestId = requestId;
     setInventoryState("loading");
     return fetchJsonWithTimeout(url).then(function (payload) {
+      if (requestId !== state.inventory.loadRequestId) {
+        return false;
+      }
       state.inventory.items = extractInventory(payload);
       state.inventory.summary = payload && payload.summary && typeof payload.summary === "object" ? payload.summary : null;
       var meta = payload && payload.meta && typeof payload.meta === "object" ? payload.meta : {};
       state.inventory.page = Math.max(1, Number(meta.page) || state.inventory.page);
       state.inventory.total = Math.max(0, Number(meta.total) || state.inventory.items.length);
       state.inventory.totalPages = Math.max(0, Number(meta.total_pages) || (state.inventory.items.length ? 1 : 0));
-      if (!state.inventory.items.length) {
+      if (!filteredInventoryItems().length) {
         setInventoryState("empty", state.inventory.filters.search ? "محصولی با این فیلتر موجودی پیدا نشد." : "محصولی برای مدیریت موجودی وجود ندارد.");
         return;
       }
       renderInventorySummary();
       renderInventoryResults();
       setInventoryState("ready");
+      return true;
     }).catch(function (error) {
+      if (requestId !== state.inventory.loadRequestId) {
+        return false;
+      }
       if (error && error.status === 401) {
         setAuthenticated(false, "");
         showView("pairing");
@@ -7059,11 +7869,18 @@
     return { percent: "درصدی", fixed_cart: "مبلغ ثابت سبد", fixed_product: "مبلغ ثابت محصول" }[type] || type;
   }
 
+  function filteredCouponItems() {
+    var query = normalizeSearchText(state.coupons.search);
+    return state.coupons.items.filter(function (coupon) {
+      return searchTextIncludes([coupon.id, coupon.code, coupon.description], query);
+    });
+  }
+
   function renderCouponResults() {
     while (elements.couponsGrid.firstChild) {
       elements.couponsGrid.removeChild(elements.couponsGrid.firstChild);
     }
-    state.coupons.items.forEach(function (coupon) {
+    filteredCouponItems().forEach(function (coupon) {
       var card = document.createElement("article");
       card.className = "coupon-card";
       var heading = document.createElement("div");
@@ -7235,6 +8052,26 @@
     });
   }
 
+  function scheduleCouponSearch() {
+    if (!elements.couponSearch) {
+      return;
+    }
+
+    state.coupons.search = elements.couponSearch.value.trim();
+    if (state.coupons.searchTimer) {
+      window.clearTimeout(state.coupons.searchTimer);
+    }
+    renderCouponResults();
+    if (state.authenticated && state.coupons.items.length && (state.coupons.status === "ready" || state.coupons.status === "empty")) {
+      var couponMatches = filteredCouponItems();
+      setCouponsState(couponMatches.length ? "ready" : "empty", couponMatches.length ? "" : "کوپنی با این عبارت در این صفحه پیدا نشد.");
+    }
+    state.coupons.searchTimer = window.setTimeout(function () {
+      state.coupons.searchTimer = null;
+      loadCoupons(1);
+    }, 350);
+  }
+
   function loadCoupons(page) {
     if (!state.authenticated) {
       setCouponsState("secure", "برای مدیریت کوپن‌ها ابتدا اتصال امن مدیر را برقرار کنید.");
@@ -7246,20 +8083,29 @@
       setCouponsState("error", "نشانی API کوپن‌ها در پیکربندی سایت موجود نیست.");
       return Promise.resolve();
     }
+    var requestId = state.coupons.loadRequestId + 1;
+    state.coupons.loadRequestId = requestId;
     setCouponsState("loading");
     return fetchJsonWithTimeout(url).then(function (payload) {
+      if (requestId !== state.coupons.loadRequestId) {
+        return false;
+      }
       state.coupons.items = extractCoupons(payload);
       var meta = payload && payload.meta && typeof payload.meta === "object" ? payload.meta : {};
       state.coupons.page = Math.max(1, Number(meta.page) || state.coupons.page);
       state.coupons.total = Math.max(0, Number(meta.total) || state.coupons.items.length);
       state.coupons.totalPages = Math.max(0, Number(meta.total_pages) || (state.coupons.items.length ? 1 : 0));
-      if (!state.coupons.items.length) {
+      if (!filteredCouponItems().length) {
         setCouponsState("empty", state.coupons.search ? "کوپنی با این عبارت پیدا نشد." : "هنوز کوپنی ساخته نشده است.");
         return;
       }
       renderCouponResults();
       setCouponsState("ready");
+      return true;
     }).catch(function (error) {
+      if (requestId !== state.coupons.loadRequestId) {
+        return false;
+      }
       if (error && error.status === 401) {
         setAuthenticated(false, "");
         showView("pairing");
@@ -7341,7 +8187,10 @@
 
   function renderReviewResults() {
     while (elements.reviewsGrid.firstChild) elements.reviewsGrid.removeChild(elements.reviewsGrid.firstChild);
-    state.reviews.items.forEach(function (review) {
+    var query = normalizeSearchText(state.reviews.search);
+    state.reviews.items.filter(function (review) {
+      return searchTextIncludes([review.id, review.productName, review.author, review.content], query);
+    }).forEach(function (review) {
       var card = document.createElement("article");
       card.className = "review-card";
       var heading = document.createElement("div");
@@ -7378,6 +8227,33 @@
     });
   }
 
+  function filteredReviewItems() {
+    var query = normalizeSearchText(state.reviews.search);
+    return state.reviews.items.filter(function (review) {
+      return searchTextIncludes([review.id, review.productName, review.author, review.content], query);
+    });
+  }
+
+  function scheduleReviewSearch() {
+    if (!elements.reviewSearch) {
+      return;
+    }
+
+    state.reviews.search = elements.reviewSearch.value.trim();
+    if (state.reviews.searchTimer) {
+      window.clearTimeout(state.reviews.searchTimer);
+    }
+    renderReviewResults();
+    if (state.authenticated && state.reviews.items.length && (state.reviews.status === "ready" || state.reviews.status === "empty")) {
+      var reviewMatches = filteredReviewItems();
+      setReviewsState(reviewMatches.length ? "ready" : "empty", reviewMatches.length ? "" : "دیدگاهی با این عبارت در این صفحه پیدا نشد.");
+    }
+    state.reviews.searchTimer = window.setTimeout(function () {
+      state.reviews.searchTimer = null;
+      loadReviews(1);
+    }, 350);
+  }
+
   function loadReviews(page) {
     if (!state.authenticated) {
       setReviewsState("secure", "برای مدیریت دیدگاه‌ها ابتدا اتصال امن مدیر را برقرار کنید.");
@@ -7389,20 +8265,29 @@
       setReviewsState("error", "نشانی API دیدگاه‌ها در پیکربندی سایت موجود نیست.");
       return Promise.resolve();
     }
+    var requestId = state.reviews.loadRequestId + 1;
+    state.reviews.loadRequestId = requestId;
     setReviewsState("loading");
     return fetchJsonWithTimeout(url).then(function (payload) {
+      if (requestId !== state.reviews.loadRequestId) {
+        return false;
+      }
       state.reviews.items = extractReviews(payload);
       var meta = payload && payload.meta && typeof payload.meta === "object" ? payload.meta : {};
       state.reviews.page = Math.max(1, Number(meta.page) || state.reviews.page);
       state.reviews.total = Math.max(0, Number(meta.total) || state.reviews.items.length);
       state.reviews.totalPages = Math.max(0, Number(meta.total_pages) || (state.reviews.items.length ? 1 : 0));
-      if (!state.reviews.items.length) {
+      if (!filteredReviewItems().length) {
         setReviewsState("empty", state.reviews.search ? "دیدگاهی با این عبارت پیدا نشد." : "هنوز دیدگاهی برای نمایش وجود ندارد.");
         return;
       }
       renderReviewResults();
       setReviewsState("ready");
+      return true;
     }).catch(function (error) {
+      if (requestId !== state.reviews.loadRequestId) {
+        return false;
+      }
       if (error && error.status === 401) {
         setAuthenticated(false, "");
         showView("pairing");
@@ -7889,15 +8774,39 @@
     elements.installAppButton.addEventListener("click", handleInstallApp);
     elements.closeInstallGuide.addEventListener("click", closeInstallGuide);
     elements.applyAppUpdate.addEventListener("click", applyAppUpdate);
-    elements.productSearch.addEventListener("input", renderProductResults);
+    bindSearchInput(elements.productSearch, scheduleProductSearch);
     elements.productTypeFilter.addEventListener("change", renderProductResults);
     elements.productStatusFilter.addEventListener("change", renderProductResults);
     elements.productSort.addEventListener("change", renderProductResults);
-    elements.globalSearch.addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        navigateFromGlobalSearch();
+    elements.globalSearch.addEventListener("input", renderGlobalSearchResults);
+    elements.globalSearch.addEventListener("focus", renderGlobalSearchResults);
+    elements.globalSearch.addEventListener("search", renderGlobalSearchResults);
+    elements.globalSearch.addEventListener("change", renderGlobalSearchResults);
+    elements.globalSearch.addEventListener("keydown", handleGlobalSearchKeydown);
+    if (elements.globalSearchResults) {
+      elements.globalSearchResults.addEventListener("click", function (event) {
+        var target = event.target;
+        while (target && target !== elements.globalSearchResults && !target.hasAttribute("data-global-search-index")) {
+          target = target.parentNode;
+        }
+        if (!target || target === elements.globalSearchResults) {
+          return;
+        }
+        var index = Number(target.getAttribute("data-global-search-index"));
+        if (!isFinite(index) || !state.globalSearch.results[index]) {
+          return;
+        }
+        openGlobalSearchResult(state.globalSearch.results[index], elements.globalSearch.value.trim());
+      });
+    }
+    document.addEventListener("click", function (event) {
+      if (!elements.globalSearch || !elements.globalSearchResults || elements.globalSearchResults.hidden) {
+        return;
       }
+      if (event.target === elements.globalSearch || elements.globalSearchResults.contains(event.target)) {
+        return;
+      }
+      closeGlobalSearchResults();
     });
     elements.newProductButton.addEventListener("click", openNewProductEditor);
     elements.openBulkPrice.addEventListener("click", openBulkPricePanel);
@@ -7935,7 +8844,7 @@
     });
     elements.uploadProductMedia.addEventListener("click", uploadProductMedia);
     elements.refreshProducts.addEventListener("click", loadProducts);
-    elements.categorySearch.addEventListener("input", renderCategoryResults);
+    bindSearchInput(elements.categorySearch, renderCategoryResults);
     elements.newCategoryButton.addEventListener("click", openNewCategoryEditor);
     elements.cancelCategoryEdit.addEventListener("click", closeCategoryEditor);
     elements.categoryEditor.addEventListener("submit", saveCategory);
@@ -7947,14 +8856,14 @@
     });
     elements.cancelVariationEdit.addEventListener("click", clearVariationEditor);
     elements.saveVariationButton.addEventListener("click", saveVariation);
-    elements.orderSearch.addEventListener("input", scheduleOrderSearch);
+    bindSearchInput(elements.orderSearch, scheduleOrderSearch);
     elements.orderStatusFilter.addEventListener("change", function () {
-      state.orders.filters.status = elements.orderStatusFilter.value || "any";
-      state.orders.page = 1;
-      closeOrderFilterPanel();
-      loadOrders(1);
+      selectOrderStatus(elements.orderStatusFilter.value || "any");
     });
     elements.orderFilterToggle.addEventListener("click", toggleOrderFilterPanel);
+    if (elements.orderFilterBackdrop) {
+      elements.orderFilterBackdrop.addEventListener("click", closeOrderFilterPanel);
+    }
     elements.closeOrderFilters.addEventListener("click", closeOrderFilterPanel);
     elements.applyOrderFilters.addEventListener("click", applyOrderFilters);
     elements.resetOrderFilters.addEventListener("click", resetOrderFilters);
@@ -7971,7 +8880,7 @@
         closeOrderDetail();
       }
     });
-    elements.customerSearch.addEventListener("input", scheduleCustomerSearch);
+    bindSearchInput(elements.customerSearch, scheduleCustomerSearch);
     elements.refreshCustomers.addEventListener("click", function () { loadCustomers(state.customers.page || 1); });
     elements.customersPreviousPage.addEventListener("click", function () {
       if (state.customers.page > 1) loadCustomers(state.customers.page - 1);
@@ -7980,11 +8889,7 @@
       if (state.customers.page < state.customers.totalPages) loadCustomers(state.customers.page + 1);
     });
     elements.closeCustomerDetail.addEventListener("click", closeCustomerDetail);
-    elements.inventorySearch.addEventListener("input", function () {
-      state.inventory.filters.search = elements.inventorySearch.value.trim();
-      window.clearTimeout(state.inventory.searchTimer);
-      state.inventory.searchTimer = window.setTimeout(function () { loadInventory(1); }, 350);
-    });
+    bindSearchInput(elements.inventorySearch, scheduleInventorySearch);
     elements.inventoryStatusFilter.addEventListener("change", function () {
       state.inventory.filters.stockStatus = elements.inventoryStatusFilter.value;
       loadInventory(1);
@@ -7996,11 +8901,7 @@
     elements.inventoryNextPage.addEventListener("click", function () {
       if (state.inventory.page < state.inventory.totalPages) loadInventory(state.inventory.page + 1);
     });
-    elements.couponSearch.addEventListener("input", function () {
-      state.coupons.search = elements.couponSearch.value.trim();
-      window.clearTimeout(state.coupons.searchTimer);
-      state.coupons.searchTimer = window.setTimeout(function () { loadCoupons(1); }, 350);
-    });
+    bindSearchInput(elements.couponSearch, scheduleCouponSearch);
     elements.newCouponButton.addEventListener("click", openNewCouponEditor);
     elements.refreshCoupons.addEventListener("click", function () { loadCoupons(state.coupons.page || 1); });
     elements.couponEditor.addEventListener("submit", saveCoupon);
@@ -8011,11 +8912,7 @@
     elements.couponsNextPage.addEventListener("click", function () {
       if (state.coupons.page < state.coupons.totalPages) loadCoupons(state.coupons.page + 1);
     });
-    elements.reviewSearch.addEventListener("input", function () {
-      state.reviews.search = elements.reviewSearch.value.trim();
-      window.clearTimeout(state.reviews.searchTimer);
-      state.reviews.searchTimer = window.setTimeout(function () { loadReviews(1); }, 350);
-    });
+    bindSearchInput(elements.reviewSearch, scheduleReviewSearch);
     elements.reviewStatusFilter.addEventListener("change", function () {
       state.reviews.statusFilter = elements.reviewStatusFilter.value;
       loadReviews(1);
@@ -8095,6 +8992,24 @@
         closeOrderFilterPanel();
         if (elements.orderFilterToggle) {
           elements.orderFilterToggle.focus();
+        }
+        return;
+      }
+
+      if (elements.orderFilterPanel && !elements.orderFilterPanel.hidden && event.key === "Tab") {
+        var orderFilterFocusable = Array.prototype.filter.call(elements.orderFilterPanel.querySelectorAll("button, a, input, select, textarea, [tabindex]:not([tabindex='-1'])"), function (node) {
+          return !node.disabled && !node.hidden && node.offsetParent !== null;
+        });
+        if (orderFilterFocusable.length) {
+          var orderFilterFirst = orderFilterFocusable[0];
+          var orderFilterLast = orderFilterFocusable[orderFilterFocusable.length - 1];
+          if (event.shiftKey && (document.activeElement === orderFilterFirst || !elements.orderFilterPanel.contains(document.activeElement))) {
+            event.preventDefault();
+            orderFilterLast.focus();
+          } else if (!event.shiftKey && (document.activeElement === orderFilterLast || !elements.orderFilterPanel.contains(document.activeElement))) {
+            event.preventDefault();
+            orderFilterFirst.focus();
+          }
         }
         return;
       }
@@ -8232,6 +9147,7 @@
     setCategoriesState("secure");
     setCustomersState("secure");
     setOrdersState("secure");
+    renderOrderStatusOptions();
     setInventoryState("secure");
     setCouponsState("secure");
     setReviewsState("secure");

@@ -186,11 +186,81 @@ function customers_search_term( $value ) {
 	}
 
 	$term = trim( sanitize_text_field( (string) $value ) );
+	$term = str_replace( array( 'ي', 'ى', 'ك', 'ۀ', 'ة' ), array( 'ی', 'ی', 'ک', 'ه', 'ه' ), $term );
+	$term = preg_replace( '/[\x{064B}-\x{065F}\x{0670}\x{06D6}-\x{06ED}\x{0640}\x{200C}\x{200D}\x{200E}\x{200F}\x{FEFF}]/u', '', $term );
+	$term = preg_replace( '/\s+/u', ' ', $term );
 	if ( function_exists( 'mb_substr' ) ) {
 		return mb_substr( $term, 0, 80 );
 	}
 
 	return substr( $term, 0, 80 );
+}
+
+/**
+ * Resolve customer search through WooCommerce first and WordPress's public
+ * user query API as a fallback for display/first/last names. Only IDs are
+ * collected here; the existing customer serializer remains the single place
+ * that controls which fields leave the endpoint.
+ *
+ * @param string $term Bounded search term.
+ * @return array<int, int>
+ */
+function customers_search_ids( $term ) {
+	$ids = array();
+	if ( '' === $term ) {
+		return $ids;
+	}
+
+	try {
+		$store = new \WC_Customer_Data_Store();
+		if ( method_exists( $store, 'search_customers' ) ) {
+			$found = $store->search_customers( $term, 200 );
+			foreach ( (array) $found as $customer_id ) {
+				$customer_id = absint( $customer_id );
+				if ( $customer_id > 0 ) {
+					$ids[ $customer_id ] = $customer_id;
+				}
+			}
+		}
+	} catch ( \Throwable $exception ) {
+		// The WordPress user query below can still resolve the search.
+	}
+
+	if ( function_exists( 'get_users' ) && empty( $ids ) ) {
+		$user_query = array(
+			'role'           => 'customer',
+			'number'         => 200,
+			'fields'         => 'ID',
+			'search'         => '*' . $term . '*',
+			'search_columns' => array( 'user_login', 'user_email', 'display_name' ),
+		);
+		foreach ( (array) get_users( $user_query ) as $customer_id ) {
+			$customer_id = absint( $customer_id );
+			if ( $customer_id > 0 ) {
+				$ids[ $customer_id ] = $customer_id;
+			}
+		}
+
+		$meta_query = array(
+			'relation' => 'OR',
+			array( 'key' => 'first_name', 'value' => $term, 'compare' => 'LIKE' ),
+			array( 'key' => 'last_name', 'value' => $term, 'compare' => 'LIKE' ),
+		);
+		$meta_user_query = array(
+			'role'       => 'customer',
+			'number'     => 200,
+			'fields'     => 'ID',
+			'meta_query' => $meta_query,
+		);
+		foreach ( (array) get_users( $meta_user_query ) as $customer_id ) {
+			$customer_id = absint( $customer_id );
+			if ( $customer_id > 0 ) {
+				$ids[ $customer_id ] = $customer_id;
+			}
+		}
+	}
+
+	return array_values( $ids );
 }
 
 /**
@@ -398,15 +468,21 @@ function list_customers( $request ) {
 		'search'   => $search,
 	);
 
+	$skip_query = false;
 	try {
-		$store  = new \WC_Customer_Data_Store();
-		if ( '' !== $search && method_exists( $store, 'search_customers' ) ) {
-			$search_ids      = $store->search_customers( $search, 200 );
-			$search_ids      = array_values( array_unique( array_filter( array_map( 'absint', (array) $search_ids ) ) ) );
+		$store = new \WC_Customer_Data_Store();
+		if ( '' !== $search ) {
+			$search_ids      = customers_search_ids( $search );
 			$args['search']  = '';
-			$args['include'] = empty( $search_ids ) ? array( 0 ) : $search_ids;
+			if ( empty( $search_ids ) ) {
+				// Avoid include=[0], which some data stores interpret as an
+				// unrestricted query and would incorrectly return every customer.
+				$skip_query = true;
+			} else {
+				$args['include'] = $search_ids;
+			}
 		}
-		$result = $store->query_customers( $args );
+		$result = $skip_query ? (object) array( 'customers' => array(), 'total' => 0, 'max_num_pages' => 0 ) : $store->query_customers( $args );
 	} catch ( \Throwable $exception ) {
 		return customers_error( 'fandoogh_customers_read_failed', __( 'خواندن فهرست مشتریان انجام نشد.', 'fandoogh-manager' ), 500 );
 	}

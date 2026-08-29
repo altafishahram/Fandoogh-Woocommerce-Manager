@@ -395,6 +395,11 @@ function app_asset_version() {
 		$files = array_merge( $files, $php_files );
 	}
 
+	$icon_files = glob( plugin_dir_path( __FILE__ ) . 'assets/icon/*.svg' );
+	if ( is_array( $icon_files ) ) {
+		$files = array_merge( $files, $icon_files );
+	}
+
 	$parts = array( FANDOOGH_MANAGER_VERSION );
 	foreach ( array_unique( $files ) as $file ) {
 		if ( ! is_readable( $file ) ) {
@@ -426,6 +431,49 @@ function app_asset_urls() {
 		'config'    => rest_url( REST_NAMESPACE . '/config' ),
 		'version'   => $version,
 	);
+}
+
+/**
+ * Return the local vector icons used by navigation and dashboard actions.
+ * Keys intentionally use the name of the UI element, while values retain the
+ * exact local source file so the mapping stays auditable without a CDN.
+ *
+ * @return array<string, string>
+ */
+function get_public_icon_urls() {
+	$icon_files = array(
+		'dashboard'    => 'iconsax-shop-3ead1b80e220-.svg',
+		'orders'       => 'iconsax-brifecase-timer-bf602fa21582-.svg',
+		'products'     => 'iconsax-archive-3b5fd84afa7b-.svg',
+		'inventory'    => 'iconsax-top-bottom-grid-f94b505b7ef1-.svg',
+		'customers'    => 'iconsax-user-tick-97125bce98c7-.svg',
+		'coupons'      => 'iconsax-ticket-discount-251defdced29-.svg',
+		'reviews'      => 'iconsax-conversation-box-7ea3e6adfe53-.svg',
+		'analytics'    => 'iconsax-status-up-e98745a5ec8b-.svg',
+		'categories'   => 'iconsax-global-74f93c2974b8-.svg',
+		'security'     => 'iconsax-tick-square-b03645d854ba-.svg',
+		'more'         => 'iconsax-setting-d380c136cee1-.svg',
+		'new-product'  => 'iconsax-edit-949de493a6da-.svg',
+		'filter'       => 'iconsax-filter-square-aec3454baeb5-.svg',
+		'notifications' => 'iconsax-bell2-a9a327da1323-.svg',
+	);
+	$version = app_asset_version();
+	$icons  = array();
+
+	foreach ( $icon_files as $element_name => $filename ) {
+		$file = plugin_dir_path( __FILE__ ) . 'assets/icon/' . $filename;
+		if ( ! is_readable( $file ) ) {
+			continue;
+		}
+
+		$url = add_query_arg( 'ver', $version, plugins_url( 'assets/icon/' . $filename, __FILE__ ) );
+		$url = public_asset_url( $url );
+		if ( $url ) {
+			$icons[ $element_name ] = $url;
+		}
+	}
+
+	return $icons;
 }
 
 /**
@@ -841,6 +889,7 @@ function get_config_response() {
 				'enabled' => ! empty( $settings['analytics_enabled'] ),
 			),
 			'currency' => get_public_currency(),
+			'icons'    => get_public_icon_urls(),
 			'theme_config' => array(
 				'slug'   => $settings['slug'],
 				'colors' => $settings['colors'],

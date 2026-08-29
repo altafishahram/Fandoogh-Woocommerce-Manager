@@ -25,7 +25,8 @@
         <div class="topbar-search-wrap">
           <label class="sr-only" for="globalSearch">جست‌وجوی پنل</label>
           <span class="topbar-search-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.2 4.2"/></svg></span>
-          <input id="globalSearch" class="topbar-search" type="search" placeholder="جست‌وجو در بخش‌های مختلف..." autocomplete="off">
+          <input id="globalSearch" class="topbar-search" type="search" placeholder="جست‌وجوی بخش یا اطلاعات..." autocomplete="off" enterkeyhint="search" aria-autocomplete="list" aria-haspopup="listbox" aria-controls="globalSearchResults" aria-expanded="false">
+          <div class="global-search-results" id="globalSearchResults" role="listbox" aria-label="نتایج جست‌وجوی کلی" hidden></div>
         </div>
 
         <div class="topbar-user" aria-label="کاربر فعال">
@@ -37,7 +38,7 @@
         </div>
 
         <div class="topbar-actions">
-          <button class="topbar-icon-button" type="button" aria-label="اعلان‌ها"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 6 2.2 6.2 2.2 7.3H4.3C4.3 16.2 6.5 16 6.5 10Z"/><path d="M9.5 20h5"/></svg><b>۴</b></button>
+          <button class="topbar-icon-button" type="button" aria-label="اعلان‌ها"><svg class="ui-icon" data-icon-name="notifications" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 6 2.2 6.2 2.2 7.3H4.3C4.3 16.2 6.5 16 6.5 10Z"/><path d="M9.5 20h5"/></svg><b>۴</b></button>
           <button class="topbar-icon-button topbar-help-button" type="button" aria-label="راهنما"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.3a2.4 2.4 0 1 1 4 1.8c-1.2.8-1.7 1.2-1.7 2.5M12 16.8h.01"/></svg></button>
           <div class="topbar-status">
             <button class="connection-control" id="connectionControl" type="button" aria-expanded="false" aria-controls="connectionPopover">
@@ -84,16 +85,16 @@
         </div>
 
         <nav class="sidebar-nav" aria-label="بخش‌های پنل">
-          <button class="sidebar-nav-item is-active" type="button" data-nav-target="dashboard" aria-current="page"><svg class="sidebar-nav-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 10 8-6 8 6v9H4Z"/><path d="M9 19v-5h6v5"/></svg><span>داشبورد</span></button>
-          <button class="sidebar-nav-item" type="button" data-nav-target="orders"><svg class="sidebar-nav-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg><span>سفارش‌ها</span><span class="nav-count-badge" id="sidebarOrdersBadge" aria-hidden="true" hidden>۰</span></button>
-          <button class="sidebar-nav-item" type="button" data-nav-target="products"><svg class="sidebar-nav-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg><span>محصولات</span></button>
-          <button class="sidebar-nav-item" type="button" data-nav-target="inventory"><svg class="sidebar-nav-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M6 16V9M12 16V5M18 16v-3"/><path d="m6 6 2-2 2 2M12 2l2 2-2 2M18 9l2 2-2 2"/></svg><span>موجودی</span></button>
-          <button class="sidebar-nav-item" type="button" data-nav-target="customers"><svg class="sidebar-nav-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5.5 19c.7-3.1 2.8-4.7 6.5-4.7s5.8 1.6 6.5 4.7"/></svg><span>مشتریان</span></button>
-          <button class="sidebar-nav-item" type="button" data-nav-target="coupons"><svg class="sidebar-nav-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v2a2.5 2.5 0 0 0 0 5v2a2.5 2.5 0 0 1-2.5 2h-11A2.5 2.5 0 0 1 4 16.5v-2a2.5 2.5 0 0 0 0-5Z"/><path d="M12 8v8M9 11h6M9 13h6"/></svg><span>کوپن‌ها</span></button>
-          <button class="sidebar-nav-item" type="button" data-nav-target="reviews"><svg class="sidebar-nav-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 4 2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7L12 4Z"/><path d="M5 20h14"/></svg><span>دیدگاه‌ها</span></button>
-          <button class="sidebar-nav-item" type="button" data-nav-target="analytics"><svg class="sidebar-nav-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V10M12 19V5M19 19v-8"/><path d="M3.5 19.5h17"/></svg><span>گزارش‌ها</span></button>
-          <button class="sidebar-nav-item" type="button" data-nav-target="categories"><svg class="sidebar-nav-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="M4 10h16M9 6v12"/></svg><span>دسته‌بندی‌ها</span></button>
-          <button class="sidebar-nav-item" type="button" data-nav-target="security"><svg class="sidebar-nav-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 19 7v5c0 4.3-2.7 6.8-7 8-4.3-1.2-7-3.7-7-8V7l7-3Z"/><path d="m9 12 2 2 4-4"/></svg><span>امنیت و دستگاه‌ها</span></button>
+          <button class="sidebar-nav-item is-active" type="button" data-nav-target="dashboard" aria-current="page"><svg class="sidebar-nav-icon ui-icon" data-icon-name="dashboard" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 10 8-6 8 6v9H4Z"/><path d="M9 19v-5h6v5"/></svg><span>داشبورد</span></button>
+          <button class="sidebar-nav-item" type="button" data-nav-target="orders"><svg class="sidebar-nav-icon ui-icon" data-icon-name="orders" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg><span>سفارش‌ها</span><span class="nav-count-badge" id="sidebarOrdersBadge" aria-hidden="true" hidden>۰</span></button>
+          <button class="sidebar-nav-item" type="button" data-nav-target="products"><svg class="sidebar-nav-icon ui-icon" data-icon-name="products" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg><span>محصولات</span></button>
+          <button class="sidebar-nav-item" type="button" data-nav-target="inventory"><svg class="sidebar-nav-icon ui-icon" data-icon-name="inventory" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M6 16V9M12 16V5M18 16v-3"/><path d="m6 6 2-2 2 2M12 2l2 2-2 2M18 9l2 2-2 2"/></svg><span>موجودی</span></button>
+          <button class="sidebar-nav-item" type="button" data-nav-target="customers"><svg class="sidebar-nav-icon ui-icon" data-icon-name="customers" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5.5 19c.7-3.1 2.8-4.7 6.5-4.7s5.8 1.6 6.5 4.7"/></svg><span>مشتریان</span></button>
+          <button class="sidebar-nav-item" type="button" data-nav-target="coupons"><svg class="sidebar-nav-icon ui-icon" data-icon-name="coupons" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v2a2.5 2.5 0 0 0 0 5v2a2.5 2.5 0 0 1-2.5 2h-11A2.5 2.5 0 0 1 4 16.5v-2a2.5 2.5 0 0 0 0-5Z"/><path d="M12 8v8M9 11h6M9 13h6"/></svg><span>کوپن‌ها</span></button>
+          <button class="sidebar-nav-item" type="button" data-nav-target="reviews"><svg class="sidebar-nav-icon ui-icon" data-icon-name="reviews" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 4 2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7L12 4Z"/><path d="M5 20h14"/></svg><span>دیدگاه‌ها</span></button>
+          <button class="sidebar-nav-item" type="button" data-nav-target="analytics"><svg class="sidebar-nav-icon ui-icon" data-icon-name="analytics" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V10M12 19V5M19 19v-8"/><path d="M3.5 19.5h17"/></svg><span>گزارش‌ها</span></button>
+          <button class="sidebar-nav-item" type="button" data-nav-target="categories"><svg class="sidebar-nav-icon ui-icon" data-icon-name="categories" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="M4 10h16M9 6v12"/></svg><span>دسته‌بندی‌ها</span></button>
+          <button class="sidebar-nav-item" type="button" data-nav-target="security"><svg class="sidebar-nav-icon ui-icon" data-icon-name="security" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 19 7v5c0 4.3-2.7 6.8-7 8-4.3-1.2-7-3.7-7-8V7l7-3Z"/><path d="m9 12 2 2 4-4"/></svg><span>امنیت و دستگاه‌ها</span></button>
         </nav>
 
         <div class="sidebar-store-card">
@@ -191,15 +192,42 @@
 
           <div class="dashboard-grid">
             <section class="dashboard-overview-grid" data-nav-section="dashboard analytics" aria-label="محتوای داشبورد">
+              <section class="dashboard-kpi-grid" id="dashboardKpiGrid" data-nav-section="dashboard" aria-label="شاخص‌های کلیدی فروشگاه">
+                <article class="dashboard-kpi-card dashboard-kpi-card--revenue">
+                  <div class="dashboard-kpi-heading"><span class="dashboard-kpi-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="analytics" viewBox="0 0 24 24"><path d="M5 19V10M12 19V5M19 19v-8"/><path d="M3.5 19.5h17"/></svg></span><span>درآمد کل</span></div>
+                  <strong id="dashboardKpiRevenue">۰ تومان</strong>
+                  <small id="dashboardKpiRevenuePeriod">در بازهٔ انتخابی</small>
+                  <span class="dashboard-kpi-spark dashboard-kpi-spark--revenue" aria-hidden="true"></span>
+                </article>
+                <article class="dashboard-kpi-card dashboard-kpi-card--orders">
+                  <div class="dashboard-kpi-heading"><span class="dashboard-kpi-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="orders" viewBox="0 0 24 24"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg></span><span>سفارش‌ها</span></div>
+                  <strong id="dashboardKpiOrders">۰</strong>
+                  <small id="dashboardKpiOrdersPeriod">در بازهٔ انتخابی</small>
+                  <span class="dashboard-kpi-spark dashboard-kpi-spark--orders" aria-hidden="true"></span>
+                </article>
+                <article class="dashboard-kpi-card dashboard-kpi-card--customers">
+                  <div class="dashboard-kpi-heading"><span class="dashboard-kpi-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="customers" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5.5 19c.7-3.1 2.8-4.7 6.5-4.7s5.8 1.6 6.5 4.7"/></svg></span><span>مشتریان یکتا</span></div>
+                  <strong id="dashboardKpiCustomers">۰</strong>
+                  <small id="dashboardKpiCustomersPeriod">در بازهٔ انتخابی</small>
+                  <span class="dashboard-kpi-spark dashboard-kpi-spark--customers" aria-hidden="true"></span>
+                </article>
+                <article class="dashboard-kpi-card dashboard-kpi-card--products">
+                  <div class="dashboard-kpi-heading"><span class="dashboard-kpi-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="products" viewBox="0 0 24 24"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg></span><span>محصولات</span></div>
+                  <strong id="dashboardKpiProducts">۰</strong>
+                  <small id="dashboardKpiProductsPeriod">کاتالوگ فروشگاه</small>
+                  <span class="dashboard-kpi-spark dashboard-kpi-spark--products" aria-hidden="true"></span>
+                </article>
+              </section>
+
               <article class="quick-actions-panel card-surface" data-nav-section="dashboard" id="dashboardQuickActionsPanel">
                 <div class="panel-heading compact-panel-heading">
                   <div><p class="card-kicker">دسترسی سریع</p><h2>عملیات روزانه</h2></div>
                 </div>
                 <div class="quick-actions-grid">
-                  <button class="quick-action quick-action--orders" type="button" data-nav-target="orders"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg></span><span>سفارش‌ها</span><span class="quick-action-badge" id="quickOrdersBadge" aria-hidden="true" hidden>۰</span></button>
-                  <button class="quick-action quick-action--products" type="button" data-nav-target="products"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg></span><span>محصولات</span></button>
-                  <button class="quick-action quick-action--new-product" type="button" data-nav-target="products" data-action="new-product"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span>افزودن محصول</span></button>
-                  <button class="quick-action quick-action--customers" type="button" data-nav-target="customers"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5.5 19c.7-3.1 2.8-4.7 6.5-4.7s5.8 1.6 6.5 4.7"/></svg></span><span>مشتریان</span></button>
+                  <button class="quick-action quick-action--orders" type="button" data-nav-target="orders"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="orders" viewBox="0 0 24 24"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg></span><span>سفارش‌ها</span><span class="quick-action-badge" id="quickOrdersBadge" aria-hidden="true" hidden>۰</span></button>
+                  <button class="quick-action quick-action--products" type="button" data-nav-target="products"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="products" viewBox="0 0 24 24"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg></span><span>محصولات</span></button>
+                  <button class="quick-action quick-action--new-product" type="button" data-nav-target="products" data-action="new-product"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="new-product" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span>افزودن محصول</span></button>
+                  <button class="quick-action quick-action--customers" type="button" data-nav-target="customers"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="customers" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5.5 19c.7-3.1 2.8-4.7 6.5-4.7s5.8 1.6 6.5 4.7"/></svg></span><span>مشتریان</span></button>
                 </div>
               </article>
 
@@ -223,14 +251,26 @@
                 </details>
               </article>
 
-              <article class="analytics-panel card-surface" id="analyticsPanel" data-nav-section="dashboard analytics" aria-labelledby="analyticsTitle" hidden>
+              <article class="dashboard-status-panel card-surface" id="dashboardOrderStatusPanel" data-nav-section="dashboard" aria-labelledby="dashboardOrderStatusTitle">
+                <div class="panel-heading compact-panel-heading">
+                  <div><p class="card-kicker">سفارش‌ها</p><h2 id="dashboardOrderStatusTitle">وضعیت سفارش‌ها</h2></div>
+                </div>
+                <div class="dashboard-status-layout">
+                  <div class="analytics-donut dashboard-status-donut" id="dashboardStatusDonut" role="img" aria-label="توزیع وضعیت سفارش‌ها">
+                    <span class="analytics-donut-center"><small>جمع کل</small><strong id="dashboardStatusDonutTotal">۰</strong></span>
+                  </div>
+                  <div class="analytics-status-list dashboard-status-list" id="dashboardStatusList"></div>
+                </div>
+              </article>
+
+              <article class="analytics-panel card-surface" id="analyticsPanel" data-nav-section="analytics" aria-labelledby="analyticsTitle" hidden>
                 <div class="panel-heading products-heading">
                   <div>
-                    <p class="card-kicker">تحلیل فروشگاه</p>
                     <h2 id="analyticsTitle">تحلیل ووکامرس</h2>
                     <p class="panel-description">خلاصهٔ فروش و وضعیت سفارش‌ها بر اساس داده‌های واقعی همین فروشگاه.</p>
                   </div>
                   <span class="state-badge products-state-badge" id="analyticsStateBadge" data-state="secure">نیازمند اتصال امن</span>
+                  <button class="secondary-button icon-refresh-button products-refresh" id="refreshAnalytics" type="button" aria-label="تازه‌سازی تحلیل" title="تازه‌سازی تحلیل"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تازه‌سازی تحلیل</span></button>
                 </div>
 
                 <div class="products-toolbar analytics-toolbar">
@@ -242,7 +282,6 @@
                     <option value="month">ماه جاری</option>
                     <option value="year">سال جاری</option>
                   </select>
-                  <button class="secondary-button products-refresh" id="refreshAnalytics" type="button">تازه‌سازی تحلیل</button>
                 </div>
 
                 <div class="products-state" id="analyticsSecureState" role="status">
@@ -268,7 +307,12 @@
                 <div class="analytics-content-grid" id="analyticsContent" hidden>
                   <section class="analytics-subpanel" aria-labelledby="analyticsStatusTitle">
                     <div class="product-editor-heading"><div><p class="card-kicker">وضعیت‌ها</p><h3 id="analyticsStatusTitle">پراکندگی سفارش‌ها</h3></div></div>
-                    <div class="analytics-status-list" id="analyticsStatusList"></div>
+                    <div class="analytics-status-layout">
+                      <div class="analytics-donut" id="analyticsStatusDonut" role="img" aria-label="توزیع وضعیت سفارش‌ها">
+                        <span class="analytics-donut-center"><small>جمع کل</small><strong id="analyticsStatusDonutTotal">۰</strong></span>
+                      </div>
+                      <div class="analytics-status-list" id="analyticsStatusList"></div>
+                    </div>
                   </section>
                   <section class="analytics-subpanel" aria-labelledby="analyticsProductsTitle">
                     <div class="product-editor-heading"><div><p class="card-kicker">کاتالوگ</p><h3 id="analyticsProductsTitle">محصولات پرفروش</h3></div></div>
@@ -292,11 +336,11 @@
             <article class="products-panel card-surface" data-nav-section="products" aria-labelledby="productsTitle">
               <div class="panel-heading products-heading">
                 <div>
-                  <p class="card-kicker">کاتالوگ</p>
                   <h2 id="productsTitle">محصولات</h2>
                   <p class="panel-description">محصولات فروشگاه را جست‌وجو و در کارت‌های خلاصه بررسی کنید.</p>
                 </div>
                 <span class="state-badge products-state-badge" id="productsStateBadge" data-state="secure">نیازمند اتصال امن</span>
+                <button class="secondary-button icon-refresh-button products-refresh" id="refreshProducts" type="button" aria-label="تلاش دوباره برای محصولات" title="تلاش دوباره"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تلاش دوباره برای محصولات</span></button>
               </div>
 
               <div class="products-toolbar">
@@ -310,7 +354,6 @@
                 <select class="product-search products-filter-select" id="productSort"><option value="updated">آخرین ویرایش</option><option value="name">نام</option><option value="price-high">قیمت: زیاد به کم</option><option value="price-low">قیمت: کم به زیاد</option></select>
                 <button class="primary-button compact-button" id="newProductButton" type="button">محصول جدید</button>
                 <button class="secondary-button compact-button" id="openBulkPrice" type="button" aria-expanded="false" aria-controls="bulkPricePanel">افزایش گروهی قیمت</button>
-                <button class="secondary-button products-refresh" id="refreshProducts" type="button">تلاش دوباره</button>
               </div>
 
               <section class="bulk-price-panel" id="bulkPricePanel" aria-labelledby="bulkPriceTitle" hidden>
@@ -434,7 +477,7 @@
                       <p class="card-kicker">تنوع محصول</p>
                       <h3 id="variationManagerTitle">variationهای محصول</h3>
                     </div>
-                    <button class="secondary-button compact-button" id="refreshVariations" type="button">تازه‌سازی</button>
+                    <button class="secondary-button icon-refresh-button" id="refreshVariations" type="button" aria-label="تازه‌سازی variationها" title="تازه‌سازی variationها"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تازه‌سازی variationها</span></button>
                   </div>
                   <p class="panel-description">برای محصول variable، قیمت، موجودی و ویژگی‌های هر variation را از همین‌جا مدیریت کنید.</p>
                   <div class="variation-editor-grid">
@@ -501,17 +544,16 @@
             <article class="categories-panel card-surface" data-nav-section="categories" aria-labelledby="categoriesTitle">
               <div class="panel-heading products-heading">
                 <div>
-                  <p class="card-kicker">ساختار کاتالوگ</p>
                   <h2 id="categoriesTitle">دسته‌بندی‌ها</h2>
                   <p class="panel-description">دسته‌بندی‌های product_cat را بدون ورود به wp-admin بسازید و ویرایش کنید.</p>
                 </div>
                 <span class="state-badge products-state-badge" id="categoriesStateBadge" data-state="secure">نیازمند اتصال امن</span>
+                <button class="secondary-button icon-refresh-button products-refresh" id="refreshCategories" type="button" aria-label="تلاش دوباره برای دسته‌بندی‌ها" title="تلاش دوباره"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تلاش دوباره برای دسته‌بندی‌ها</span></button>
               </div>
               <div class="products-toolbar">
                 <label class="sr-only" for="categorySearch">جست‌وجوی دسته‌بندی‌ها</label>
                 <input id="categorySearch" class="product-search" type="search" placeholder="جست‌وجوی دسته‌بندی" autocomplete="off">
                 <button class="primary-button compact-button" id="newCategoryButton" type="button">دسته‌بندی جدید</button>
-                <button class="secondary-button products-refresh" id="refreshCategories" type="button">تلاش دوباره</button>
               </div>
               <form class="product-editor" id="categoryEditor" hidden>
                 <div class="product-editor-heading"><div><p class="card-kicker">عملیات دسته‌بندی</p><h3 id="categoryEditorTitle">ساخت دسته‌بندی</h3></div><button class="secondary-button compact-button" id="cancelCategoryEdit" type="button">انصراف</button></div>
@@ -533,24 +575,24 @@
             <article class="orders-panel card-surface" data-nav-section="orders" aria-labelledby="ordersTitle">
               <div class="panel-heading products-heading">
                 <div>
-                  <p class="card-kicker">فروش</p>
                   <h2 id="ordersTitle">سفارش‌ها</h2>
-                  <p class="panel-description">سفارش‌های فروشگاه را با وضعیت، مبلغ و مشتری مرور کنید.</p>
+                  <p class="panel-description">وضعیت سفارش‌های فروشگاه.</p>
                 </div>
-              </div>
-              <div class="orders-state-actions" aria-label="وضعیت اتصال سفارش‌ها">
-                <span class="state-badge products-state-badge" id="ordersStateBadge" data-state="secure">نیازمند اتصال امن</span>
-                <button class="secondary-button compact-button products-refresh orders-refresh" id="refreshOrders" type="button">تلاش دوباره</button>
+                <div class="orders-state-actions" aria-label="وضعیت اتصال سفارش‌ها">
+                  <span class="state-badge products-state-badge" id="ordersStateBadge" data-state="secure">نیازمند اتصال امن</span>
+                  <button class="secondary-button icon-refresh-button products-refresh orders-refresh" id="refreshOrders" type="button" aria-label="تلاش دوباره برای سفارش‌ها" title="تلاش دوباره"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تلاش دوباره برای سفارش‌ها</span></button>
+                </div>
               </div>
               <div class="orders-toolbar">
                 <div class="products-toolbar orders-toolbar-controls">
                   <label class="sr-only" for="orderSearch">جست‌وجوی سفارش‌ها</label>
                   <input id="orderSearch" class="product-search" type="search" placeholder="شماره یا نام مشتری" autocomplete="off">
                   <button class="secondary-button compact-button orders-filter-toggle" id="toggleOrderFilters" type="button" aria-label="باز کردن فیلترهای سفارش" aria-controls="orderFilterPanel" aria-expanded="false">
-                    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z"/></svg>
-                    <span>فیلتر</span>
+                    <svg class="ui-icon" data-icon-name="filter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z"/></svg>
+                    <span class="orders-filter-label">فیلتر</span>
                   </button>
-                  <div class="management-filter-panel" id="orderFilterPanel" role="dialog" aria-labelledby="orderFilterTitle" hidden>
+                  <div class="order-filter-backdrop" id="orderFilterBackdrop" hidden aria-hidden="true"></div>
+                  <div class="management-filter-panel" id="orderFilterPanel" role="dialog" aria-labelledby="orderFilterTitle" aria-modal="true" hidden>
                     <div class="management-filter-header">
                       <h3 id="orderFilterTitle">فیلترهای پیشرفته</h3>
                       <button class="secondary-button compact-button" id="closeOrderFilters" type="button">بستن</button>
@@ -571,8 +613,9 @@
                   </div>
                 </div>
                 <div class="orders-quick-filters" aria-label="فیلتر سریع وضعیت سفارش‌ها">
-                  <label class="orders-quick-filters-label" for="orderStatusFilter">فیلتر سریع وضعیت</label>
-                  <select class="product-search orders-status-select" id="orderStatusFilter" aria-label="فیلتر سریع وضعیت سفارش‌ها">
+                  <span class="orders-quick-filters-label">فیلتر سریع وضعیت</span>
+                  <div class="orders-quick-filters-scroll" id="orderStatusChips" role="group" aria-label="وضعیت‌های سفارش"></div>
+                  <select class="orders-status-select" id="orderStatusFilter" aria-label="فیلتر سریع وضعیت سفارش‌ها" hidden tabindex="-1">
                     <option value="any">همهٔ وضعیت‌ها</option>
                   </select>
                 </div>
@@ -631,13 +674,13 @@
 
             <article class="customers-panel card-surface" data-nav-section="customers" aria-labelledby="customersTitle">
               <div class="panel-heading products-heading">
-                <div><p class="card-kicker">مشتری</p><h2 id="customersTitle">مشتریان</h2><p class="panel-description">مشتریان ثبت‌شده را برای پیگیری سفارش و ارتباط عملیاتی مرور کنید.</p></div>
+                <div><h2 id="customersTitle">مشتریان</h2><p class="panel-description">مشتریان ثبت‌شده را برای پیگیری سفارش و ارتباط عملیاتی مرور کنید.</p></div>
                 <span class="state-badge products-state-badge" id="customersStateBadge" data-state="secure">نیازمند اتصال امن</span>
+                <button class="secondary-button icon-refresh-button products-refresh" id="refreshCustomers" type="button" aria-label="تلاش دوباره برای مشتریان" title="تلاش دوباره"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تلاش دوباره برای مشتریان</span></button>
               </div>
               <div class="products-toolbar">
                 <label class="sr-only" for="customerSearch">جست‌وجوی مشتریان</label>
                 <input id="customerSearch" class="product-search" type="search" placeholder="نام، ایمیل یا نام کاربری" autocomplete="off">
-                <button class="secondary-button products-refresh" id="refreshCustomers" type="button">تلاش دوباره</button>
               </div>
               <div class="products-state" id="customersSecureState" role="status"><span class="products-state-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><div><strong>نیازمند اتصال امن</strong><p>برای مشاهدهٔ مشتریان ابتدا اتصال امن مدیر را برقرار کنید.</p></div></div>
               <div class="products-state" id="customersLoadingState" role="status" hidden><span class="products-state-icon products-spinner" aria-hidden="true"></span><div><strong>در حال دریافت مشتریان</strong><p>اطلاعات مشتریان از API داخلی در حال دریافت است.</p></div></div>
@@ -657,15 +700,15 @@
 
             <article class="operations-panel card-surface inventory-panel" data-nav-section="inventory" aria-labelledby="inventoryTitle">
               <div class="panel-heading products-heading">
-                <div><p class="card-kicker">انبار</p><h2 id="inventoryTitle">مرکز موجودی</h2><p class="panel-description">موجودی کم، ناموجود و پیش‌فروش را از یک نقطه بررسی و اصلاح کنید.</p></div>
+                <div><h2 id="inventoryTitle">مرکز موجودی</h2><p class="panel-description">موجودی کم، ناموجود و پیش‌فروش را از یک نقطه بررسی و اصلاح کنید.</p></div>
                 <span class="state-badge products-state-badge" id="inventoryStateBadge" data-state="secure">نیازمند اتصال امن</span>
+                <button class="secondary-button icon-refresh-button products-refresh" id="refreshInventory" type="button" aria-label="تازه‌سازی موجودی" title="تازه‌سازی موجودی"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تازه‌سازی موجودی</span></button>
               </div>
               <div class="products-toolbar">
                 <label class="sr-only" for="inventorySearch">جست‌وجوی موجودی</label>
                 <input id="inventorySearch" class="product-search" type="search" placeholder="نام یا SKU محصول" autocomplete="off">
                 <label class="sr-only" for="inventoryStatusFilter">وضعیت موجودی</label>
                 <select id="inventoryStatusFilter" class="product-search products-filter-select"><option value="">همهٔ وضعیت‌ها</option><option value="instock">موجود</option><option value="outofstock">ناموجود</option><option value="onbackorder">پیش‌فروش</option></select>
-                <button class="secondary-button products-refresh" id="refreshInventory" type="button">تازه‌سازی</button>
               </div>
               <div class="inventory-summary" id="inventorySummary" hidden></div>
               <p class="secure-note operations-message" id="inventoryMessage" role="status" hidden></p>
@@ -679,10 +722,11 @@
 
             <article class="operations-panel card-surface coupons-panel" data-nav-section="coupons" aria-labelledby="couponsTitle">
               <div class="panel-heading products-heading">
-                <div><p class="card-kicker">فروش و تخفیف</p><h2 id="couponsTitle">کوپن‌ها</h2><p class="panel-description">کوپن درصدی، مبلغ ثابت، محدودیت مصرف و تاریخ انقضا را مدیریت کنید.</p></div>
+                <div><h2 id="couponsTitle">کوپن‌ها</h2><p class="panel-description">کوپن درصدی، مبلغ ثابت، محدودیت مصرف و تاریخ انقضا را مدیریت کنید.</p></div>
                 <span class="state-badge products-state-badge" id="couponsStateBadge" data-state="secure">نیازمند اتصال امن</span>
+                <button class="secondary-button icon-refresh-button products-refresh" id="refreshCoupons" type="button" aria-label="تازه‌سازی کوپن‌ها" title="تازه‌سازی کوپن‌ها"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تازه‌سازی کوپن‌ها</span></button>
               </div>
-              <div class="products-toolbar"><label class="sr-only" for="couponSearch">جست‌وجوی کوپن</label><input id="couponSearch" class="product-search" type="search" placeholder="کد کوپن" autocomplete="off"><button class="primary-button compact-button" id="newCouponButton" type="button">کوپن جدید</button><button class="secondary-button products-refresh" id="refreshCoupons" type="button">تازه‌سازی</button></div>
+              <div class="products-toolbar"><label class="sr-only" for="couponSearch">جست‌وجوی کوپن</label><input id="couponSearch" class="product-search" type="search" placeholder="کد کوپن" autocomplete="off"><button class="primary-button compact-button" id="newCouponButton" type="button">کوپن جدید</button></div>
               <form class="coupon-editor" id="couponEditor" hidden>
                 <div class="product-editor-heading"><div><p class="card-kicker">ویرایش سریع</p><h3 id="couponEditorTitle">ساخت کوپن</h3></div><button class="secondary-button compact-button" id="cancelCouponEdit" type="button">بستن</button></div>
                 <div class="product-editor-grid">
@@ -710,10 +754,11 @@
 
             <article class="operations-panel card-surface reviews-panel" data-nav-section="reviews" aria-labelledby="reviewsTitle">
               <div class="panel-heading products-heading">
-                <div><p class="card-kicker">اعتماد مشتری</p><h2 id="reviewsTitle">دیدگاه‌های محصولات</h2><p class="panel-description">دیدگاه‌ها را بررسی، تأیید، اسپم یا پاسخ‌گذاری کنید.</p></div>
+                <div><h2 id="reviewsTitle">دیدگاه‌های محصولات</h2><p class="panel-description">دیدگاه‌ها را بررسی، تأیید، اسپم یا پاسخ‌گذاری کنید.</p></div>
                 <span class="state-badge products-state-badge" id="reviewsStateBadge" data-state="secure">نیازمند اتصال امن</span>
+                <button class="secondary-button icon-refresh-button products-refresh" id="refreshReviews" type="button" aria-label="تازه‌سازی دیدگاه‌ها" title="تازه‌سازی دیدگاه‌ها"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تازه‌سازی دیدگاه‌ها</span></button>
               </div>
-              <div class="products-toolbar"><label class="sr-only" for="reviewSearch">جست‌وجوی دیدگاه</label><input id="reviewSearch" class="product-search" type="search" placeholder="نام مشتری یا متن دیدگاه" autocomplete="off"><label class="sr-only" for="reviewStatusFilter">وضعیت دیدگاه</label><select id="reviewStatusFilter" class="product-search products-filter-select"><option value="all">همهٔ وضعیت‌ها</option><option value="approve">تأییدشده</option><option value="hold">در انتظار بررسی</option><option value="spam">اسپم</option><option value="trash">زباله‌دان</option></select><button class="secondary-button products-refresh" id="refreshReviews" type="button">تازه‌سازی</button></div>
+              <div class="products-toolbar"><label class="sr-only" for="reviewSearch">جست‌وجوی دیدگاه</label><input id="reviewSearch" class="product-search" type="search" placeholder="نام مشتری یا متن دیدگاه" autocomplete="off"><label class="sr-only" for="reviewStatusFilter">وضعیت دیدگاه</label><select id="reviewStatusFilter" class="product-search products-filter-select"><option value="all">همهٔ وضعیت‌ها</option><option value="approve">تأییدشده</option><option value="hold">در انتظار بررسی</option><option value="spam">اسپم</option><option value="trash">زباله‌دان</option></select></div>
               <div class="products-state" id="reviewsSecureState" role="status"><span class="products-state-icon" aria-hidden="true">▣</span><div><strong>نیازمند اتصال امن</strong><p>برای مدیریت دیدگاه‌ها اتصال امن مدیر لازم است.</p></div></div>
               <div class="products-state" id="reviewsLoadingState" role="status" hidden><span class="products-state-icon products-spinner" aria-hidden="true"></span><div><strong>در حال دریافت دیدگاه‌ها</strong><p>دیدگاه‌ها از API داخلی وردپرس دریافت می‌شوند.</p></div></div>
               <div class="products-state" id="reviewsEmptyState" role="status" hidden><span class="products-state-icon" aria-hidden="true">—</span><div><strong>دیدگاهی پیدا نشد</strong><p>برای این فیلتر دیدگاهی وجود ندارد.</p></div></div>
@@ -725,14 +770,13 @@
             <article class="security-panel card-surface" data-nav-section="security" aria-labelledby="securityTitle">
               <div class="panel-heading products-heading">
                 <div>
-                  <p class="card-kicker">امنیت و دسترسی</p>
                   <h2 id="securityTitle">دستگاه‌ها و گزارش فعالیت</h2>
                   <p class="panel-description">نشست‌های فعال این مدیر را ببینید و در صورت نیاز بدون ورود به wp-admin آن‌ها را باطل کنید.</p>
                 </div>
                 <span class="state-badge products-state-badge" id="securityStateBadge" data-state="secure">نیازمند اتصال امن</span>
+                <button class="secondary-button icon-refresh-button products-refresh" id="refreshDevices" type="button" aria-label="تازه‌سازی دستگاه‌ها" title="تازه‌سازی دستگاه‌ها"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تازه‌سازی دستگاه‌ها</span></button>
               </div>
               <div class="products-toolbar security-toolbar">
-                <button class="secondary-button compact-button" id="refreshDevices" type="button">تازه‌سازی دستگاه‌ها</button>
                 <button class="secondary-button compact-button danger-outline-button" id="revokeOtherDevices" type="button">ابطال دستگاه‌های دیگر</button>
               </div>
               <div class="products-state" id="devicesSecureState" role="status"><span class="products-state-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><div><strong>نیازمند اتصال امن</strong><p>برای مشاهدهٔ نشست‌ها ابتدا اتصال امن مدیر را برقرار کنید.</p></div></div>
@@ -748,6 +792,7 @@
                     <h3 id="auditTitle">رویدادهای مدیریتی</h3>
                   </div>
                   <span class="state-badge products-state-badge" id="auditStateBadge" data-state="secure">فقط مدیر اصلی</span>
+                  <button class="secondary-button icon-refresh-button products-refresh" id="refreshAudit" type="button" aria-label="تازه‌سازی گزارش" title="تازه‌سازی گزارش"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تازه‌سازی گزارش</span></button>
                 </div>
                 <div class="products-toolbar audit-toolbar">
                   <label class="sr-only" for="auditEventFilter">فیلتر رویداد</label>
@@ -769,7 +814,6 @@
                     <option value="font_uploaded">آپلود فونت</option>
                     <option value="font_deleted">حذف فونت</option>
                   </select>
-                  <button class="secondary-button compact-button" id="refreshAudit" type="button">تازه‌سازی گزارش</button>
                   <button class="secondary-button compact-button" id="auditPreviousPage" type="button" disabled>قبلی</button>
                   <button class="secondary-button compact-button" id="auditNextPage" type="button" disabled>بعدی</button>
                 </div>
@@ -785,10 +829,10 @@
       </main>
 
       <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="ناوبری سریع موبایل">
-        <button class="mobile-nav-item is-active" type="button" data-nav-target="dashboard" aria-current="page"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 10 8-6 8 6v9H4Z"/><path d="M9 19v-5h6v5"/></svg><small>داشبورد</small></button>
-        <button class="mobile-nav-item" type="button" data-nav-target="orders"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg><small>سفارش‌ها</small><span class="nav-count-badge" id="mobileOrdersBadge" aria-hidden="true" hidden>۰</span></button>
-        <button class="mobile-nav-item" type="button" data-nav-target="products"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg><small>محصولات</small></button>
-        <button class="mobile-nav-item" type="button" data-nav-target="security"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg><small>بیشتر</small></button>
+        <button class="mobile-nav-item is-active" type="button" data-nav-target="dashboard" aria-current="page"><svg class="ui-icon" data-icon-name="dashboard" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 10 8-6 8 6v9H4Z"/><path d="M9 19v-5h6v5"/></svg><small>داشبورد</small></button>
+        <button class="mobile-nav-item" type="button" data-nav-target="orders"><svg class="ui-icon" data-icon-name="orders" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg><small>سفارش‌ها</small><span class="nav-count-badge" id="mobileOrdersBadge" aria-hidden="true" hidden>۰</span></button>
+        <button class="mobile-nav-item" type="button" data-nav-target="products"><svg class="ui-icon" data-icon-name="products" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg><small>محصولات</small></button>
+        <button class="mobile-nav-item" type="button" data-nav-target="security"><svg class="ui-icon" data-icon-name="more" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg><small>بیشتر</small></button>
       </nav>
 
       <footer class="app-footer">

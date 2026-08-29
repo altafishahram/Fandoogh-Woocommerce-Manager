@@ -350,7 +350,9 @@ function list_coupons( $request ) {
 	$args = array( 'limit' => $per_page, 'page' => $page, 'paginate' => true, 'orderby' => 'date', 'order' => 'DESC', 'return' => 'objects' );
 	$search = coupon_clean_text( $request->get_param( 'search' ), 80 );
 	if ( '' !== $search ) {
-		$args['code'] = $search;
+		// Use WooCommerce's bounded search argument so partial coupon codes and
+		// descriptions are handled by the official data store.
+		$args['search'] = $search;
 	}
 	try {
 		$result = function_exists( 'wc_get_coupons' ) ? wc_get_coupons( $args ) : array();
