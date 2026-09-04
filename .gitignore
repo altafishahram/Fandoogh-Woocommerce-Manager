@@ -1,4 +1,7 @@
 node_modules/
+dist/
+_verify/
+*.zip
 test-results/
 playwright-report/
 blob-report/

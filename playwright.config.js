@@ -2,13 +2,12 @@
 const { defineConfig } = require('@playwright/test');
 
 /**
- * Responsive overflow checks for the PWA shell.
+ * Responsive browser checks for the PWA shell.
  *
  * The app is served from a tiny dependency-free static server (tools/
  * static-server.js) and loaded in `?preview=1` mode, which renders the full
- * authenticated dashboard from client-side sample data — no WordPress needed.
- * Tests run against the system-installed Chrome so no browser download is
- * required (PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 during `npm install`).
+ * authenticated dashboard from client-side sample data. This is a browser/UI
+ * test of preview mode, not a WordPress or REST integration test.
  */
 module.exports = defineConfig({
   testDir: './e2e',
@@ -17,36 +16,40 @@ module.exports = defineConfig({
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
+  workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI ? [['github'], ['html']] : [['list']],
   use: {
-    channel: 'chrome',
     baseURL: 'http://127.0.0.1:8124',
+    locale: 'fa-IR',
+    colorScheme: 'light',
+    reducedMotion: 'reduce',
+    serviceWorkers: 'block',
     trace: process.env.CI ? 'retain-on-failure' : 'on-first-retry',
-    screenshot: process.env.CI ? 'only-on-failure' : 'only-on-failure',
+    screenshot: 'only-on-failure',
   },
   projects: [
     {
       name: 'mobile-320',
-      use: { viewport: { width: 320, height: 720 } },
+      use: { browserName: 'chromium', viewport: { width: 320, height: 720 } },
     },
     {
       name: 'tablet-768',
-      use: { viewport: { width: 768, height: 900 } },
+      use: { browserName: 'chromium', viewport: { width: 768, height: 900 } },
     },
     {
       name: 'desktop-1280',
-      use: { viewport: { width: 1280, height: 900 } },
-      use: { channel: 'chrome' },
+      use: { browserName: 'chromium', viewport: { width: 1280, height: 900 } },
     },
     {
       name: 'webkit-desktop',
-      use: { viewport: { width: 1280, height: 900 } },
+      use: { browserName: 'webkit', viewport: { width: 1280, height: 900 } },
     },
   ],
   webServer: {
     command: 'node tools/static-server.js',
     port: 8124,
-    reuseExistingServer: true,
+    // Never point a test run at a preview server from another worktree.
+    reuseExistingServer: false,
     timeout: 15000,
   },
 });

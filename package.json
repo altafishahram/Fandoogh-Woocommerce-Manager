@@ -5,20 +5,14 @@
   "description": "Preview-mode browser checks and release tooling for the Fandoogh Manager PWA shell.",
   "scripts": {
     "test:e2e": "playwright test",
-    "test:e2e:preview": "playwright test --reporter=list",
-    "test:e2e:chromium": "playwright test --project=chromium --reporter=list",
-    "test:e2e:webkit": "playwright test --project=webkit --reporter=list",
+    "test:e2e:preview": "playwright test",
+    "test:e2e:chromium": "playwright test --project=mobile-320 --project=tablet-768 --project=desktop-1280",
+    "test:e2e:webkit": "playwright test --project=webkit-desktop",
     "test:e2e:ci": "playwright test --reporter=list",
-    "test:e2e:all": "playwright test --reporter=list",
+    "test:e2e:all": "playwright test",
     "lint": "node tools/lint.js",
     "package": "node tools/package-plugin.js",
     "package:check": "node tools/verify-package.js"
-  },
-  "playwright": {
-    "browsers": [
-      "chromium",
-      "webkit"
-    ]
   },
   "engines": {
     "node": ">=20"

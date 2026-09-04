@@ -1,4 +1,4 @@
-name: Playwright Responsive Tests
+name: Playwright browser checks
 
 on:
   push:
@@ -14,6 +14,8 @@ jobs:
   test:
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -25,29 +27,23 @@ jobs:
 
       - run: npm ci
         working-directory: .
-        env:
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 0
 
-      - name: Install Playwright browsers
-        uses: microsoft/playwright-github-actions@v1
-        with:
-          browsers: chromium, webkit
+      - name: Install Playwright browsers and Linux dependencies
+        run: npx playwright install --with-deps chromium webkit
 
-      - name: Install system dependencies (Ubuntu)
-        run: |
-          npx playwright install-deps --with-deps chromium webkit
+      - name: Lint source and test tooling
+        run: npm run lint
 
-      - name: Run responsive tests (Chromium)
-        run: npm run test:e2e
-        env:
-          PLAYWRIGHT_CHROMIUM_DISABLE_SECCOMP: 1
-          CI: true
-
-      - name: Run responsive tests (WebKit)
-        run: npx playwright test --project=webkit
-        if: ${{ !cancelled() }}
+      - name: Run preview-mode browser tests
+        run: npm run test:e2e:preview
         env:
           CI: true
+
+      - name: Build deterministic plugin package
+        run: npm run package
+
+      - name: Verify plugin package contents
+        run: npm run package:check
 
       - uses: actions/upload-artifact@v4
         if: failure()
