@@ -92,7 +92,6 @@ function addEntry(msgid, ref, comment) {
 }
 
 for (const file of FILES) {
-  if (file === 'mock-api.php') continue;
   const src = fs.readFileSync(file, 'utf8');
   let m;
   while ((m = FN_RE.exec(src))) {

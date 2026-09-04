@@ -15,7 +15,6 @@ const ROOT = path.join(__dirname, '..');
 const SKIP_DIRECTORIES = new Set([
   '.git',
   'node_modules',
-  '_verify',
   'dist',
   'test-results',
   'playwright-report',

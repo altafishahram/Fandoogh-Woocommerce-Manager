@@ -1,7 +1,7 @@
 /*
  * Audit the frontend asset contract without touching WordPress or a browser.
  * The PHP icon map is the server-side source of truth for replaceable icons;
- * data-icon-name values are the client-side contract. Archives and _verify are
+ * data-icon-name values are the client-side contract. Generated archives are
  * intentionally outside this audit because they are not release sources.
  */
 "use strict";
