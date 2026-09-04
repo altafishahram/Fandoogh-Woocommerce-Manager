@@ -5,9 +5,9 @@ const { defineConfig } = require('@playwright/test');
  * Responsive browser checks for the PWA shell.
  *
  * The app is served from a tiny dependency-free static server (tools/
- * static-server.js) and loaded in `?preview=1` mode, which renders the full
- * authenticated dashboard from client-side sample data. This is a browser/UI
- * test of preview mode, not a WordPress or REST integration test.
+ * static-server.js). Layout checks use `?preview=1` sample data; coupon-flow
+ * checks intercept HTTP responses to exercise the production UI. Neither
+ * suite is a live WordPress/WooCommerce integration test.
  */
 module.exports = defineConfig({
   testDir: './e2e',

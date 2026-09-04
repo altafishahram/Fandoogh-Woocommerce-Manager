@@ -34,7 +34,10 @@ jobs:
       - name: Lint source and test tooling
         run: npm run lint
 
-      - name: Run preview-mode browser tests
+      - name: Run coupon backend contract checks
+        run: npm run test:coupons
+
+      - name: Run browser regression checks
         run: npm run test:e2e:preview
         env:
           CI: true

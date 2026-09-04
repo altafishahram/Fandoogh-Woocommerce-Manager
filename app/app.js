@@ -3796,9 +3796,6 @@
         imageWrap.appendChild(createTextElement("span", "product-card-discount", discountPercentLabel + "٪ تخفیف"));
       }
 
-      var content = document.createElement("div");
-      content.className = "product-card-content";
-
       var topline = document.createElement("div");
       topline.className = "product-card-topline";
       topline.appendChild(createTextElement("h3", "product-card-name", product.name));
@@ -3810,7 +3807,12 @@
       if (kindAndStatus.firstChild) {
         topline.appendChild(kindAndStatus);
       }
-      content.appendChild(topline);
+      card.appendChild(topline);
+
+      var categoryName = product.categories && product.categories.length ? product.categories[0].name : "بدون دسته‌بندی";
+      var category = createTextElement("span", "product-card-category-hint", categoryName);
+      category.title = categoryName;
+      card.appendChild(category);
 
       var stockLine = document.createElement("div");
       stockLine.className = "product-card-stock-line";
@@ -3818,19 +3820,17 @@
       if (product.sku) {
         stockLine.appendChild(createTextElement("span", "product-card-sku", "SKU: " + product.sku));
       }
-      content.appendChild(stockLine);
+      card.appendChild(stockLine);
 
       var priceRow = document.createElement("div");
       priceRow.className = "product-card-price-row";
-      priceRow.appendChild(createTextElement("strong", "product-card-price", productPriceLabel(product)));
+      var prices = document.createElement("div");
+      prices.className = "product-card-prices";
+      prices.appendChild(createTextElement("strong", "product-card-price", productPriceLabel(product)));
       if (product.salePrice && product.regularPrice && product.salePrice !== product.regularPrice) {
-        priceRow.appendChild(createTextElement("del", "product-card-regular-price", formatStoreAmount(product.regularPrice)));
+        prices.appendChild(createTextElement("del", "product-card-regular-price", formatStoreAmount(product.regularPrice)));
       }
-      content.appendChild(priceRow);
-
-      content.appendChild(createTextElement("span", "product-card-category-hint", product.categories && product.categories.length ? product.categories[0].name : "بدون دسته‌بندی"));
-
-      content.appendChild(document.createElement("div")).className = "product-card-divider";
+      priceRow.appendChild(prices);
 
       var actions = document.createElement("div");
       actions.className = "product-card-actions";
@@ -3856,9 +3856,9 @@
         openProductEditor(product.id);
       });
       actions.appendChild(editButton);
-      content.appendChild(actions);
+      priceRow.appendChild(actions);
 
-      card.appendChild(content);
+      card.appendChild(priceRow);
       elements.productsGrid.appendChild(card);
     });
   }
@@ -11501,7 +11501,8 @@
       individual_use: Boolean(elements.couponIndividualUse.checked),
       exclude_sale_items: Boolean(elements.couponExcludeSaleItems.checked)
     };
-    var url = state.coupons.editorId ? operationResourceUrl("couponsUrl", state.coupons.editorId) : apiUrl("couponsUrl");
+    var isCreate = !state.coupons.editorId;
+    var url = isCreate ? apiUrl("couponsUrl") : operationResourceUrl("couponsUrl", state.coupons.editorId);
     if (!url) {
       setCouponEditorMessage("نشانی API کوپن‌ها در پیکربندی سایت موجود نیست.", true);
       return;
@@ -11509,12 +11510,20 @@
     elements.saveCouponButton.disabled = true;
     setCouponEditorMessage("در حال ذخیرهٔ کوپن...");
     fetchJsonWithTimeout(url, {
-      method: state.coupons.editorId ? "PATCH" : "POST",
+      method: isCreate ? "POST" : "PATCH",
       headers: { "Content-Type": "application/json", "X-Fandoogh-CSRF": state.csrfToken },
       body: JSON.stringify(body)
     }).then(function () {
       closeCouponEditor();
-      return loadCoupons(state.coupons.page);
+      // New coupons sort first. A previous page or search must not hide the
+      // record that was just created, including a queued debounced search.
+      if (isCreate) {
+        window.clearTimeout(state.coupons.searchTimer);
+        state.coupons.searchTimer = null;
+        state.coupons.search = "";
+        elements.couponSearch.value = "";
+      }
+      return loadCoupons(isCreate ? 1 : state.coupons.page);
     }).catch(function (error) {
       if (error && error.status === 401) {
         setAuthenticated(false, "");
@@ -11609,11 +11618,11 @@
       state.coupons.page = Math.max(1, Number(meta.page) || state.coupons.page);
       state.coupons.total = Math.max(0, Number(meta.total) || state.coupons.items.length);
       state.coupons.totalPages = Math.max(0, Number(meta.total_pages) || (state.coupons.items.length ? 1 : 0));
+      renderCouponResults();
       if (!filteredCouponItems().length) {
         setCouponsState("empty", state.coupons.search ? "کوپنی با این عبارت پیدا نشد." : "هنوز کوپنی ساخته نشده است.");
         return;
       }
-      renderCouponResults();
       setCouponsState("ready");
       return true;
     }).catch(function (error) {

@@ -1664,71 +1664,11 @@ a {
   margin-top: 1rem;
 }
 
-.product-card {
-  min-width: 0;
-  overflow: hidden;
-  background: var(--brand-surface);
-  border: 1px solid var(--brand-border);
-  border-radius: 16px;
-}
-
-.product-card-image {
-  display: block;
-  width: 100%;
-  height: 142px;
-  object-fit: cover;
-  background: var(--brand-primary-soft);
-}
-
-.product-card-image-fallback {
-  display: grid;
-  place-items: center;
-  color: var(--brand-primary);
-  font-size: 2rem;
-  font-weight: 800;
-}
-
-.product-card-content {
-  padding: 0.85rem 0.9rem 1rem;
-}
-
-.product-card-name {
-  margin: 0;
-  overflow: hidden;
-  font-size: 0.88rem;
-  line-height: 1.5;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.product-card-price {
-  margin: 0.45rem 0 0;
-  color: var(--brand-primary-strong);
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.product-card-stock {
-  display: inline-flex;
-  margin-top: 0.55rem;
-  padding: 0.2rem 0.45rem;
-  color: var(--brand-muted);
-  background: #f2f4f8;
-  border-radius: 999px;
-  font-size: 0.68rem;
-}
-
 .compact-button {
   width: auto;
   min-height: 40px;
   padding: 0.45rem 0.75rem;
   font-size: 0.74rem;
-}
-
-.product-edit-button {
-  display: block;
-  width: 100%;
-  margin-top: 0.75rem;
 }
 
 /* UI: فرم‌های محصول و کارت‌های دسته‌بندی/variation. */
@@ -4993,20 +4933,6 @@ body.menu-open {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .product-card {
-    display: grid;
-    grid-template-columns: 92px minmax(0, 1fr);
-    align-items: center;
-  }
-
-  .product-card-image {
-    width: 92px;
-    height: 92px;
-  }
-
-  .product-card-content {
-    padding: 0.75rem;
-  }
 }
 
 /* UI: overrideهای نهایی RTL و دسترس‌پذیری؛ قبل از تغییرات عمومی این بخش را بررسی کن. */
@@ -5614,9 +5540,8 @@ body.order-detail-open {
   }
 }
 
-/* Product catalog cards and read-only product detail flow. The card keeps the
- * reference composition on every viewport: product media remains on the RTL
- * right side, while the copy and two icon actions stay in the content column. */
+/* Product cards: three RTL columns and three rows. Media spans the right
+ * column; title, category/stock, then price with actions below fill the left. */
 .products-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
@@ -5624,9 +5549,13 @@ body.order-detail-open {
 
 .product-card {
   --product-card-accent: #98e3c4;
-  display: flex;
+  --product-card-image-padding: 0.2rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto minmax(0, 1fr);
+  align-items: stretch;
   min-width: 0;
-  min-height: 218px;
+  min-height: 194px;
   overflow: hidden;
   direction: rtl;
   background: #ffffff;
@@ -5659,24 +5588,24 @@ body.order-detail-open {
 
 .product-card-image-wrap {
   position: relative;
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  flex: 0 0 43%;
-  min-width: 132px;
+  grid-column: 1;
+  grid-row: 1 / 4;
+  min-width: 0;
   min-height: 0;
-  padding: 0.72rem;
-  background: linear-gradient(145deg, #f6fbfa 0%, #eef5f5 100%);
+  background: radial-gradient(ellipse at center, #ffffff 20%, #eff8f5 100%);
+  border-inline-end: 1px solid rgba(15, 118, 110, 0.08);
 }
 
 .product-card-image {
+  position: absolute;
+  inset: var(--product-card-image-padding);
   display: block;
-  width: 100%;
-  height: 100%;
+  width: calc(100% - 2 * var(--product-card-image-padding));
+  height: calc(100% - 2 * var(--product-card-image-padding));
   min-height: 0;
   object-fit: contain;
-  border-radius: 16px;
-  background: #eef4f3;
+  border-radius: 12px;
+  background: transparent;
 }
 
 .product-card-image-fallback {
@@ -5686,16 +5615,6 @@ body.order-detail-open {
   background: #e7f4f0;
   font-size: 2.2rem;
   font-weight: 800;
-}
-
-.product-card-content {
-  display: grid;
-  flex: 1 1 auto;
-  min-width: 0;
-  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
-  gap: 0.4rem;
-  padding: 1.05rem 1.15rem 0.95rem;
-  direction: rtl;
 }
 
 .product-card-topline,
@@ -5708,7 +5627,12 @@ body.order-detail-open {
 }
 
 .product-card-topline {
+  grid-column: 2 / 4;
+  grid-row: 1;
   align-items: flex-start;
+  flex-wrap: wrap;
+  min-width: 0;
+  padding: 0.85rem 0.8rem 0.55rem;
 }
 
 .product-card-name {
@@ -5719,10 +5643,6 @@ body.order-detail-open {
   font-weight: 800;
   line-height: 1.55;
   overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
 }
 
 .product-card-meta-pills {
@@ -5751,7 +5671,14 @@ body.order-detail-open {
 }
 
 .product-card-stock-line {
+  grid-column: 3;
+  grid-row: 2;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: flex-start;
+  min-width: 0;
+  padding: 0.1rem 0.4rem 0.65rem 0.8rem;
+  gap: 0.2rem;
   margin-top: 0;
   color: var(--brand-muted);
   font-size: 0.76rem;
@@ -5760,11 +5687,13 @@ body.order-detail-open {
 .product-card-stock-label {
   color: var(--brand-ink);
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .product-card-sku,
 .product-card-category-hint {
   min-width: 0;
+  max-width: 100%;
   margin-top: 0;
   overflow: hidden;
   color: var(--brand-muted);
@@ -5774,10 +5703,25 @@ body.order-detail-open {
 }
 
 .product-card-price-row {
-  align-items: baseline;
+  grid-column: 2 / 4;
+  grid-row: 3;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: flex-start;
+  margin: 0 0.8rem;
+  padding: 0.65rem 0;
+  border-top: 1px solid var(--brand-border);
+}
+
+.product-card-prices {
+  display: flex;
   flex-wrap: wrap;
-  margin-top: 0;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+  min-width: 0;
+  width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .product-card-price {
@@ -5795,11 +5739,13 @@ body.order-detail-open {
 .product-card-discount {
   position: absolute;
   z-index: 2;
-  top: 0.85rem;
-  inset-inline-start: 0.85rem;
-  max-width: calc(100% - 1.7rem);
-  min-height: 32px;
-  padding: 0.3rem 0.62rem;
+  top: 0.45rem;
+  inset-inline-start: 0.45rem;
+  max-width: calc(100% - 0.9rem);
+  min-height: 28px;
+  padding: 0.25rem 0.4rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
   color: #ffffff;
   background: var(--brand-primary-strong);
   border: 1px solid rgba(255, 255, 255, 0.75);
@@ -5807,23 +5753,23 @@ body.order-detail-open {
 }
 
 .product-card-category-hint {
-  margin-top: 0;
-}
-
-.product-card-divider {
-  width: 100%;
-  align-self: end;
+  grid-column: 2;
+  grid-row: 2;
   margin: 0;
-  border-top: 1px solid var(--brand-border);
+  padding: 0.1rem 0.8rem 0.65rem 0.4rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 0.76rem;
 }
 
 .product-card-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 0.6rem;
-  min-height: 48px;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  min-height: 36px;
   margin: 0;
+  width: 100%;
   direction: ltr;
 }
 
@@ -5864,6 +5810,21 @@ body.order-detail-open {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.8;
+}
+
+.product-card-action {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  flex-basis: 36px;
+  border-width: 1px;
+  border-radius: 10px;
+}
+
+.product-card-action .ui-icon {
+  width: 19px;
+  height: 19px;
 }
 
 .product-editor-advanced-fields {
@@ -6349,19 +6310,9 @@ body.order-detail-open {
     border-radius: 20px;
   }
 
-  .product-card-image-wrap {
-    flex-basis: 34%;
-    min-width: 106px;
-    padding: 0.58rem;
-  }
-
   .product-card-image {
     min-height: 0;
     border-radius: 13px;
-  }
-
-  .product-card-content {
-    padding: 0.85rem 0.9rem 0.75rem;
   }
 
   .product-card-name {
@@ -6442,24 +6393,6 @@ body.order-detail-open {
 }
 
 @media (max-width: 420px) {
-  .product-card-image-wrap {
-    flex-basis: 31%;
-    min-width: 92px;
-  }
-
-  .product-card-image {
-    min-height: 0;
-  }
-
-  .product-card-content {
-    padding-inline: 0.72rem;
-  }
-
-  .product-card-stock-line {
-    flex-direction: column;
-    gap: 0.2rem;
-  }
-
   .product-view-field-grid,
   .product-view-variation-meta {
     grid-template-columns: minmax(0, 1fr);

@@ -10,11 +10,12 @@
 npm ci
 npx playwright install chromium webkit
 npm run lint
+npm run test:coupons
 npm run test:e2e:chromium
 npm run test:e2e:webkit
 ```
 
-`npm run test:e2e:preview` (و aliasهای `test:e2e` و `test:e2e:all`) همهٔ پروژه‌ها را اجرا می‌کند. تست‌ها برنامه را از سرور استاتیک `tools/static-server.js` و با `?preview=1` باز می‌کنند. این‌ها تست‌های browser/UI برای دادهٔ نمونهٔ داخل حافظه‌اند؛ تست integration وردپرس، REST API، احراز هویت یا WooCommerce نیستند و هیچ درخواستی به `/wp-json/` ارسال نمی‌کنند.
+`npm run test:e2e:preview` (و aliasهای `test:e2e` و `test:e2e:all`) همهٔ پروژه‌ها را اجرا می‌کند. تست‌های چیدمان برنامه را از سرور استاتیک `tools/static-server.js` و با `?preview=1` باز می‌کنند. تست‌های گردش کار کوپن پاسخ‌های HTTP را در مرورگر شبیه‌سازی می‌کنند تا نمایش نتیجهٔ ثبت، صفحه‌بندی و خطاها بررسی شود. `test:coupons` نیز قرارداد backend را با مدل‌های آزمایشی درون حافظه بررسی می‌کند. این آزمون‌ها جایگزین تست integration روی WordPress و WooCommerce واقعی نیستند.
 
 ## ساخت بستهٔ نصب
 

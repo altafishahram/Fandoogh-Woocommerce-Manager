@@ -318,7 +318,9 @@ function coupon_apply_values( $coupon, $values ) {
 		if ( array_key_exists( 'date_expires', $values ) && method_exists( $coupon, 'set_date_expires' ) ) {
 			$coupon->set_date_expires( $values['date_expires'] );
 		}
-		$coupon->save();
+		if ( ! $coupon->save() ) {
+			throw new \RuntimeException( 'Coupon save did not return an ID.' );
+		}
 	} catch ( \Throwable $exception ) {
 		return coupons_error( 'fandoogh_coupon_save_failed', __( 'ذخیرهٔ کوپن انجام نشد.', 'fandoogh-manager' ), 500 );
 	}
@@ -337,6 +339,8 @@ function coupon_from_id( $id ) {
 }
 
 function list_coupons( $request ) {
+	global $wpdb;
+
 	$session = get_session_context();
 	if ( is_wp_error( $session ) ) {
 		return $session;
@@ -347,26 +351,44 @@ function list_coupons( $request ) {
 	apply_session_user_context( $session );
 	$page = max( 1, min( 100000, absint( $request->get_param( 'page' ) ?: 1 ) ) );
 	$per_page = max( 1, min( 50, absint( $request->get_param( 'per_page' ) ?: 20 ) ) );
-	$args = array( 'limit' => $per_page, 'page' => $page, 'paginate' => true, 'orderby' => 'date', 'order' => 'DESC', 'return' => 'objects' );
+	// Match WooCommerce's REST coupon lookup: query post IDs, then use CRUD
+	// objects for coupon data. WooCommerce has no standard wc_get_coupons().
+	$args = array(
+		'post_type'           => 'shop_coupon',
+		'post_status'         => array( 'publish', 'future', 'draft', 'pending', 'private' ),
+		'fields'              => 'ids',
+		'posts_per_page'      => $per_page,
+		'paged'               => $page,
+		'orderby'             => array( 'date' => 'DESC', 'ID' => 'DESC' ),
+		'ignore_sticky_posts' => true,
+		'no_found_rows'       => false,
+	);
 	$search = coupon_clean_text( $request->get_param( 'search' ), 80 );
 	if ( '' !== $search ) {
-		// Use WooCommerce's bounded search argument so partial coupon codes and
-		// descriptions are handled by the official data store.
-		$args['search'] = $search;
+		$args['s'] = $search;
 	}
 	try {
-		$result = function_exists( 'wc_get_coupons' ) ? wc_get_coupons( $args ) : array();
-	} catch ( \Throwable $exception ) {
-		return coupons_error( 'fandoogh_coupons_query_failed', __( 'خواندن فهرست کوپن‌ها انجام نشد.', 'fandoogh-manager' ), 500 );
-	}
-	$coupons = is_object( $result ) && isset( $result->coupons ) ? $result->coupons : (array) $result;
-	$total = is_object( $result ) && isset( $result->total ) ? absint( $result->total ) : count( $coupons );
-	$pages = is_object( $result ) && isset( $result->max_num_pages ) ? absint( $result->max_num_pages ) : max( 1, (int) ceil( $total / $per_page ) );
-	$items = array();
-	foreach ( $coupons as $coupon ) {
-		if ( is_object( $coupon ) && method_exists( $coupon, 'get_id' ) ) {
+		// WP_Query can return an empty array on database failure. Clear stale
+		// diagnostics first so a cached successful query is not misclassified.
+		if ( isset( $wpdb->last_error ) ) {
+			$wpdb->last_error = '';
+		}
+		$query = new \WP_Query( $args );
+		if ( ! is_array( $query->posts ) || ! isset( $query->found_posts, $query->max_num_pages ) || ! empty( $wpdb->last_error ) ) {
+			throw new \RuntimeException( 'Coupon query failed.' );
+		}
+		$total = absint( $query->found_posts );
+		$pages = absint( $query->max_num_pages );
+		$items = array();
+		foreach ( $query->posts as $coupon_id ) {
+			$coupon = new \WC_Coupon( absint( $coupon_id ) );
+			if ( ! $coupon->get_id() ) {
+				throw new \RuntimeException( 'Coupon could not be read.' );
+			}
 			$items[] = serialize_coupon( $coupon );
 		}
+	} catch ( \Throwable $exception ) {
+		return coupons_error( 'fandoogh_coupons_query_failed', __( 'خواندن فهرست کوپن‌ها انجام نشد.', 'fandoogh-manager' ), 500 );
 	}
 	return coupons_response( array( 'data' => $items, 'meta' => array( 'page' => $page, 'per_page' => $per_page, 'total' => $total, 'total_pages' => $pages ) ) );
 }
