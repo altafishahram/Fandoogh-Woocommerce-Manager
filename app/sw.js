@@ -5,14 +5,16 @@
  */
 "use strict";
 
-var CACHE_NAME = "fandoogh-manager-shell-v33";
+var CACHE_NAME = "fandoogh-manager-shell-v34";
 var WORKER_VERSION = new URL(self.location.href).searchParams.get("ver") || "base";
 var MANAGER_BASE = new URL("./", self.location.href).pathname;
 var PUBLIC_ASSET_PATHS = [
   MANAGER_BASE,
   MANAGER_BASE + "styles.css",
   MANAGER_BASE + "app.js",
-  MANAGER_BASE + "fonts.css"
+  MANAGER_BASE + "fonts.css",
+  MANAGER_BASE + "ui.css",
+  MANAGER_BASE + "manifest.webmanifest"
 ];
 var PUBLIC_ASSETS = [MANAGER_BASE].concat(PUBLIC_ASSET_PATHS.slice(1).map(function (assetPath) {
   return WORKER_VERSION === "base" ? assetPath : assetPath + "?ver=" + encodeURIComponent(WORKER_VERSION);

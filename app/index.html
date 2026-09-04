@@ -6,21 +6,26 @@
     <meta name="theme-color" content="#0f766e" id="themeColor">
     <meta name="color-scheme" content="light">
     <meta name="description" content="داشبورد مدیریت فندوق؛ پوستهٔ آماده برای اتصال امن به وردپرس.">
+    <meta name="format-detection" content="telephone=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="فندوق">
     <link rel="manifest" href="/manager/manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="/assets/brand/fandoogh-mark.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/brand/fandoogh-mark.svg">
     <link rel="stylesheet" href="./styles.css">
     <link rel="stylesheet" href="./fonts.css">
+    <link rel="stylesheet" href="./ui.css">
     <title>فندوق | مدیریت</title>
   </head>
   <body>
+    <a class="skip-link" href="#appMain">پرش به محتوای اصلی</a>
     <!-- UI: پوستهٔ اصلی برنامه؛ بیشتر تغییرات چیدمان کلی از .app-shell و .app-workspace در styles.css کنترل می‌شود. -->
     <div class="app-shell">
       <!-- UI: سربرگ؛ جست‌وجو، هویت کاربر، اعلان‌ها، وضعیت اتصال و نصب وب‌اپ. -->
       <header class="topbar" aria-label="سربرگ برنامه">
-        <button class="mobile-menu-button" id="mobileMenuToggle" type="button" aria-label="بازکردن منوی مدیریت" aria-controls="appSidebar" aria-expanded="false">
+        <button class="mobile-menu-button fm-button fm-button--icon" id="mobileMenuToggle" type="button" aria-label="بازکردن منوی مدیریت" aria-controls="appSidebar" aria-expanded="false">
           <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></svg>
         </button>
 
@@ -40,17 +45,17 @@
         </div>
 
         <div class="topbar-actions">
-          <button class="topbar-icon-button" id="notificationsButton" type="button" aria-label="اعلان‌ها" aria-controls="notificationsPanel" aria-expanded="false" hidden><svg class="ui-icon" data-icon-name="notifications" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 6 2.2 6.2 2.2 7.3H4.3C4.3 16.2 6.5 16 6.5 10Z"/><path d="M9.5 20h5"/></svg><b id="notificationsBadge" hidden></b></button>
+          <button class="topbar-icon-button fm-button fm-button--icon" id="notificationsButton" type="button" aria-label="اعلان‌ها" aria-controls="notificationsPanel" aria-expanded="false" hidden><svg class="ui-icon" data-icon-name="notifications" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 6 2.2 6.2 2.2 7.3H4.3C4.3 16.2 6.5 16 6.5 10Z"/><path d="M9.5 20h5"/></svg><b id="notificationsBadge" hidden></b></button>
           <div class="topbar-notifications">
             <div class="topbar-popover" id="notificationsPanel" role="region" aria-label="اعلان‌های سفارش" hidden>
               <strong id="notificationsPanelTitle">اعلان‌ها</strong>
               <p id="notificationsPanelText">سفارش جدیدی برای بررسی نیست.</p>
               <ul class="notifications-pending-list" id="notificationsPendingList" hidden></ul>
-              <button class="secondary-button compact-button" id="notificationsOpenOrders" type="button">مشاهدهٔ سفارش‌ها</button>
+              <button class="secondary-button compact-button fm-button fm-button--secondary" id="notificationsOpenOrders" type="button">مشاهدهٔ سفارش‌ها</button>
             </div>
           </div>
           <div class="topbar-status">
-            <button class="connection-control" id="connectionControl" type="button" aria-expanded="false" aria-controls="connectionPopover">
+            <button class="connection-control fm-button fm-button--secondary" id="connectionControl" type="button" aria-expanded="false" aria-controls="connectionPopover">
               <span class="connection-indicator" id="connectionIndicator" data-state="checking">
                 <span class="status-dot" aria-hidden="true"></span>
                 <span id="connectionLabel">در حال بررسی اتصال</span>
@@ -64,7 +69,7 @@
           </div>
 
           <div class="install-control">
-            <button class="secondary-button compact-button install-button" id="installAppButton" type="button" hidden>نصب وب‌اپ</button>
+            <button class="secondary-button compact-button install-button fm-button fm-button--secondary" id="installAppButton" type="button" hidden>نصب وب‌اپ</button>
             <div class="install-popover" id="installPopover" role="dialog" aria-labelledby="installPopoverTitle" hidden>
               <strong id="installPopoverTitle">نصب وب‌اپ</strong>
               <p id="installPopoverText">از منوی مرورگر گزینهٔ نصب یا افزودن به صفحهٔ اصلی را انتخاب کنید.</p>
@@ -85,7 +90,7 @@
           <a class="brand-lockup" href="/manager/" aria-label="صفحهٔ اصلی مدیریت فندوق">
             <span class="brand-mark" aria-hidden="true">
               <span class="brand-mark-fallback" data-brand-mark-fallback>ف</span>
-              <img class="brand-logo" data-brand-logo alt="" hidden>
+              <img class="brand-logo" data-brand-logo data-default-logo="/assets/brand/fandoogh-mark.svg" src="/assets/brand/fandoogh-mark.svg" alt="" hidden>
             </span>
             <span class="brand-copy">
               <span class="brand-name" data-brand-name>فندوق</span>
@@ -119,12 +124,12 @@
       <div class="app-workspace">
 
       <!-- UI: اعلان آماده‌بودن نسخهٔ جدید وب‌اپ. -->
-      <div class="app-update-banner" id="appUpdateBanner" role="status" hidden>
+      <div class="app-update-banner fm-alert fm-alert--info" id="appUpdateBanner" role="status" hidden>
         <div>
           <strong>نسخهٔ جدید آماده است</strong>
           <p>برای دریافت اصلاحات و قابلیت‌های جدید، وب‌اپ را به‌روزرسانی کنید.</p>
         </div>
-        <button class="primary-button compact-button" id="applyAppUpdate" type="button">به‌روزرسانی</button>
+        <button class="primary-button compact-button fm-button fm-button--primary" id="applyAppUpdate" type="button">به‌روزرسانی</button>
       </div>
 
       <!-- UI: ناحیهٔ اصلی صفحات مدیریت. -->
@@ -180,12 +185,12 @@
                   <input id="pairingCode" name="pairingCode" type="text" inputmode="numeric" autocomplete="one-time-code" minlength="8" maxlength="14" placeholder="مثلاً ۱۲۳۴-۵۶۷۸-۹۰۱۲" enterkeyhint="done">
                 </div>
                 <p class="field-hint">کد فقط یک‌بار مصرف است؛ هیچ رمز یا توکنی در مرورگر ذخیره نمی‌شود.</p>
-                <button class="primary-button" id="pairingSubmit" type="submit">اتصال امن</button>
+                <button class="primary-button fm-button fm-button--primary" id="pairingSubmit" type="submit">اتصال امن</button>
               </form>
 
-              <div class="secure-note" id="pairingMessage" role="status" hidden></div>
+              <div class="secure-note fm-alert" id="pairingMessage" role="status" hidden></div>
               <div class="card-divider"><span>یا</span></div>
-              <button class="secondary-button full-width" id="previewDashboard" type="button">مشاهدهٔ داشبورد با دادهٔ نمونه</button>
+              <button class="secondary-button full-width fm-button fm-button--secondary" id="previewDashboard" type="button">مشاهدهٔ داشبورد با دادهٔ نمونه</button>
             </div>
           </div>
         </section>

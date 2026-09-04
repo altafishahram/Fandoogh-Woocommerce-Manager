@@ -8,7 +8,26 @@
   "start_url": "/manager/",
   "scope": "/manager/",
   "display": "standalone",
+  "display_override": ["standalone"],
   "orientation": "any",
   "theme_color": "#0f766e",
-  "background_color": "#f5f7fb"
+  "background_color": "#f5f7fb",
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "icons": [
+    {
+      "src": "/assets/brand/fandoogh-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/brand/fandoogh-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
 }

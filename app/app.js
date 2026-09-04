@@ -1805,6 +1805,111 @@
     }
   }
 
+  // [UI: SEMANTIC HOOKS] کلاس‌های قابل‌ردیابی برای audit و theme مستقل از
+  // کلاس‌های legacy اعمال می‌شوند؛ id، data-state و نقش‌های accessibility دست‌نخورده می‌مانند.
+  function applySemanticUiHooks(scope) {
+    var rootNode = scope && (scope.nodeType === 1 || scope.nodeType === 9) ? scope : document;
+    var buttons = [];
+    var stateNodes = [];
+    var alertNodes = [];
+
+    if (rootNode.nodeType === 1 && rootNode.matches) {
+      if (rootNode.matches("button")) {
+        buttons.push(rootNode);
+      }
+      if (rootNode.matches("[data-state]")) {
+        stateNodes.push(rootNode);
+      }
+      if (rootNode.matches("[role=alert], [data-alert], .secure-note, .app-update-banner")) {
+        alertNodes.push(rootNode);
+      }
+    }
+
+    Array.prototype.forEach.call(rootNode.querySelectorAll("button"), function (button) {
+      buttons.push(button);
+    });
+    Array.prototype.forEach.call(rootNode.querySelectorAll("[data-state]"), function (node) {
+      stateNodes.push(node);
+    });
+    Array.prototype.forEach.call(rootNode.querySelectorAll("[role=alert], [data-alert], .secure-note, .app-update-banner"), function (node) {
+      alertNodes.push(node);
+    });
+
+    buttons.forEach(function (button) {
+      button.classList.add("fm-button");
+      if (button.classList.contains("primary-button")) {
+        button.classList.add("fm-button--primary");
+      } else if (button.classList.contains("danger-button")) {
+        button.classList.add("fm-button--danger");
+      } else if (button.classList.contains("danger-outline-button")) {
+        button.classList.add("fm-button--danger-quiet");
+      } else if (button.classList.contains("quick-action")) {
+        button.classList.add("fm-button--quick-action");
+      } else if (button.classList.contains("text-link-button")) {
+        button.classList.add("fm-button--link");
+      } else if (button.classList.contains("secondary-button") || button.classList.contains("connection-control")) {
+        button.classList.add("fm-button--secondary");
+      }
+
+      if (button.classList.contains("topbar-icon-button") || button.classList.contains("mobile-menu-button") || button.classList.contains("icon-button") || button.classList.contains("icon-refresh-button")) {
+        button.classList.add("fm-button--icon");
+      }
+    });
+
+    function syncModifier(node, prefix, value) {
+      Array.prototype.forEach.call(node.classList, function (className) {
+        if (className.indexOf(prefix) === 0) {
+          node.classList.remove(className);
+        }
+      });
+      if (value) {
+        node.classList.add(prefix + value);
+      }
+    }
+
+    stateNodes.forEach(function (node) {
+      var stateName = String(node.getAttribute("data-state") || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      node.classList.add("fm-state");
+      syncModifier(node, "fm-state--", stateName);
+    });
+
+    alertNodes.forEach(function (node) {
+      var stateName = String(node.getAttribute("data-state") || "").toLowerCase();
+      var modifier = "info";
+      node.classList.add("fm-alert");
+      if (node.classList.contains("products-error-state") || node.classList.contains("product-view-error-state") || node.classList.contains("error-state") || stateName === "error") {
+        modifier = "error";
+      } else if (node.classList.contains("session-alert-panel") || node.classList.contains("inventory-warning-text") || node.classList.contains("warning-state") || stateName === "warning") {
+        modifier = "warning";
+      } else if (node.classList.contains("shipment-success-note") || node.classList.contains("success-state") || stateName === "ready" || stateName === "connected") {
+        modifier = "success";
+      }
+      syncModifier(node, "fm-alert--", modifier);
+    });
+  }
+
+  function setupSemanticUiHooks() {
+    applySemanticUiHooks(document);
+    if (!elements.appMain || !window.MutationObserver) {
+      return;
+    }
+
+    var observer = new MutationObserver(function (records) {
+      var shouldSync = records.some(function (record) {
+        return record.type === "childList" || record.type === "attributes";
+      });
+      if (shouldSync) {
+        applySemanticUiHooks(elements.appMain);
+      }
+    });
+    observer.observe(elements.appMain, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["data-state", "aria-invalid"]
+    });
+  }
+
   function safeApiUrl(value) {
     var normalized = safeAssetUrl(value);
     return normalized && /^https?:/i.test(normalized) ? normalized : "";
@@ -1984,7 +2089,9 @@
     });
 
     Array.prototype.forEach.call(document.querySelectorAll("[data-brand-logo]"), function (node) {
-      var hasLogo = Boolean(brand.logoUrl);
+      var defaultLogoUrl = safeAssetUrl(node.getAttribute("data-default-logo"));
+      var logoUrl = brand.logoUrl || defaultLogoUrl;
+      var hasLogo = Boolean(logoUrl);
       node.hidden = !hasLogo;
 
       if (hasLogo) {
@@ -1995,14 +2102,16 @@
             fallback.hidden = false;
           });
         };
-        node.src = brand.logoUrl;
+        node.src = logoUrl;
       } else {
         node.removeAttribute("src");
       }
     });
 
     Array.prototype.forEach.call(document.querySelectorAll("[data-brand-mark-fallback]"), function (node) {
-      node.hidden = Boolean(brand.logoUrl);
+      var brandLogo = document.querySelector("[data-brand-logo]");
+      var defaultLogoUrl = brandLogo ? safeAssetUrl(brandLogo.getAttribute("data-default-logo")) : "";
+      node.hidden = Boolean(brand.logoUrl || defaultLogoUrl);
     });
 
     document.title = formatDisplayText(brand.name + " | مدیریت");
@@ -12900,6 +13009,7 @@
   // [APP: BOOTSTRAP] ترتیب راه‌اندازی DOM، تنظیمات، نشست و بارگذاری اولیهٔ داده‌ها.
   function init() {
     getElements();
+    setupSemanticUiHooks();
     rememberAppVersion();
     initializePersianDatePickers();
     setupProductEditorWizard();

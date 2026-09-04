@@ -1,0 +1,11 @@
+/*
+ * Fandoogh Manager font entry point.
+ *
+ * WordPress replaces this sheet with the same-origin, generated font CSS when
+ * an administrator has uploaded a managed local font. Keeping a local
+ * fallback file makes the static preview and offline shell deterministic when
+ * no managed font has been configured yet.
+ */
+:root {
+  --fandoogh-font-source: local("FandooghLocal");
+}

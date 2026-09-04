@@ -471,7 +471,7 @@ function register_rewrite_rules() {
 		);
 
 		add_rewrite_rule(
-			'^' . preg_quote( $slug, '#' ) . '/(manifest\\.webmanifest|sw\\.js|app\\.js|styles\\.css|fonts\\.css)$',
+			'^' . preg_quote( $slug, '#' ) . '/(manifest\\.webmanifest|sw\\.js|app\\.js|styles\\.css|fonts\\.css|ui\\.css)$',
 			'index.php?' . APP_ASSET_QUERY_VAR . '=$matches[1]',
 			'top'
 		);
@@ -579,6 +579,7 @@ function app_asset_version() {
 		plugin_dir_path( __FILE__ ) . 'app/app.js',
 		plugin_dir_path( __FILE__ ) . 'app/styles.css',
 		plugin_dir_path( __FILE__ ) . 'app/fonts.css',
+		plugin_dir_path( __FILE__ ) . 'app/ui.css',
 		plugin_dir_path( __FILE__ ) . 'app/sw.js',
 	);
 
@@ -590,6 +591,11 @@ function app_asset_version() {
 	$icon_files = glob( plugin_dir_path( __FILE__ ) . 'assets/icon/*.svg' );
 	if ( is_array( $icon_files ) ) {
 		$files = array_merge( $files, $icon_files );
+	}
+
+	$brand_files = glob( plugin_dir_path( __FILE__ ) . 'assets/brand/*.svg' );
+	if ( is_array( $brand_files ) ) {
+		$files = array_merge( $files, $brand_files );
 	}
 
 	$parts = array( FANDOOGH_MANAGER_VERSION );
@@ -620,6 +626,7 @@ function app_asset_urls() {
 		'sw'        => add_query_arg( 'ver', $version, $base . 'sw.js' ),
 		'manifest'  => add_query_arg( 'ver', $version, $base . 'manifest.webmanifest' ),
 		'fonts'     => add_query_arg( 'ver', $version, $base . 'fonts.css' ),
+		'ui'        => add_query_arg( 'ver', $version, $base . 'ui.css' ),
 		'config'    => rest_url( REST_NAMESPACE . '/config' ),
 		'version'   => $version,
 	);
@@ -634,20 +641,20 @@ function app_asset_urls() {
  */
 function get_public_icon_urls() {
 	$icon_files = array(
-		'dashboard'    => 'iconsax-shop-3ead1b80e220-.svg',
-		'orders'       => 'iconsax-brifecase-timer-bf602fa21582-.svg',
-		'products'     => 'iconsax-archive-3b5fd84afa7b-.svg',
-		'inventory'    => 'iconsax-top-bottom-grid-f94b505b7ef1-.svg',
-		'customers'    => 'iconsax-user-tick-97125bce98c7-.svg',
-		'coupons'      => 'iconsax-ticket-discount-251defdced29-.svg',
-		'reviews'      => 'iconsax-conversation-box-7ea3e6adfe53-.svg',
-		'analytics'    => 'iconsax-status-up-e98745a5ec8b-.svg',
-		'categories'   => 'iconsax-global-74f93c2974b8-.svg',
-		'security'     => 'iconsax-tick-square-b03645d854ba-.svg',
-		'more'         => 'iconsax-setting-d380c136cee1-.svg',
-		'new-product'  => 'iconsax-edit-949de493a6da-.svg',
-		'filter'       => 'iconsax-filter-square-aec3454baeb5-.svg',
-		'notifications' => 'iconsax-bell2-a9a327da1323-.svg',
+		'dashboard'     => 'fandoogh-dashboard.svg',
+		'orders'        => 'fandoogh-orders.svg',
+		'products'      => 'fandoogh-products.svg',
+		'inventory'     => 'fandoogh-inventory.svg',
+		'customers'     => 'fandoogh-customers.svg',
+		'coupons'       => 'fandoogh-coupons.svg',
+		'reviews'       => 'fandoogh-reviews.svg',
+		'analytics'     => 'fandoogh-analytics.svg',
+		'categories'    => 'fandoogh-categories.svg',
+		'security'      => 'fandoogh-security.svg',
+		'more'          => 'fandoogh-more.svg',
+		'new-product'   => 'fandoogh-new-product.svg',
+		'filter'        => 'fandoogh-filter.svg',
+		'notifications' => 'fandoogh-notifications.svg',
 	);
 	$version = app_asset_version();
 	$icons  = array();
@@ -708,6 +715,7 @@ function maybe_serve_app_asset() {
 	$asset_map = array(
 		'app.js'     => array( 'file' => 'app/app.js', 'type' => 'application/javascript; charset=utf-8' ),
 		'styles.css' => array( 'file' => 'app/styles.css', 'type' => 'text/css; charset=utf-8' ),
+		'ui.css'     => array( 'file' => 'app/ui.css', 'type' => 'text/css; charset=utf-8' ),
 		'sw.js'      => array( 'file' => 'app/sw.js', 'type' => 'application/javascript; charset=utf-8' ),
 	);
 
@@ -742,19 +750,24 @@ function maybe_serve_app_asset() {
  */
 function serve_manifest() {
 	$branding = get_public_branding();
+	$settings = get_settings();
+	$urls     = app_asset_urls();
 	$manifest = array(
-		'id'             => app_base_url(),
-		'name'           => ! empty( $branding['site_name'] ) ? $branding['site_name'] . ' — مدیریت' : 'مدیریت فروشگاه',
-		'short_name'     => ! empty( $branding['site_name'] ) ? $branding['site_name'] : 'مدیریت فروشگاه',
-		'description'    => 'وب‌اپ مدیریت فروشگاه WooCommerce',
-		'lang'           => 'fa-IR',
-		'dir'            => 'rtl',
-		'start_url'      => app_base_url(),
-		'scope'          => app_base_url(),
-		'display'        => 'standalone',
-		'orientation'    => 'any',
-		'theme_color'    => get_settings()['colors']['primary'],
-		'background_color' => get_settings()['colors']['background'],
+		'id'                          => app_base_url(),
+		'name'                        => ! empty( $branding['site_name'] ) ? $branding['site_name'] . ' — مدیریت' : 'مدیریت فروشگاه',
+		'short_name'                  => ! empty( $branding['site_name'] ) ? $branding['site_name'] : 'مدیریت فروشگاه',
+		'description'                 => 'وب‌اپ مدیریت فروشگاه WooCommerce',
+		'lang'                        => 'fa-IR',
+		'dir'                         => 'rtl',
+		'start_url'                   => app_base_url(),
+		'scope'                       => app_base_url(),
+		'display'                     => 'standalone',
+		'display_override'            => array( 'standalone' ),
+		'orientation'                 => 'any',
+		'theme_color'                 => $settings['colors']['primary'],
+		'background_color'            => $settings['colors']['background'],
+		'prefer_related_applications' => false,
+		'launch_handler'              => array( 'client_mode' => 'navigate-existing' ),
 	);
 
 	$icons = array();
@@ -764,8 +777,22 @@ function serve_manifest() {
 				'src'   => $icon_url,
 				'sizes' => '512x512',
 				'type'  => 'image/png',
+				'purpose' => 'any maskable',
 			);
 			break;
+		}
+	}
+
+	$bundled_icon_path = plugin_dir_path( __FILE__ ) . 'assets/brand/fandoogh-mark.svg';
+	if ( is_readable( $bundled_icon_path ) ) {
+		$bundled_icon_url = public_asset_url( add_query_arg( 'ver', $urls['version'], plugins_url( 'assets/brand/fandoogh-mark.svg', __FILE__ ) ) );
+		if ( $bundled_icon_url ) {
+			$icons[] = array(
+				'src'    => $bundled_icon_url,
+				'sizes'  => 'any',
+				'type'   => 'image/svg+xml',
+				'purpose' => 'any maskable',
+			);
 		}
 	}
 
@@ -1165,17 +1192,31 @@ function maybe_render_app_shell() {
 		$meta .= '<link rel="apple-touch-icon" href="' . esc_url( $apple_icon ) . '">';
 	}
 
+	$bundled_icon_path = plugin_dir_path( __FILE__ ) . 'assets/brand/fandoogh-mark.svg';
+	$bundled_icon_url  = '';
+	if ( is_readable( $bundled_icon_path ) ) {
+		$bundled_icon_url = public_asset_url( add_query_arg( 'ver', $urls['version'], plugins_url( 'assets/brand/fandoogh-mark.svg', __FILE__ ) ) );
+	}
+
 	$html = str_replace(
 		array(
 			'href="/manager/manifest.webmanifest"',
 			'href="./styles.css"',
 			'href="./fonts.css"',
+			'href="./ui.css"',
+			'href="/assets/brand/fandoogh-mark.svg"',
+			'src="/assets/brand/fandoogh-mark.svg"',
+			'data-default-logo="/assets/brand/fandoogh-mark.svg"',
 			'src="./app.js"',
 		),
 		array(
 			'href="' . esc_url( $urls['manifest'] ) . '"',
 			'href="' . esc_url( $urls['styles'] ) . '"',
 			'href="' . esc_url( $urls['fonts'] ) . '"',
+			'href="' . esc_url( $urls['ui'] ) . '"',
+			'href="' . esc_url( $bundled_icon_url ) . '"',
+			'src="' . esc_url( $bundled_icon_url ) . '"',
+			'data-default-logo="' . esc_url( $bundled_icon_url ) . '"',
 			'src="' . esc_url( $urls['app'] ) . '"',
 		),
 		$html

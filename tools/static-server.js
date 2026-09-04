@@ -50,6 +50,15 @@ function resolveFile(urlPath) {
   if (rel === '/manager/manifest.webmanifest' || rel === '/manifest.webmanifest') {
     return path.join(ROOT, 'manifest.webmanifest');
   }
+  if (rel.startsWith('/assets/')) {
+    const assetsRoot = path.join(ROOT, 'assets');
+    const file = path.join(ROOT, rel.replace(/^\/+/, ''));
+    const normalized = path.normalize(file);
+    if (!normalized.startsWith(assetsRoot + path.sep)) {
+      return null;
+    }
+    return normalized;
+  }
   if (rel.startsWith('/manager/')) {
     rel = rel.slice('/manager/'.length);
   }
