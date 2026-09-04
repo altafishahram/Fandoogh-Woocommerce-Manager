@@ -2177,19 +2177,18 @@
       return;
     }
 
-    elements.installAppButton.hidden = state.pwa.installed || isStandaloneMode();
+    // Browser-install UX is intentionally limited to iOS. Android is kept
+    // manifest/service-worker ready for the native Trusted Web Activity shell,
+    // not offered as a competing browser PWA installation.
+    elements.installAppButton.hidden = !isIosDevice() || state.pwa.installed || isStandaloneMode();
   }
 
   function openInstallGuide() {
-    if (!elements.installPopover) {
-      return;
-    }
+    if (!elements.installPopover || !isIosDevice()) {
+	  return;
+	}
 
-    if (isIosDevice()) {
-      elements.installPopoverText.textContent = "در Safari روی Share بزنید و گزینهٔ Add to Home Screen را انتخاب کنید.";
-    } else {
-      elements.installPopoverText.textContent = "از منوی مرورگر گزینهٔ Install app یا Add to Home screen را انتخاب کنید.";
-    }
+    elements.installPopoverText.textContent = "در Safari روی Share بزنید و گزینهٔ Add to Home Screen را انتخاب کنید.";
 
     elements.installPopover.hidden = false;
   }
@@ -2201,6 +2200,10 @@
   }
 
   function handleInstallApp() {
+	if (!isIosDevice()) {
+	  return;
+	}
+
     var installPrompt = state.pwa.deferredInstallPrompt;
 
     if (!installPrompt) {
@@ -12982,7 +12985,7 @@
     });
     window.addEventListener("beforeinstallprompt", function (event) {
       event.preventDefault();
-      state.pwa.deferredInstallPrompt = event;
+      state.pwa.deferredInstallPrompt = isIosDevice() ? event : null;
       setInstallButtonVisibility();
     });
     window.addEventListener("appinstalled", function () {
