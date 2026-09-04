@@ -1,0 +1,19 @@
+{
+  "name": "fandoogh-manager-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Playwright responsiveness checks for the Fandoogh Manager PWA shell.",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ci": "playwright test --reporter=list"
+  },
+  "playwright": {
+    "browsers": [
+      "chromium",
+      "webkit"
+    ]
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}

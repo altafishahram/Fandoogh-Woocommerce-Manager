@@ -1,0 +1,66 @@
+# راهنمای ویرایش ظاهر پنل فندوق
+
+## قرارداد سادهٔ فایل‌ها
+
+- `index.html`: اسکلت و متن صفحه‌ها. بخش‌های اصلی با کامنت `UI:` مشخص شده‌اند.
+- `styles.css`: رنگ، فونت، فاصله، اندازه، کارت‌ها، مودال‌ها و responsive.
+- `app.js`: رفتار، اتصال به API، تغییر وضعیت‌ها و رندر کارت‌ها/لیست‌های پویا.
+
+## مهم‌ترین قانون
+
+`class` معمولاً برای ظاهر است؛ `id` و `data-*` معمولاً قلاب رفتار هستند.
+
+پس برای تغییر رنگ، فاصله، اندازه و چیدمان، اول `styles.css` را تغییر بده. این موارد را بدون هماهنگ‌کردن با `app.js` تغییر نده:
+
+- `id`هایی مثل `pairingForm`، `productsGrid`، `ordersGrid` و `appSidebar`
+- `data-nav-target` و `data-nav-section`
+- `data-state`، `hidden`، `aria-expanded`، `aria-selected` و `aria-busy`
+- کلاس‌های وضعیتی مثل `is-active` و کلاس‌هایی که در رندر کارت‌های پویا استفاده می‌شوند
+
+اگر نام یک `id` یا `data-*` عوض شد، همان نام را در `getElements`، `bindEvents` و تابع `render` مربوط به آن بخش هم اصلاح کن.
+
+## نقشهٔ سریع CSS
+
+| ظاهر موردنظر | selectorها / متغیرها |
+| --- | --- |
+| رنگ اصلی و فونت | `:root`، مخصوصاً `--brand-primary`، `--brand-accent` و `--font-sans` |
+| پس‌زمینه و کارت عمومی | `--brand-bg`، `--brand-surface`، `.card-surface` |
+| گردی و سایه | `--brand-radius`، `--shadow-soft`، `--shadow-card` |
+| سربرگ و جست‌وجو | `.topbar`، `.topbar-search`، `.topbar-actions` |
+| سایدبار | `.app-sidebar`، `.sidebar-nav-item`، `.sidebar-store-card` |
+| صفحهٔ ورود | `.pairing-view`، `.hero-grid`، `.auth-card` |
+| داشبورد | `.dashboard-grid`، `.dashboard-kpi-card`، `.quick-action`، `.dashboard-chart-panel` |
+| محصولات | `.products-panel`، `.products-toolbar`، `.products-grid`، `.product-card` |
+| سفارش‌ها | `.orders-panel`، `.orders-toolbar`، `.orders-grid`، `.order-card` |
+| مشتریان/موجودی/کوپن/دیدگاه | `.customers-panel`، `.inventory-panel`، `.coupons-panel`، `.reviews-panel` |
+| مودال‌ها | `.product-editor-dialog`، `.product-view-dialog`، `.order-modal-dialog`، `.manual-order-dialog` |
+| موبایل | `.mobile-bottom-nav` و بلوک‌های `@media` در انتهای فایل |
+
+فایل CSS چند لایهٔ override دارد؛ بلوک‌های پایین‌تر با کامنت‌های `Final` و `Responsive` ممکن است قواعد بالاتر را بازنویسی کنند. برای تغییرات شخصی، بخش `UI: CUSTOM OVERRIDES` در انتهای فایل محل مناسبی است.
+
+## رندرهای پویا
+
+کارت‌ها و ردیف‌هایی که از API می‌آیند مستقیماً در HTML اولیه نیستند و در `app.js` ساخته می‌شوند. اگر ظاهر این موارد را عوض می‌کنی:
+
+- ظاهر کارت محصول: `.product-card` و `renderProductCards`
+- ظاهر کارت سفارش: `.order-card` و `renderOrderCards`
+- ظاهر کارت مشتری: `.customer-card` و `renderCustomerCards`
+- وضعیت‌های loading/empty/error: `.products-state` و توابع `set...State`
+
+در اغلب تغییرات ظاهری فقط CSS کافی است. اگر ساختار HTML یک کارت یا نام کلاسش عوض شود، آن‌وقت `app.js` را هم هماهنگ می‌کنم.
+
+## روال پیشنهادی تغییر
+
+1. ابتدا با CSS رنگ، فاصله، radius، shadow و responsive را تغییر بده.
+2. اگر یک بخش جدید لازم است، در HTML یک `class` ظاهری اضافه کن و قلاب‌های رفتاری موجود را نگه دار.
+3. بعد از تغییر HTML، `id`ها و `data-*`ها را با جست‌وجو در `app.js` بررسی کن.
+4. اگر ظاهر کارت‌ها از داده ساخته می‌شود، کلاس‌های رندر همان بخش را هم بررسی کن.
+5. فایل‌های اصلی را برای format یا minify مجدد overwrite نکن تا کامنت‌های راهنما باقی بمانند.
+
+من می‌توانم در مرحلهٔ بعد هر تغییر ظاهری که در `index.html` یا `styles.css` انجام دادی را بررسی کنم و `app.js` را بدون تغییر رفتار API با آن هماهنگ کنم.
+
+## دیدن صفحه با دادهٔ نمونه
+
+برای بررسی ظاهر پنل بدون اتصال واقعی به فروشگاه، روی دکمهٔ «مشاهدهٔ داشبورد با دادهٔ نمونه» بزن؛ یا آدرس مدیریت را با پارامتر `?preview=1` باز کن (مثلاً `/manager/?preview=1`). اگر فایل‌ها را مستقیم باز می‌کنی، همین پارامتر را به آدرس `index.html` اضافه کن. در این حالت داشبورد، محصولات، سفارش‌ها، مشتریان، موجودی، کوپن‌ها، دیدگاه‌ها و بخش تحلیل با دادهٔ ساختگی نمایش داده می‌شوند و هیچ درخواست یا ذخیره‌ای در فروشگاه انجام نمی‌شود.
+
+داده‌های نمونه در ابتدای `app.js` داخل `PREVIEW_STORE_DATA` قرار دارند و می‌توانی متن، تعداد کارت‌ها، قیمت‌ها و وضعیت‌ها را همان‌جا تغییر بدهی. برای دیدن اطلاعات واقعی، پارامتر پیش‌نمایش را حذف کن و اتصال امن فروشگاه را انجام بده.
