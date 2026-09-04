@@ -27,6 +27,10 @@ if ( ! defined( 'FANDOOGH_MANAGER_VERSION' ) ) {
 	define( 'FANDOOGH_MANAGER_VERSION', VERSION );
 }
 
+if ( ! defined( 'FANDOOGH_MANAGER_FILE' ) ) {
+	define( 'FANDOOGH_MANAGER_FILE', __FILE__ );
+}
+
 require_once plugin_dir_path( __FILE__ ) . 'app/security.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/products.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/bulk-pricing.php';
@@ -36,6 +40,7 @@ require_once plugin_dir_path( __FILE__ ) . 'app/variations.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/customers.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/orders.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/shipping.php';
+require_once plugin_dir_path( __FILE__ ) . 'app/order-tracking.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/analytics.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/media.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/fonts.php';
@@ -48,8 +53,10 @@ register_deactivation_hook( __FILE__, __NAMESPACE__ . '\\deactivate' );
 
 add_action( 'init', __NAMESPACE__ . '\\load_plugin_textdomain', 0 );
 add_action( 'init', __NAMESPACE__ . '\\maybe_ensure_security_schema', 1 );
+add_action( 'init', __NAMESPACE__ . '\\maybe_schedule_security_cleanup', 2 );
 add_action( 'init', __NAMESPACE__ . '\\register_rewrite_rules', 20 );
 add_action( 'init', __NAMESPACE__ . '\\register_shortcodes', 20 );
+add_action( SECURITY_CLEANUP_HOOK, __NAMESPACE__ . '\\cleanup_security_data' );
 
 /**
  * Load the plugin's translations from the /languages folder. Strings are
@@ -100,6 +107,7 @@ function default_settings() {
 		'session_alert_email'    => '',
 		'analytics_enabled' => false,
 		'local_fonts'      => array(),
+		'order_tracking'   => order_tracking_default_settings(),
 	);
 }
 
@@ -116,6 +124,9 @@ function activate() {
 	}
 
 	ensure_security_schema();
+	if ( function_exists( 'wp_next_scheduled' ) && false === wp_next_scheduled( SECURITY_CLEANUP_HOOK ) ) {
+		wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', SECURITY_CLEANUP_HOOK );
+	}
 	register_rewrite_rules();
 	flush_rewrite_rules();
 }
@@ -124,6 +135,7 @@ function activate() {
  * @return void
  */
 function deactivate() {
+	wp_clear_scheduled_hook( SECURITY_CLEANUP_HOOK );
 	flush_rewrite_rules();
 }
 
@@ -422,6 +434,7 @@ function sanitize_settings( $raw_settings ) {
 	$settings['session_alert_email'] = isset( $raw_settings['session_alert_email'] ) ? sanitize_email( (string) $raw_settings['session_alert_email'] ) : '';
 	$settings['analytics_enabled'] = ! empty( $raw_settings['analytics_enabled'] );
 	$settings['local_fonts'] = isset( $raw_settings['local_fonts'] ) ? sanitize_local_font_allowlist( $raw_settings['local_fonts'] ) : array();
+	$settings['order_tracking'] = isset( $raw_settings['order_tracking'] ) ? order_tracking_sanitize_settings( $raw_settings['order_tracking'] ) : order_tracking_default_settings();
 
 	return $settings;
 }
@@ -1084,6 +1097,7 @@ function get_config_response() {
 			'analytics' => array(
 				'enabled' => ! empty( $settings['analytics_enabled'] ),
 			),
+			'tracking' => order_tracking_public_config(),
 			'currency' => get_public_currency(),
 			'icons'    => get_public_icon_urls(),
 			'theme_config' => array(
@@ -1234,6 +1248,14 @@ function register_settings() {
 		__( 'تحلیل فروش WooCommerce', 'fandoogh-manager' ),
 		__NAMESPACE__ . '\\render_analytics_section',
 		'fandoogh-manager-settings'
+	);
+
+	add_settings_field(
+		'fandoogh_manager_analytics_enabled',
+		__( 'فعال‌سازی داشبورد تحلیل فروش', 'fandoogh-manager' ),
+		__NAMESPACE__ . '\\render_analytics_enabled_field',
+		'fandoogh-manager-settings',
+		'fandoogh_manager_analytics_section'
 	);
 
 	add_settings_section(

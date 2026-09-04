@@ -8518,6 +8518,27 @@ body.order-filter-open {
 .order-edit-dialog .shipment-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .order-edit-dialog .order-operations-block { margin-top: 0; }
 
+/* Order tracking actions are dedicated controls so carrier links and copy
+ * feedback remain identifiable during future UI revisions. */
+.shipment-tracking-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.shipment-tracking-actions .shipment-tracking-copy,
+.shipment-tracking-actions .shipment-tracking-link {
+  min-height: 42px;
+}
+
+.shipment-tracking-actions .shipment-tracking-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 @media (max-width: 1200px) and (min-width: 901px) { .orders-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (max-width: 900px) and (min-width: 601px) { .orders-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .order-line-items-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 720px) {
@@ -8541,6 +8562,9 @@ body.order-filter-open {
   .order-address-grid,
   .order-edit-fields-grid,
   .order-edit-dialog .shipment-form-grid { grid-template-columns: minmax(0, 1fr); }
+
+  .shipment-tracking-actions .shipment-tracking-copy,
+  .shipment-tracking-actions .shipment-tracking-link { flex: 1 1 100%; width: 100%; }
   .order-line-card { grid-template-columns: 5.25rem minmax(0, 1fr); }
   .order-line-image { width: 5.25rem; min-width: 5.25rem; height: 5.25rem; }
 }

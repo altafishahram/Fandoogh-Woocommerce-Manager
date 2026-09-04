@@ -20,6 +20,12 @@ const CSRF_HEADER_NAME = 'X-Fandoogh-CSRF';
 const CSRF_GRACE_TTL = 90;
 const ACCESS_POLICY_META_KEY = 'fandoogh_manager_access_policy';
 const SESSION_ALERT_OPTION_KEY = 'fandoogh_manager_session_alert_state';
+const SECURITY_CLEANUP_HOOK = 'fandoogh_manager_cleanup';
+const SECURITY_PAIRING_RETENTION = 86400;
+const SECURITY_SESSION_RETENTION = 7776000;
+const SECURITY_AUDIT_RETENTION = 15552000;
+const SECURITY_IDEMPOTENCY_RETENTION = 86400;
+const SECURITY_CLEANUP_BATCH = 500;
 
 /**
  * Install the two small site-local tables used for one-time pairing and
@@ -104,6 +110,112 @@ function ensure_security_schema() {
 function maybe_ensure_security_schema() {
 	if ( SECURITY_SCHEMA_VERSION !== (string) get_option( SECURITY_SCHEMA_OPTION, '' ) ) {
 		ensure_security_schema();
+	}
+}
+
+/**
+ * Keep active installations on the same lifecycle as a newly activated one.
+ *
+ * @return void
+ */
+function maybe_schedule_security_cleanup() {
+	if ( ! function_exists( 'wp_next_scheduled' ) || ! function_exists( 'wp_schedule_event' ) ) {
+		return;
+	}
+
+	if ( false === wp_next_scheduled( SECURITY_CLEANUP_HOOK ) ) {
+		$delay = defined( 'HOUR_IN_SECONDS' ) ? HOUR_IN_SECONDS : 3600;
+		wp_schedule_event( time() + $delay, 'daily', SECURITY_CLEANUP_HOOK );
+	}
+}
+
+/**
+ * Prune only plugin-owned security and idempotency data. WooCommerce orders,
+ * products, and customer records are never included in this maintenance job.
+ *
+ * @return void
+ */
+function cleanup_security_data() {
+	global $wpdb;
+
+	$now                 = time();
+	$pairing_cutoff      = security_mysql_from_timestamp( $now - SECURITY_PAIRING_RETENTION );
+	$session_cutoff      = security_mysql_from_timestamp( $now - SECURITY_SESSION_RETENTION );
+	$session_idle_cutoff = security_mysql_from_timestamp( $now - SECURITY_SESSION_RETENTION - SESSION_IDLE_TTL );
+	$audit_cutoff        = security_mysql_from_timestamp( $now - SECURITY_AUDIT_RETENTION );
+
+	$wpdb->query(
+		$wpdb->prepare(
+			'DELETE FROM ' . security_pairings_table() . ' WHERE expires_at < %s LIMIT ' . SECURITY_CLEANUP_BATCH,
+			$pairing_cutoff
+		)
+	);
+
+	$wpdb->query(
+		$wpdb->prepare(
+			'DELETE FROM ' . security_sessions_table() . ' WHERE ((status <> %s AND COALESCE(revoked_at, expires_at, last_seen_at, created_at) < %s) OR (status = %s AND (expires_at < %s OR last_seen_at < %s))) LIMIT ' . SECURITY_CLEANUP_BATCH,
+			'active',
+			$session_cutoff,
+			'active',
+			$session_cutoff,
+			$session_idle_cutoff
+		)
+	);
+
+	$wpdb->query(
+		$wpdb->prepare(
+			'DELETE FROM ' . security_audit_table() . ' WHERE created_at < %s LIMIT ' . SECURITY_CLEANUP_BATCH,
+			$audit_cutoff
+		)
+	);
+
+	cleanup_security_idempotency_options( $now - SECURITY_IDEMPOTENCY_RETENTION );
+
+	$state       = get_option( SESSION_ALERT_OPTION_KEY, array() );
+	$clean_state = sanitize_session_alert_state( $state );
+	if ( $clean_state !== $state ) {
+		update_option( SESSION_ALERT_OPTION_KEY, $clean_state, false );
+	}
+}
+
+/**
+ * Delete expired dynamic option claims through WordPress's option API after
+ * enumerating only prefixes owned by this plugin.
+ *
+ * @param int $cutoff Unix timestamp.
+ * @return void
+ */
+function cleanup_security_idempotency_options( $cutoff ) {
+	global $wpdb;
+
+	$prefixes = array(
+		'fandoogh_order_create_',
+		'fandoogh_refund_',
+		'fandoogh_bulk_price_claim_',
+	);
+
+	foreach ( $prefixes as $prefix ) {
+		$option_names = $wpdb->get_col(
+			$wpdb->prepare(
+				'SELECT option_name FROM ' . $wpdb->options . ' WHERE option_name LIKE %s ORDER BY option_id ASC LIMIT ' . SECURITY_CLEANUP_BATCH,
+				$wpdb->esc_like( $prefix ) . '%'
+			)
+		);
+
+		foreach ( (array) $option_names as $option_name ) {
+			$value     = get_option( $option_name, false );
+			$timestamp = 0;
+			if ( is_array( $value ) ) {
+				$timestamp = max(
+					absint( isset( $value['completed_at'] ) ? $value['completed_at'] : 0 ),
+					absint( isset( $value['created_at'] ) ? $value['created_at'] : 0 )
+				);
+			}
+
+			if ( $timestamp < absint( $cutoff ) ) {
+				delete_option( $option_name );
+			}
+		}
 	}
 }
 
@@ -602,6 +714,7 @@ function allowed_audit_events() {
 			'order_note_added',
 			'order_refunded',
 			'shipment_updated',
+			'order_tracking_updated',
 			'fulfillment_updated',
 			'coupon_created',
 			'coupon_updated',
@@ -824,22 +937,16 @@ function consume_pairing_rate_limit() {
  */
 function find_pairing_record( $code ) {
 	global $wpdb;
-	$rows = $wpdb->get_results(
+	$hash = security_hash_secret( normalize_pairing_code( $code ) );
+
+	return $wpdb->get_row(
 		$wpdb->prepare(
-			"SELECT * FROM " . security_pairings_table() . " WHERE status = %s AND expires_at > %s AND attempts < max_attempts ORDER BY id DESC LIMIT 50",
+			'SELECT * FROM ' . security_pairings_table() . ' WHERE token_hash = %s AND status = %s AND expires_at > %s AND attempts < max_attempts LIMIT 1',
+			$hash,
 			'active',
 			security_now_mysql()
 		)
 	);
-	$hash = security_hash_secret( normalize_pairing_code( $code ) );
-
-	foreach ( (array) $rows as $row ) {
-		if ( is_object( $row ) && isset( $row->token_hash ) && hash_equals( (string) $row->token_hash, $hash ) ) {
-			return $row;
-		}
-	}
-
-	return null;
 }
 
 /**
@@ -1086,7 +1193,7 @@ function session_alert_unacknowledged_count( $user_id, $session_id, $rows ) {
 
 	if ( 0 === $count && isset( $state[ $key ] ) ) {
 		unset( $state[ $key ] );
-		sanitize_session_alert_state( $state );
+		$state = sanitize_session_alert_state( $state );
 		update_option( SESSION_ALERT_OPTION_KEY, $state, false );
 	}
 
@@ -1119,7 +1226,7 @@ function session_alert_acknowledge( $user_id, $session_id, $rows ) {
 	}
 
 	$state[ $key ] = $seen;
-	sanitize_session_alert_state( $state );
+	$state = sanitize_session_alert_state( $state );
 	update_option( SESSION_ALERT_OPTION_KEY, $state, false );
 }
 
@@ -1153,7 +1260,7 @@ function sanitize_session_alert_state( $state ) {
 			if ( count( $seen ) >= 200 ) {
 				break;
 			}
-					}
+		}
 		if ( ! empty( $seen ) ) {
 			$clean[ $user_key ] = $seen;
 		}

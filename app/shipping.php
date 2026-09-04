@@ -69,6 +69,7 @@ function shipping_snapshot_defaults() {
 		'shipping_method_id'      => '',
 		'shipping_method_title'   => '',
 		'tracking_code'           => '',
+		'carrier_id'              => '',
 		'carrier_label'           => '',
 		'shipped_at'              => '',
 		'estimated_delivery_date' => '',
@@ -113,6 +114,13 @@ function shipping_normalize_snapshot( $raw ) {
 				$max_length = SHIPPING_NOTE_MAX_LENGTH;
 			}
 			$snapshot[ $key ] = shipping_bounded_stored_text( $raw[ $key ], $max_length );
+		}
+	}
+
+	if ( isset( $raw['carrier_id'] ) && is_scalar( $raw['carrier_id'] ) && function_exists( __NAMESPACE__ . '\\order_tracking_sanitize_provider_id' ) ) {
+		$carrier_id = order_tracking_sanitize_provider_id( $raw['carrier_id'] );
+		if ( '' !== $carrier_id && function_exists( __NAMESPACE__ . '\\order_tracking_get_provider' ) && order_tracking_get_provider( $carrier_id ) ) {
+			$snapshot['carrier_id'] = $carrier_id;
 		}
 	}
 
@@ -418,6 +426,7 @@ function shipping_request_body( $request ) {
 		'shipping_method_id',
 		'shipping_method_title',
 		'tracking_code',
+		'carrier_id',
 		'carrier_label',
 		'shipped_at',
 		'estimated_delivery_date',
@@ -441,6 +450,13 @@ function shipping_request_body( $request ) {
 	}
 
 	$parsed = array( 'status' => $status );
+	if ( array_key_exists( 'carrier_id', $body ) ) {
+		$carrier_id = shipping_validate_carrier_id( $body['carrier_id'] );
+		if ( is_wp_error( $carrier_id ) ) {
+			return $carrier_id;
+		}
+		$parsed['carrier_id'] = $carrier_id;
+	}
 	foreach ( array( 'shipping_method_id', 'shipping_method_title', 'tracking_code', 'carrier_label', 'note' ) as $field ) {
 		if ( ! array_key_exists( $field, $body ) ) {
 			continue;
@@ -511,6 +527,27 @@ function shipping_validate_status( $value ) {
 	}
 
 	return $value;
+}
+
+/**
+ * Validate an optional configured carrier ID. An empty value remains valid so
+ * stores can record a custom carrier label without creating a provider record.
+ *
+ * @param mixed $value Candidate carrier ID.
+ * @return string|\WP_Error
+ */
+function shipping_validate_carrier_id( $value ) {
+	$value = is_scalar( $value ) ? trim( (string) $value ) : '';
+	if ( '' === $value ) {
+		return '';
+	}
+
+	$carrier_id = function_exists( __NAMESPACE__ . '\\order_tracking_sanitize_provider_id' ) ? order_tracking_sanitize_provider_id( $value ) : '';
+	if ( '' === $carrier_id || ! function_exists( __NAMESPACE__ . '\\order_tracking_get_provider' ) || ! order_tracking_get_provider( $carrier_id ) ) {
+		return shipping_error( 'fandoogh_shipping_invalid_carrier', __( 'شرکت حمل انتخاب‌شده معتبر نیست.', 'fandoogh-manager' ), 422 );
+	}
+
+	return $carrier_id;
 }
 
 /**
@@ -640,13 +677,17 @@ function shipping_strlen( $value ) {
 function shipping_serialize_snapshot( $order_id, $snapshot ) {
 	$snapshot = shipping_normalize_snapshot( $snapshot );
 	$tracking = (string) $snapshot['tracking_code'];
+	$provider = function_exists( __NAMESPACE__ . '\\order_tracking_get_provider' ) ? order_tracking_get_provider( $snapshot['carrier_id'] ) : null;
+	$tracking_url = ( '' !== $tracking && function_exists( __NAMESPACE__ . '\\order_tracking_build_url' ) ) ? order_tracking_build_url( $provider, $tracking ) : '';
 
 	return array(
 		'status'                  => $snapshot['status'],
 		'shipping_method_id'      => (string) $snapshot['shipping_method_id'],
 		'shipping_method_title'   => (string) $snapshot['shipping_method_title'],
 		'tracking_code'           => $tracking,
+		'carrier_id'              => (string) $snapshot['carrier_id'],
 		'carrier_label'           => (string) $snapshot['carrier_label'],
+		'tracking_url'            => '' !== $tracking_url ? $tracking_url : null,
 		'shipped_at'              => '' !== $snapshot['shipped_at'] ? $snapshot['shipped_at'] : null,
 		'estimated_delivery_date' => '' !== $snapshot['estimated_delivery_date'] ? $snapshot['estimated_delivery_date'] : null,
 		'delivered_at'            => '' !== $snapshot['delivered_at'] ? $snapshot['delivered_at'] : null,
@@ -671,9 +712,15 @@ function shipping_serialize_snapshot( $order_id, $snapshot ) {
 function shipping_save_snapshot( $order, $body, $user_id ) {
 	$snapshot = shipping_read_snapshot( $order );
 
-	foreach ( array( 'status', 'shipping_method_id', 'shipping_method_title', 'tracking_code', 'carrier_label', 'shipped_at', 'estimated_delivery_date', 'delivered_at', 'note' ) as $field ) {
+	foreach ( array( 'status', 'shipping_method_id', 'shipping_method_title', 'tracking_code', 'carrier_id', 'carrier_label', 'shipped_at', 'estimated_delivery_date', 'delivered_at', 'note' ) as $field ) {
 		if ( array_key_exists( $field, $body ) ) {
 			$snapshot[ $field ] = $body[ $field ];
+		}
+	}
+	if ( '' !== $snapshot['carrier_id'] && function_exists( __NAMESPACE__ . '\\order_tracking_get_provider' ) ) {
+		$provider = order_tracking_get_provider( $snapshot['carrier_id'] );
+		if ( $provider ) {
+			$snapshot['carrier_label'] = $provider['label'];
 		}
 	}
 	if ( array_key_exists( 'items', $body ) ) {

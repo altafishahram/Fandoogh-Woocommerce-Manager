@@ -46,6 +46,13 @@
     analytics: {
       enabled: false
     },
+    tracking: {
+      providers: [
+        { id: "post", label: "پست ایران" },
+        { id: "chapar", label: "چاپار" },
+        { id: "tipax", label: "تیپاکس" }
+      ]
+    },
     currency: {
       code: "IRT",
       label: "تومان"
@@ -1803,6 +1810,19 @@
     return normalized && /^https?:/i.test(normalized) ? normalized : "";
   }
 
+  function safeExternalHttpsUrl(value) {
+    if (typeof value !== "string" || !value.trim()) {
+      return "";
+    }
+
+    try {
+      var url = new URL(value.trim());
+      return url.protocol === "https:" && !url.username && !url.password ? url.toString() : "";
+    } catch (error) {
+      return "";
+    }
+  }
+
   function normalizeConfig(payload) {
     var source = payload && typeof payload === "object" ? payload : {};
     var sourceBrand = source.brand && typeof source.brand === "object" ? source.brand : {};
@@ -1812,6 +1832,7 @@
     var sourceApi = source.api && typeof source.api === "object" ? source.api : {};
     var sourceEndpoints = source.endpoints && typeof source.endpoints === "object" ? source.endpoints : {};
     var sourceAnalytics = source.analytics && typeof source.analytics === "object" ? source.analytics : {};
+    var sourceTracking = source.tracking && typeof source.tracking === "object" ? source.tracking : {};
     var sourceCurrency = source.currency && typeof source.currency === "object" ? source.currency : {};
     var sourceIcons = source.icons && typeof source.icons === "object" ? source.icons : {};
     var defaultBrand = DEFAULT_CONFIG.brand;
@@ -1831,6 +1852,9 @@
       },
       analytics: {
         enabled: Boolean(sourceAnalytics.enabled)
+      },
+      tracking: {
+        providers: normalizeTrackingProviders(sourceTracking.providers)
       },
       currency: {
         code: safeText(sourceCurrency.code, DEFAULT_CONFIG.currency.code, 12).toUpperCase(),
@@ -1878,6 +1902,46 @@
     });
 
     return normalized;
+  }
+
+  function normalizeTrackingProviders(source) {
+    var normalized = [];
+    var used = {};
+    if (!Array.isArray(source)) {
+      return normalized;
+    }
+
+    source.forEach(function (provider) {
+      var row = provider && typeof provider === "object" ? provider : {};
+      var id = safeText(row.id, "", 32).toLowerCase();
+      var label = safeText(row.label, "", 80);
+      if (!/^[a-z][a-z0-9_-]{0,31}$/.test(id) || !label || used[id]) {
+        return;
+      }
+      used[id] = true;
+      normalized.push({ id: id, label: label });
+    });
+
+    return normalized;
+  }
+
+  function trackingProviders() {
+    var tracking = state.config && state.config.tracking && typeof state.config.tracking === "object" ? state.config.tracking : {};
+    return Array.isArray(tracking.providers) ? tracking.providers : [];
+  }
+
+  function trackingProviderForId(value) {
+    var id = safeText(value, "", 32).toLowerCase();
+    return trackingProviders().filter(function (provider) {
+      return provider.id === id;
+    })[0] || null;
+  }
+
+  function trackingProviderForLabel(value) {
+    var label = safeText(value, "", 80).trim();
+    return trackingProviders().filter(function (provider) {
+      return provider.label === label;
+    })[0] || null;
   }
 
   function applyConfiguredIcons() {
@@ -7899,7 +7963,9 @@
       shippingMethodId: safeText(source.shipping_method_id, "", 100),
       shippingMethodTitle: safeText(source.shipping_method_title, "", 255),
       trackingCode: safeText(source.tracking_code, "", 100),
+      carrierId: safeText(source.carrier_id || source.carrierId, "", 32).toLowerCase(),
       carrierLabel: safeText(source.carrier_label, "", 80),
+      trackingUrl: safeExternalHttpsUrl(source.tracking_url || source.trackingUrl),
       shippedAt: safeText(source.shipped_at, "", 80),
       estimatedDeliveryDate: safeText(source.estimated_delivery_date, "", 80),
       deliveredAt: safeText(source.delivered_at, "", 80),
@@ -8039,6 +8105,68 @@
     elements.orderShipmentContainer.appendChild(section);
   }
 
+  function copyShipmentTrackingCode(value) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      return navigator.clipboard.writeText(value);
+    }
+
+    var area = document.createElement("textarea");
+    area.value = value;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    var copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } catch (error) {
+      copied = false;
+    }
+    document.body.removeChild(area);
+    return copied ? Promise.resolve() : Promise.reject(new Error("copy_failed"));
+  }
+
+  function appendShipmentTrackingActions(parent, shipment) {
+    if (!shipment.trackingCode) {
+      return;
+    }
+
+    var actions = document.createElement("div");
+    actions.className = "shipment-tracking-actions";
+    var copyButton = document.createElement("button");
+    copyButton.type = "button";
+    copyButton.className = "secondary-button compact-button shipment-tracking-copy";
+    copyButton.textContent = "کپی کد رهگیری";
+    copyButton.addEventListener("click", function () {
+      var original = copyButton.textContent;
+      copyShipmentTrackingCode(shipment.trackingCode).then(function () {
+        copyButton.textContent = "کپی شد";
+        window.setTimeout(function () {
+          copyButton.textContent = original;
+        }, 1800);
+      }).catch(function () {
+        copyButton.textContent = "کپی نشد";
+        window.setTimeout(function () {
+          copyButton.textContent = original;
+        }, 2200);
+      });
+    });
+    actions.appendChild(copyButton);
+
+    if (shipment.trackingUrl) {
+      var trackingLink = document.createElement("a");
+      trackingLink.className = "primary-button compact-button shipment-tracking-link";
+      trackingLink.href = shipment.trackingUrl;
+      trackingLink.target = "_blank";
+      trackingLink.rel = "noopener noreferrer";
+      trackingLink.textContent = "باز کردن صفحهٔ پیگیری";
+      actions.appendChild(trackingLink);
+    }
+
+    parent.appendChild(actions);
+  }
+
   function renderOrderShipment(shipment, notice) {
     if (!elements.orderShipmentContainer) {
       return;
@@ -8070,13 +8198,14 @@
     appendShipmentSummaryItem(summary, "روش ارسال ووکامرس", shipment.shippingMethodTitle || "روش ثبت‌شده هنگام خرید");
     appendShipmentSummaryItem(summary, "شرکت حمل", shipment.carrierLabel || "ثبت نشده است");
     appendShipmentSummaryItem(summary, "کد رهگیری", shipment.trackingCode || "ثبت نشده است", "shipment-summary-ltr");
-    appendShipmentSummaryItem(summary, "رهگیری", shipment.hasTracking ? "کد ثبت شده است" : "کدی ثبت نشده است");
+    appendShipmentSummaryItem(summary, "رهگیری", shipment.trackingUrl ? "پیوند پیگیری آماده است" : (shipment.hasTracking ? "کد ثبت شده است" : "کدی ثبت نشده است"));
     appendShipmentSummaryItem(summary, "زمان ارسال", shipment.shippedAt ? formatDisplayDate(shipment.shippedAt, true) : "ثبت نشده است");
     appendShipmentSummaryItem(summary, "تاریخ تحویل تخمینی", shipment.estimatedDeliveryDate ? formatDisplayDate(shipment.estimatedDeliveryDate, false) : "ثبت نشده است");
     appendShipmentSummaryItem(summary, "زمان تحویل", shipment.deliveredAt ? formatDisplayDate(shipment.deliveredAt, true) : "ثبت نشده است");
     appendShipmentSummaryItem(summary, "آخرین به‌روزرسانی", shipment.updatedAt ? formatDisplayDate(shipment.updatedAt, true) : "ثبت نشده است");
     appendShipmentSummaryItem(summary, "توضیح", shipment.note || "توضیحی ثبت نشده است", "shipment-summary-wide");
     section.appendChild(summary);
+    appendShipmentTrackingActions(section, shipment);
 
     if (notice) {
       var successNote = createTextElement("p", "shipment-success-note", notice);
@@ -8140,9 +8269,38 @@
     });
     formGrid.appendChild(createShipmentField("وضعیت ارسال", statusSelect));
 
-    var carrierInput = createShipmentInput("text", shipment.carrierLabel, 80, "مثلاً پست یا تیپاکس");
+    var matchedProvider = trackingProviderForId(shipment.carrierId) || trackingProviderForLabel(shipment.carrierLabel);
+    var carrierSelect = document.createElement("select");
+    carrierSelect.name = "carrier_id";
+    var customCarrierOption = document.createElement("option");
+    customCarrierOption.value = "";
+    customCarrierOption.textContent = "شرکت دیگر یا انتخاب‌نشده";
+    carrierSelect.appendChild(customCarrierOption);
+    trackingProviders().forEach(function (provider) {
+      var option = document.createElement("option");
+      option.value = provider.id;
+      option.textContent = provider.label;
+      option.selected = Boolean(matchedProvider && matchedProvider.id === provider.id);
+      carrierSelect.appendChild(option);
+    });
+    formGrid.appendChild(createShipmentField("شرکت حمل", carrierSelect));
+
+    var carrierInput = createShipmentInput("text", shipment.carrierLabel, 80, "مثلاً شرکت حمل محلی");
     carrierInput.name = "carrier_label";
-    formGrid.appendChild(createShipmentField("شرکت حمل", carrierInput));
+    function syncCarrierLabel() {
+      var provider = trackingProviderForId(carrierSelect.value);
+      if (provider) {
+        carrierInput.value = provider.label;
+        carrierInput.readOnly = true;
+        carrierInput.setAttribute("aria-readonly", "true");
+      } else {
+        carrierInput.readOnly = false;
+        carrierInput.removeAttribute("aria-readonly");
+      }
+    }
+    carrierSelect.addEventListener("change", syncCarrierLabel);
+    syncCarrierLabel();
+    formGrid.appendChild(createShipmentField("نام شرکت حمل (دلخواه)", carrierInput));
 
     var trackingInput = createShipmentInput("text", shipment.trackingCode, 100, "کد رهگیری متنی");
     trackingInput.name = "tracking_code";
@@ -8228,6 +8386,7 @@
         status: statusSelect,
         shippingMethodId: shippingMethodIdInput,
         shippingMethodTitle: shippingMethodTitleInput,
+        carrierId: carrierSelect,
         carrierLabel: carrierInput,
         trackingCode: trackingInput,
         shippedAt: shippedAtInput,
@@ -8350,6 +8509,10 @@
       delivered_at: shipmentDateTimeRequestValue(fields.deliveredAt),
       note: fields.note.value.trim()
     };
+
+    if (fields.carrierId) {
+      body.carrier_id = fields.carrierId.value ? fields.carrierId.value.trim() : "";
+    }
 
     if (Array.isArray(fields.items)) {
       body.items = fields.items.map(function (item) {
@@ -8530,11 +8693,23 @@
       return Promise.resolve();
     }
     var originalLabel = button.textContent;
+    var idempotencyFingerprint = JSON.stringify({
+      orderId: Number(orderId),
+      amount: amount || "",
+      reason: reason,
+      restockItems: Boolean(restockInput.checked),
+      refundPayment: Boolean(paymentInput.checked)
+    });
+    if (button.dataset.refundIdempotencyFingerprint !== idempotencyFingerprint || !button.dataset.refundIdempotencyKey) {
+      button.dataset.refundIdempotencyFingerprint = idempotencyFingerprint;
+      button.dataset.refundIdempotencyKey = "refund-" + String(orderId) + "-" + String(Date.now()) + "-" + makeEphemeralDeviceId();
+    }
+    var idempotencyKey = button.dataset.refundIdempotencyKey;
     var body = {
       reason: reason,
       restock_items: Boolean(restockInput.checked),
       refund_payment: Boolean(paymentInput.checked),
-      idempotency_key: "manager-" + String(orderId) + "-" + String(Date.now())
+      idempotency_key: idempotencyKey
     };
     if (amount) {
       body.amount = amount;
@@ -8545,9 +8720,11 @@
     message.hidden = false;
     return fetchJsonWithTimeout(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Fandoogh-CSRF": state.csrfToken },
+      headers: { "Content-Type": "application/json", "X-Fandoogh-CSRF": state.csrfToken, "Idempotency-Key": idempotencyKey },
       body: JSON.stringify(body)
     }).then(function () {
+      delete button.dataset.refundIdempotencyFingerprint;
+      delete button.dataset.refundIdempotencyKey;
       return loadOrders().then(function () { return loadOrderDetail(orderId); });
     }).catch(function (error) {
       if (error && error.status === 401) {

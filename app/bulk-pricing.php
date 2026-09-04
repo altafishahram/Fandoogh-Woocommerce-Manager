@@ -157,9 +157,16 @@ function bulk_price_confirmation_is_valid( $token, $values, $session_id, $plan_h
 		return false;
 	}
 
-	// delete_transient() is the one-time consume step. A replay finds no token
-	// and is rejected before any mutation starts.
-	return (bool) delete_transient( $token_key );
+	// Claim the token with add_option() before deleting the transient. The
+	// transient get/delete pair is not atomic, while add_option() gives
+	// concurrent executions a single winner. The claim is intentionally kept
+	// if transient deletion fails so a retry can never re-run the mutation.
+	$claim_key = 'fandoogh_bulk_price_claim_' . hash( 'sha256', (string) $token );
+	if ( ! add_option( $claim_key, array( 'created_at' => time(), 'session_id' => absint( $session_id ) ), '', 'no' ) ) {
+		return false;
+	}
+	delete_transient( $token_key );
+	return true;
 }
 
 /**
