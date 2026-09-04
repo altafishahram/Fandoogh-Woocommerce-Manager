@@ -2,10 +2,17 @@
   "name": "fandoogh-manager-e2e",
   "private": true,
   "version": "1.0.0",
-  "description": "Playwright responsiveness checks for the Fandoogh Manager PWA shell.",
+  "description": "Preview-mode browser checks and release tooling for the Fandoogh Manager PWA shell.",
   "scripts": {
     "test:e2e": "playwright test",
-    "test:e2e:ci": "playwright test --reporter=list"
+    "test:e2e:preview": "playwright test --reporter=list",
+    "test:e2e:chromium": "playwright test --project=chromium --reporter=list",
+    "test:e2e:webkit": "playwright test --project=webkit --reporter=list",
+    "test:e2e:ci": "playwright test --reporter=list",
+    "test:e2e:all": "playwright test --reporter=list",
+    "lint": "node tools/lint.js",
+    "package": "node tools/package-plugin.js",
+    "package:check": "node tools/verify-package.js"
   },
   "playwright": {
     "browsers": [
@@ -13,7 +20,11 @@
       "webkit"
     ]
   },
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
-    "@playwright/test": "^1.48.0"
+    "@playwright/test": "^1.48.0",
+    "adm-zip": "^0.6.0"
   }
 }
