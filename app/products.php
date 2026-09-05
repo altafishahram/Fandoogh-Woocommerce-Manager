@@ -1597,6 +1597,48 @@ function serialize_product_attributes( $product ) {
 }
 
 /**
+ * Resolve display metadata without changing the product's assigned categories.
+ * Read through WordPress's taxonomy API (and its term cache). A broken chain,
+ * foreign taxonomy, cycle, or hierarchy exceeding 100 terms has no safe root.
+ *
+ * @param mixed $term Assigned product category term.
+ * @return array{id: int, name: string, slug: string}|null
+ */
+function product_root_category( $term ) {
+    $visited     = array();
+    $expected_id = null;
+
+    for ( $depth = 0; $depth < 100; $depth++ ) {
+        if ( ! is_object( $term ) || is_wp_error( $term ) || ! isset( $term->term_id, $term->taxonomy, $term->parent, $term->name, $term->slug ) || 'product_cat' !== $term->taxonomy || ! is_string( $term->name ) || ! is_string( $term->slug ) ) {
+            return null;
+        }
+
+        $term_id   = filter_var( $term->term_id, FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 1 ) ) );
+        $parent_id = filter_var( $term->parent, FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 0 ) ) );
+        if ( false === $term_id || false === $parent_id || isset( $visited[ $term_id ] ) || ( null !== $expected_id && $term_id !== $expected_id ) ) {
+            return null;
+        }
+        $visited[ $term_id ] = true;
+
+        if ( 0 === $parent_id ) {
+            return array(
+                'id'   => $term_id,
+                'name' => sanitize_text_field( $term->name ),
+                'slug' => sanitize_title( $term->slug ),
+            );
+        }
+
+        if ( isset( $visited[ $parent_id ] ) ) {
+            return null;
+        }
+        $expected_id = $parent_id;
+        $term        = get_term( $parent_id, 'product_cat' );
+    }
+
+    return null;
+}
+
+/**
  * @param object $product WooCommerce product object.
  * @param bool   $detail Include longer fields.
  * @return array<string, mixed>
@@ -1618,6 +1660,7 @@ function serialize_product( $product, $detail = false ) {
             'parent'      => absint( $term->parent ),
             'parent_name' => $parent_term && ! is_wp_error( $parent_term ) ? sanitize_text_field( $parent_term->name ) : '',
             'parent_slug' => $parent_term && ! is_wp_error( $parent_term ) ? sanitize_title( $parent_term->slug ) : '',
+            'root_category' => product_root_category( $term ),
         );
     }
 

@@ -12,6 +12,7 @@
     "test:e2e:all": "playwright test",
     "lint": "node tools/lint.js",
     "test:coupons": "php tests/coupons-contract.php",
+    "test:product-categories": "php tests/product-categories-contract.php",
     "package": "node tools/package-plugin.js",
     "package:check": "node tools/verify-package.js"
   },

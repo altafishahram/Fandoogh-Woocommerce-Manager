@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fandoogh Manager
  * Description: A dependency-free WordPress/WooCommerce management PWA foundation.
- * Version: 1.3.3
+ * Version: 1.3.4
  * Requires at least: 6.4
  * Requires PHP: 7.4
  * Author: Fandoogh
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const VERSION = '1.3.3';
+const VERSION = '1.3.4';
 const REST_NAMESPACE = 'fandoogh-manager/v1';
 const OPTION_KEY = 'fandoogh_manager_settings';
 const OPTION_GROUP = 'fandoogh_manager_settings_group';

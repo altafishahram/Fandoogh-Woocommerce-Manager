@@ -3646,13 +3646,19 @@
       }).filter(Boolean),
       categories: categories.map(function (category) {
         var item = category && typeof category === "object" ? category : {};
+        var rootCategory = item.root_category && typeof item.root_category === "object" ? item.root_category : null;
         return {
           id: item.id ? String(item.id) : "",
           name: safeText(item.name, "دسته‌بندی", 160),
           slug: safeText(item.slug, "", 160),
           parent: item.parent ? String(item.parent) : "0",
           parentName: safeText(item.parent_name || item.parentName, "", 160),
-          parentSlug: safeText(item.parent_slug || item.parentSlug, "", 160)
+          parentSlug: safeText(item.parent_slug || item.parentSlug, "", 160),
+          rootCategoryResolved: Object.prototype.hasOwnProperty.call(item, "root_category"),
+          rootCategory: rootCategory && rootCategory.id && rootCategory.name ? {
+            id: String(rootCategory.id),
+            name: safeText(rootCategory.name, "", 160)
+          } : null
         };
       }).filter(function (category) {
         return category.id;
@@ -3762,6 +3768,22 @@
     }[product && product.stock] || "موجودی مدیریت نمی‌شود";
   }
 
+  function productCardCategoryName(product) {
+    var categories = product.categories || [];
+    for (var index = 0; index < categories.length; index += 1) {
+      var category = categories[index];
+      if (category.rootCategory && category.rootCategory.name) {
+        return category.rootCategory.name;
+      }
+      // Preview/older payloads can identify a directly assigned root. Never
+      // substitute a child's name when its ancestry could not be resolved.
+      if (!category.rootCategoryResolved && category.parent === "0") {
+        return category.name;
+      }
+    }
+    return categories.length ? "دسته‌بندی مادر نامشخص" : "بدون دسته‌بندی";
+  }
+
   function renderProductCards(items) {
     while (elements.productsGrid.firstChild) {
       elements.productsGrid.removeChild(elements.productsGrid.firstChild);
@@ -3798,7 +3820,9 @@
 
       var topline = document.createElement("div");
       topline.className = "product-card-topline";
-      topline.appendChild(createTextElement("h3", "product-card-name", product.name));
+      var name = createTextElement("h3", "product-card-name", product.name);
+      name.title = product.name;
+      topline.appendChild(name);
       var kindAndStatus = document.createElement("div");
       kindAndStatus.className = "product-card-meta-pills";
       if (product.type === "variable" || product.type === "variable-subscription") {
@@ -3809,26 +3833,27 @@
       }
       card.appendChild(topline);
 
-      var categoryName = product.categories && product.categories.length ? product.categories[0].name : "بدون دسته‌بندی";
+      var categoryName = productCardCategoryName(product);
       var category = createTextElement("span", "product-card-category-hint", categoryName);
       category.title = categoryName;
-      card.appendChild(category);
 
       var stockLine = document.createElement("div");
       stockLine.className = "product-card-stock-line";
-      stockLine.appendChild(createTextElement("span", "product-card-stock-label", productStockLabel(product)));
-      if (product.sku) {
-        stockLine.appendChild(createTextElement("span", "product-card-sku", "SKU: " + product.sku));
-      }
+      var stockLabel = productStockLabel(product);
+      stockLine.title = stockLabel;
+      stockLine.appendChild(createTextElement("span", "product-card-stock-label", stockLabel));
+      stockLine.appendChild(category);
       card.appendChild(stockLine);
 
       var priceRow = document.createElement("div");
       priceRow.className = "product-card-price-row";
       var prices = document.createElement("div");
       prices.className = "product-card-prices";
-      prices.appendChild(createTextElement("strong", "product-card-price", productPriceLabel(product)));
+      var price = createTextElement("strong", "product-card-price", productPriceLabel(product));
+      price.title = productPriceLabel(product);
+      prices.appendChild(price);
       if (product.salePrice && product.regularPrice && product.salePrice !== product.regularPrice) {
-        prices.appendChild(createTextElement("del", "product-card-regular-price", formatStoreAmount(product.regularPrice)));
+        price.title += " — قیمت قبل از تخفیف: " + formatStoreAmount(product.regularPrice);
       }
       priceRow.appendChild(prices);
 
@@ -3855,7 +3880,7 @@
       editButton.addEventListener("click", function () {
         openProductEditor(product.id);
       });
-      actions.appendChild(editButton);
+      actions.insertBefore(editButton, viewButton);
       priceRow.appendChild(actions);
 
       card.appendChild(priceRow);

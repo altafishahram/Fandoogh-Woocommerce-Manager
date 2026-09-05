@@ -11,6 +11,7 @@ npm ci
 npx playwright install chromium webkit
 npm run lint
 npm run test:coupons
+npm run test:product-categories
 npm run test:e2e:chromium
 npm run test:e2e:webkit
 ```

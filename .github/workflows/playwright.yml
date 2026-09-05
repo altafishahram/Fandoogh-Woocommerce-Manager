@@ -37,6 +37,9 @@ jobs:
       - name: Run coupon backend contract checks
         run: npm run test:coupons
 
+      - name: Run product category contract checks
+        run: npm run test:product-categories
+
       - name: Run browser regression checks
         run: npm run test:e2e:preview
         env:
