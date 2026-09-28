@@ -10,7 +10,6 @@
 | `app/fonts.css` | ورودی fallback برای preview؛ وردپرس در runtime CSS فونت محلی را تولید می‌کند |
 | `assets/brand/fandoogh-mark.svg` | favicon، Apple touch icon و آیکون پایهٔ manifest |
 | `assets/icon/fandoogh-*.svg` | iconهای محلی navigation/action که PHP در config عمومی map می‌کند |
-| `assets/twa/assetlinks.example.json` | template لازم برای Digital Asset Links در استقرار TWA |
 
 ## قرارداد icon
 
@@ -23,13 +22,6 @@
 `data-icon-name` و map PHP مصرف می‌شدند. ۱۲ فایل Iconsax بدون ارجاع از source
 حذف شدند؛ نام ۱۴ فایل باقی‌مانده به قرارداد `fandoogh-<role>.svg` تغییر کرد.
 آرشیوهای ZIP ورودی انتشار نیستند و عمداً در این audit لحاظ نمی‌شوند.
-
-## آمادگی TWA
-
-در استقرار Android، فایل `assets/twa/assetlinks.example.json` را با package name
-و fingerprint گواهی release تکمیل و در مسیر HTTPS
-`/.well-known/assetlinks.json` دامنهٔ فروشگاه منتشر کنید. مقدارهای نمونه عمداً
-placeholder هستند و نباید بدون جایگزینی وارد release شوند.
 
 برای تکرار بررسی:
 

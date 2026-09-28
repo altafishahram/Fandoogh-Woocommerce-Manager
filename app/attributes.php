@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/composition/product-attributes.php';
+
 /**
  * Expose the registered WooCommerce global attributes and their terms to the
  * manager UI. Attribute writes remain part of the product contract so a
@@ -38,44 +40,11 @@ function product_attributes_read_permission( $request ) {
  * @return \WP_REST_Response|\WP_Error
  */
 function list_product_attributes( $request ) {
-	if ( ! function_exists( 'wc_get_attribute_taxonomies' ) || ! function_exists( 'wc_attribute_taxonomy_name' ) ) {
+	/** @var \Fandoogh_Manager\Catalog\ProductAttributeList $attributes */
+	$attributes = compose_product_attribute_list();
+	if ( ! $attributes->isAvailable() ) {
 		return new \WP_Error( 'fandoogh_woocommerce_inactive', __( 'WooCommerce فعال نیست یا API ویژگی‌ها در دسترس نیست.', 'fandoogh-manager' ), array( 'status' => 503 ) );
 	}
 
-	$items = array();
-	foreach ( (array) wc_get_attribute_taxonomies() as $attribute ) {
-		$slug     = sanitize_title( (string) ( isset( $attribute->attribute_name ) ? $attribute->attribute_name : '' ) );
-		$taxonomy = wc_attribute_taxonomy_name( $slug );
-		if ( '' === $slug || ! taxonomy_exists( $taxonomy ) ) {
-			continue;
-		}
-
-		$terms      = get_terms(
-			array(
-				'taxonomy'   => $taxonomy,
-				'hide_empty' => false,
-				'number'     => 200,
-			)
-		);
-		$term_items = array();
-		if ( ! is_wp_error( $terms ) ) {
-			foreach ( (array) $terms as $term ) {
-				$term_items[] = array(
-					'id'   => absint( $term->term_id ),
-					'name' => sanitize_text_field( $term->name ),
-					'slug' => sanitize_title( $term->slug ),
-				);
-			}
-		}
-
-		$items[] = array(
-			'id'    => absint( isset( $attribute->attribute_id ) ? $attribute->attribute_id : 0 ),
-			'label' => sanitize_text_field( isset( $attribute->attribute_label ) ? $attribute->attribute_label : $slug ),
-			'slug'  => $slug,
-			'name'  => $taxonomy,
-			'terms' => $term_items,
-		);
-	}
-
-	return product_no_store_response( rest_ensure_response( array( 'data' => $items ) ) );
+	return product_no_store_response( rest_ensure_response( array( 'data' => $attributes->items() ) ) );
 }

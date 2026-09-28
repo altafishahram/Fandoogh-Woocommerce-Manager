@@ -31,6 +31,7 @@
 | صفحهٔ ورود | `.pairing-view`، `.hero-grid`، `.auth-card` |
 | داشبورد | `.dashboard-grid`، `.dashboard-kpi-card`، `.quick-action`، `.dashboard-chart-panel` |
 | محصولات | `.products-panel`، `.products-toolbar`، `.products-grid`، `.product-card` |
+| تغییر قیمت گروهی | `.bulk-price-workflow`، `.bulk-price-steps`، `.bulk-price-method-grid`، `.bulk-price-preview-table-wrap`؛ تب مستقل `#bulk-price` در منوی اصلی |
 | سفارش‌ها | `.orders-panel`، `.orders-toolbar`، `.orders-grid`، `.order-card` |
 | مشتریان/موجودی/کوپن/دیدگاه | `.customers-panel`، `.inventory-panel`، `.coupons-panel`، `.reviews-panel` |
 | مودال‌ها | `.product-editor-dialog`، `.product-view-dialog`، `.order-modal-dialog`، `.manual-order-dialog` |
@@ -51,7 +52,13 @@
 
 کارت محصول در نسخهٔ ۱٫۳٫۴ حداکثر ۱۲۰ پیکسل ارتفاع دارد: قاب مربع ۱۰۰×۱۰۰ در راست، نام تک‌خطی با سه‌نقطه، موجودی و دسته‌بندی مادر، قیمت در چپ و دکمه‌های ۳۰ پیکسلی زیر آن. SKU فقط از کارت حذف شده و همچنان در جزئیات و فرم محصول موجود است. نام کامل محصول و قیمت از طریق `title` قابل مشاهده‌اند. نام دسته‌بندی کارت از `categories[].root_category` خوانده می‌شود؛ این دادهٔ نمایشی، دسته‌بندی‌های انتخاب‌شدهٔ محصول را تغییر نمی‌دهد.
 
+گردش‌کار تغییر قیمت در نسخهٔ ۱٫۳٫۱۰ سه مرحله دارد: انتخاب دسته یا محصول، تنظیم افزایش/کاهش و زمان اجرا، و پیش‌نمایش نهایی. ورودی `#bulkPriceScheduleDate` از انتخاب‌گر شمسی مشترک افزونه استفاده می‌کند و مقدار ISO میلادی را فقط برای قرارداد API نگه می‌دارد. کلاس‌ها و `data-bulk-price-*`های این بخش به هم وابسته‌اند و باید همراه با توابع `bulkPrice...` در `app.js` تغییر کنند.
+
+مرکز موجودی در نسخهٔ ۱٫۳٫۵ از `.inventory-grid` با ستون‌های متناسب با فضای واقعی پنل استفاده می‌کند. فیلدهای `.inventory-input` حداقل ۴۴ پیکسل ارتفاع دارند؛ چیدمان داخل هر `.inventory-card` با container query در عرض ۳۰۰ پیکسل و کمتر تک‌ستونه می‌شود. `.inventory-manage-stock`، `.inventory-field-label` و `.inventory-save-button` قلاب‌های اختصاصی این فرم‌اند؛ رنگ نشان وضعیت از `data-stock-status` تعیین می‌شود. این قواعد در بخش Operations فایل `styles.css` متمرکزند و نباید به قواعد فیلدهای ارسال سفارش وابسته شوند. ورودی تعداد، موجودی نهایی است، نه مقدار افزایش؛ قرارداد PATCH و کنترل هم‌زمانی موجودی تغییر نکرده‌اند. تست `e2e/inventory-layout.spec.js` هم مرز فیلدها و عدم تداخل را در تغییر عرض بررسی می‌کند، هم ذخیره با API شبیه‌سازی‌شده را؛ جایگزین تست فروشگاه واقعی نیست.
+
 ## روال پیشنهادی تغییر
+
+در فرم ورود، سه‌نقطهٔ تزئینی با `.input-shell::before` داخل یک محدودهٔ ۳۷ پیکسلی رسم می‌شود، نه با سایه‌ای که بیرون کادر برود. عرض و فاصلهٔ آن از لبه در `--fm-login-mark-width` و `--fm-login-mark-inset` تعریف شده و padding سمت راست ورودی از همین متغیرها محاسبه می‌شود تا متن با نقاط تداخل نکند. تست `e2e/login-layout.spec.js` این قرارداد را برای نام کاربری، رمز عبور و کد بررسی می‌کند.
 
 1. ابتدا با CSS رنگ، فاصله، radius، shadow و responsive را تغییر بده.
 2. اگر یک بخش جدید لازم است، در HTML یک `class` ظاهری اضافه کن و قلاب‌های رفتاری موجود را نگه دار.

@@ -1,4 +1,8 @@
-:root {
+.fandoogh-manager-admin-page {
+  --fandoogh-primary: #0f766e;
+  --fandoogh-secondary: #115e59;
+  --fandoogh-accent: #f59e0b;
+  --fandoogh-text: #1f2937;
   --fandoogh-page: #f8fafc;
   --fandoogh-surface: #ffffff;
   --fandoogh-border: #e5e7eb;
@@ -11,14 +15,101 @@
 
 body.toplevel_page_fandoogh-manager #wpcontent,
 body.fandoogh-manager_page_fandoogh-manager-settings #wpcontent {
-  background: var(--fandoogh-page);
+  background: #f8fafc;
 }
 
 .fandoogh-manager-admin-page {
-  max-width: 1160px;
+  max-width: 1280px;
   padding: 24px 0 48px;
   color: var(--fandoogh-text);
   font-family: Tahoma, "Segoe UI", Arial, sans-serif;
+}
+
+.fandoogh-manager-admin-page *,
+.fandoogh-manager-admin-page *::before,
+.fandoogh-manager-admin-page *::after { box-sizing: border-box; }
+
+.fandoogh-admin-content,
+.fandoogh-admin-card,
+.fandoogh-admin-hero > div { min-width: 0; }
+
+.fandoogh-admin-version { display: inline-block; margin-top: 10px; color: var(--fandoogh-muted); font-size: 12px; direction: ltr; }
+
+.fandoogh-admin-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px;
+  margin-bottom: 24px;
+  border: 1px solid var(--fandoogh-border);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.fandoogh-admin-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  color: var(--fandoogh-muted);
+  text-decoration: none;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.fandoogh-admin-tab:hover { background: #f1f5f9; color: var(--fandoogh-primary); }
+.fandoogh-admin-tab[aria-current="page"] { background: var(--fandoogh-primary); color: #fff; }
+.fandoogh-admin-tab .dashicons { flex-shrink: 0; }
+.fandoogh-admin-page-title { margin: 0 0 18px; font-size: 22px; line-height: 1.6; }
+
+.fandoogh-admin-summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+.fandoogh-admin-summary { display: grid; gap: 12px; min-width: 0; padding: 22px; color: var(--fandoogh-text); background: #fff; border: 1px solid var(--fandoogh-border); border-radius: 16px; text-decoration: none; }
+.fandoogh-admin-summary:hover { border-color: var(--fandoogh-primary); }
+.fandoogh-admin-summary > span { color: var(--fandoogh-muted); font-weight: 700; }
+.fandoogh-admin-summary > strong { color: var(--fandoogh-primary); font-size: 23px; line-height: 1.6; }
+.fandoogh-admin-summary > p { margin: 0; color: var(--fandoogh-muted); font-size: 12px; line-height: 1.9; }
+
+.fandoogh-admin-savebar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; margin: 0 0 24px; border: 1px solid var(--fandoogh-border); border-radius: 12px; background: #fff; }
+.fandoogh-admin-savebar p { margin: 0; color: var(--fandoogh-muted); }
+.fandoogh-admin-settings-form { margin: 0; }
+.fandoogh-admin-card h3 { margin: 0 0 14px; font-size: 17px; line-height: 1.7; color: var(--fandoogh-text); }
+.fandoogh-admin-card .fandoogh-admin-checklist { padding-inline-start: 22px; margin-bottom: 20px; }
+.fandoogh-admin-card .fandoogh-admin-checklist li { display: list-item; padding: 8px 0; line-height: 1.9; border: 0; color: var(--fandoogh-muted); }
+.fandoogh-admin-alert { padding: 12px 16px; border-inline-start: 4px solid var(--fandoogh-primary); border-radius: 8px; }
+.fandoogh-admin-alert--info { background: #f0fdfa; }
+.fandoogh-manager-admin-page .notice-error { border-inline-start-color: var(--fandoogh-danger); }
+.fandoogh-manager-admin-page .notice-warning { border-inline-start-color: #d97706; }
+.fandoogh-manager-admin-page code,
+.fandoogh-manager-admin-page td a { overflow-wrap: anywhere; }
+.fandoogh-manager-admin-page input:not([type="checkbox"]):not([type="radio"]),
+.fandoogh-manager-admin-page textarea,
+.fandoogh-manager-admin-page select { max-width: 100%; }
+.fandoogh-manager-admin-page .button { white-space: normal; text-align: center; }
+.fandoogh-manager-admin-page .widefat th { width: auto; }
+.fandoogh-health-table td a { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+
+@media (min-width: 1200px) {
+  .fandoogh-admin-tabs { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  .fandoogh-admin-tab { flex-direction: column; }
+}
+
+@media (max-width: 600px) {
+  .fandoogh-admin-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fandoogh-admin-tab { justify-content: flex-start; font-size: 12px; }
+  .fandoogh-admin-summary-grid { grid-template-columns: 1fr; }
+  .fandoogh-admin-hero { flex-wrap: wrap; gap: 16px; }
+  .fandoogh-admin-hero h1 { overflow-wrap: anywhere; }
+  .fandoogh-admin-savebar { align-items: stretch; flex-direction: column; }
+  .fandoogh-manager-admin-page .fandoogh-health-table,
+  .fandoogh-health-table tbody,
+  .fandoogh-health-table tr { display: block; width: 100%; }
+  .fandoogh-manager-admin-page .fandoogh-health-table th,
+  .fandoogh-manager-admin-page .fandoogh-health-table td { display: block; width: 100%; padding: 8px 12px; text-align: right; }
+  .fandoogh-manager-admin-page .fandoogh-health-table td { padding-top: 0; padding-bottom: 16px; }
 }
 
 .fandoogh-admin-hero {

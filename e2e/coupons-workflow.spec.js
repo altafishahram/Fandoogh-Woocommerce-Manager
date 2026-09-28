@@ -23,6 +23,12 @@ async function bootCoupons(page, { failRefresh = false, failSave = false } = {})
     if (url.pathname.endsWith('/auth/csrf')) {
       return route.fulfill({ json: { data: { csrf_token: 'coupon-browser-test' } } });
     }
+    if (/\/coupons\/\d+\/?$/.test(url.pathname) && request.method() === 'DELETE') {
+      const id = Number(url.pathname.match(/(\d+)\/?$/)[1]);
+      const index = rows.findIndex((row) => row.id === id);
+      if (index >= 0) rows.splice(index, 1);
+      return route.fulfill({ json: { data: { id, deleted: true } } });
+    }
     if (url.pathname.endsWith('/coupons') && request.method() === 'POST') {
       expect(request.headers()['x-fandoogh-csrf']).toBe('coupon-browser-test');
       if (failSave) return route.fulfill({ status: 409, json: { message: 'این کد کوپن قبلاً وجود دارد.' } });
@@ -53,6 +59,7 @@ async function bootCoupons(page, { failRefresh = false, failSave = false } = {})
 
 async function submitNewCoupon(page) {
   await page.locator('#newCouponButton').click();
+  await expect(page.getByRole('dialog', { name: 'کوپن جدید' })).toBeVisible();
   await page.locator('#couponCode').fill('NEWDISCOUNT');
   await page.locator('#couponType').selectOption('percent');
   await page.locator('#couponAmount').fill('15');
@@ -71,6 +78,100 @@ test('shows a newly saved coupon even after searching and moving to another page
   await expect(page.locator('#couponSearch')).toHaveValue('');
   await expect(page.locator('#couponsGrid .coupon-card').first()).toContainText('NEWDISCOUNT');
   expect(reads.filter((read) => read.afterSave)).toEqual([{ page: 1, search: '', afterSave: true }]);
+});
+
+test('coupon modal fits the viewport, traps focus and restores its trigger', async ({ page }, testInfo) => {
+  await bootCoupons(page);
+  await page.locator('#newCouponButton').click();
+  const dialog = page.locator('#couponEditor');
+  await expect(page.locator('#couponCode')).toBeFocused();
+  await expect(page.locator('.app-shell')).toHaveAttribute('inert', '');
+  await expect.poll(() => dialog.evaluate((form) => getComputedStyle(form).opacity)).toBe('1');
+  const errors = await dialog.evaluate((form) => {
+    const failures = [];
+    const rect = form.getBoundingClientRect();
+    if (rect.left < 0 || rect.right > innerWidth || rect.top < 0 || rect.bottom > innerHeight) failures.push('dialog outside viewport');
+    if (form.scrollWidth > form.clientWidth) failures.push('horizontal overflow');
+    for (const input of form.querySelectorAll('input:not([type="checkbox"]), select')) {
+      const bounds = input.getBoundingClientRect();
+      if (bounds.width < 80 || bounds.height < 43.5 || parseFloat(getComputedStyle(input).borderRadius) < 8) failures.push(`${input.id}: ${bounds.width} x ${bounds.height}, radius ${getComputedStyle(input).borderRadius}`);
+    }
+    const save = form.querySelector('#saveCouponButton').getBoundingClientRect();
+    if (save.bottom > innerHeight || save.top < 0) failures.push('save button outside viewport');
+    return failures;
+  });
+  expect(errors).toEqual([]);
+  await dialog.screenshot({ path: testInfo.outputPath('coupon-modal.png') });
+  const cancel = dialog.getByRole('button', { name: 'انصراف', exact: true });
+  await cancel.focus();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#cancelCouponEdit')).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(cancel).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(page.locator('#newCouponButton')).toBeFocused();
+  await expect(page.locator('.app-shell')).not.toHaveAttribute('inert', '');
+  await page.locator('#couponsGrid .coupon-card').first().getByRole('button', { name: /ویرایش/ }).click();
+  await expect(dialog).toBeVisible();
+  await expect(page.locator('#couponCode')).toHaveValue('LEGACY01');
+  await cancel.click();
+  await expect(dialog).toBeHidden();
+});
+
+test('coupon calendar works inside the modal and Escape closes the calendar first', async ({ page }) => {
+  await bootCoupons(page);
+  await page.locator('#newCouponButton').click();
+  await page.locator('#couponExpiry').click();
+  const calendar = page.locator('#couponEditor .persian-calendar-popover');
+  await expect(calendar).toBeVisible();
+  await calendar.getByRole('button', { name: 'امروز', exact: true }).click();
+  await expect(page.locator('#couponExpiry')).not.toHaveValue('');
+  await page.locator('#couponExpiry').click();
+  await page.keyboard.press('Escape');
+  await expect(calendar).toBeHidden();
+  await expect(page.locator('#couponEditor')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#couponEditor')).toBeHidden();
+});
+
+test('coupon cards stay compact and view modal supports edit and delete actions', async ({ page }) => {
+  await bootCoupons(page);
+  const cards = await page.locator('#couponsGrid .coupon-card').evaluateAll((nodes) => nodes.map((card) => ({
+    height: card.getBoundingClientRect().height,
+    overflow: card.scrollHeight - card.clientHeight,
+    buttons: card.querySelectorAll('.order-card-icon-button.product-card-action').length,
+    text: card.textContent,
+  })));
+  for (const card of cards) {
+    expect(card.height).toBeLessThanOrEqual(120);
+    expect(card.overflow).toBeLessThanOrEqual(1);
+    expect(card.buttons).toBe(2);
+    expect(card.text).toContain('مصرف');
+    expect(card.text).toContain('انقضا');
+  }
+
+  await page.locator('.coupon-card-view-button').first().click();
+  const detail = page.locator('#couponDetailDialog');
+  await expect(detail).toBeVisible();
+  await expect(detail).toContainText('LEGACY01');
+  await expect(detail).toContainText('میزان مصرف');
+  await expect(detail).toContainText('تاریخ انقضا');
+  await page.locator('#editCouponFromDetail').click();
+  await expect(page.locator('#couponEditor')).toBeVisible();
+  await expect(page.locator('#couponCode')).toHaveValue('LEGACY01');
+  await page.locator('#cancelCouponEdit').click();
+  await expect(page.locator('#couponEditor')).toBeHidden();
+
+  await page.locator('.coupon-card-view-button').first().click();
+  await page.once('dialog', (dialog) => dialog.accept());
+  await Promise.all([
+    page.waitForRequest((request) => request.method() === 'DELETE' && /\/coupons\/1\/?$/.test(request.url())),
+    page.locator('#deleteCouponFromDetail').click(),
+  ]);
+  await expect(page.locator('#couponDetailOverlay')).toBeHidden();
+  await expect(page.locator('#couponsGrid .coupon-card')).toHaveCount(20);
+  await expect(page.locator('#couponsGrid')).not.toContainText('LEGACY01');
 });
 
 test('shows a list-refresh failure after saving instead of claiming there are no coupons', async ({ page }) => {

@@ -40,6 +40,33 @@ jobs:
       - name: Run product category contract checks
         run: npm run test:product-categories
 
+      - name: Run product attribute refactor parity checks
+        run: npm run test:product-attributes
+
+      - name: Run product repository contract checks
+        run: npm run test:product-repository
+
+      - name: Run infrastructure adapter contract checks
+        run: npm run test:infrastructure
+
+      - name: Run customer, order, and security repository checks
+        run: |
+          npm run test:customer-repository
+          npm run test:order-repository
+          npm run test:security-database
+          npm run test:refactor-compatibility
+
+      - name: Run PHP shell and asset handler contract checks
+        run: npm run test:app-assets
+
+      - name: Run service worker cache boundary checks
+        run: npm run test:service-worker
+
+      - name: Run administrator and analytics contract checks
+        run: |
+          npm run test:admin
+          npm run test:analytics
+
       - name: Run browser regression checks
         run: npm run test:e2e:preview
         env:

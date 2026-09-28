@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fandoogh Manager
  * Description: A dependency-free WordPress/WooCommerce management PWA foundation.
- * Version: 1.3.4
+ * Version: 1.3.13
  * Requires at least: 6.4
  * Requires PHP: 7.4
  * Author: Fandoogh
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const VERSION = '1.3.4';
+const VERSION = '1.3.13';
 const REST_NAMESPACE = 'fandoogh-manager/v1';
 const OPTION_KEY = 'fandoogh_manager_settings';
 const OPTION_GROUP = 'fandoogh_manager_settings_group';
@@ -47,16 +47,13 @@ require_once plugin_dir_path( __FILE__ ) . 'app/fonts.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/coupons.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/reviews.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/inventory.php';
+require_once plugin_dir_path( __FILE__ ) . 'app/admin.php';
 
+require_once plugin_dir_path( __FILE__ ) . 'app/composition/settings.php';
+require_once plugin_dir_path( __FILE__ ) . 'app/composition/hooks.php';
 register_activation_hook( __FILE__, __NAMESPACE__ . '\\activate' );
 register_deactivation_hook( __FILE__, __NAMESPACE__ . '\\deactivate' );
-
-add_action( 'init', __NAMESPACE__ . '\\load_plugin_textdomain', 0 );
-add_action( 'init', __NAMESPACE__ . '\\maybe_ensure_security_schema', 1 );
-add_action( 'init', __NAMESPACE__ . '\\maybe_schedule_security_cleanup', 2 );
-add_action( 'init', __NAMESPACE__ . '\\register_rewrite_rules', 20 );
-add_action( 'init', __NAMESPACE__ . '\\register_shortcodes', 20 );
-add_action( SECURITY_CLEANUP_HOOK, __NAMESPACE__ . '\\cleanup_security_data' );
+register_plugin_hooks();
 
 /**
  * Load the plugin's translations from the /languages folder. Strings are
@@ -68,20 +65,6 @@ add_action( SECURITY_CLEANUP_HOOK, __NAMESPACE__ . '\\cleanup_security_data' );
 function load_plugin_textdomain() {
 	\load_plugin_textdomain( 'fandoogh-manager', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 }
-add_filter( 'query_vars', __NAMESPACE__ . '\\register_query_vars' );
-add_action( 'template_redirect', __NAMESPACE__ . '\\maybe_serve_app_asset', 1 );
-add_action( 'template_redirect', __NAMESPACE__ . '\\maybe_render_app_shell' );
-add_action( 'rest_api_init', __NAMESPACE__ . '\\register_rest_routes' );
-add_filter( 'rest_post_dispatch', __NAMESPACE__ . '\\add_private_api_headers', 10, 3 );
-add_action( 'before_woocommerce_init', __NAMESPACE__ . '\\declare_woocommerce_compatibility' );
-
-add_action( 'admin_init', __NAMESPACE__ . '\\register_settings' );
-add_action( 'admin_menu', __NAMESPACE__ . '\\register_admin_menu' );
-add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\\enqueue_admin_assets' );
-add_action( 'admin_notices', __NAMESPACE__ . '\\maybe_render_woocommerce_notice' );
-add_filter( 'option_page_capability_' . OPTION_GROUP, __NAMESPACE__ . '\\settings_capability' );
-add_action( 'update_option_' . OPTION_KEY, __NAMESPACE__ . '\\maybe_flush_rewrite_rules_on_settings_update', 10, 3 );
-
 /**
  * Return the default option values. This is intentionally a function so the
  * defaults remain easy to inspect and do not get exposed as a public option.
@@ -136,6 +119,8 @@ function activate() {
  */
 function deactivate() {
 	wp_clear_scheduled_hook( SECURITY_CLEANUP_HOOK );
+	// Alerts have per-session arguments; clear every argument variant on shutdown.
+	wp_unschedule_hook( SESSION_ALERT_CRON_HOOK );
 	flush_rewrite_rules();
 }
 
@@ -446,7 +431,7 @@ function sanitize_settings( $raw_settings ) {
  * @return array<string, mixed>
  */
 function get_settings() {
-	return sanitize_settings( get_option( OPTION_KEY, array() ) );
+	return compose_settings_store()->read();
 }
 
 /**
@@ -614,22 +599,36 @@ function app_asset_version() {
 /**
  * Return the public asset URLs used by the shell.
  *
+ * Keep the request path at the working app route. Some Nginx hosts intercept
+ * .css/.js paths before WordPress and return 404 for virtual rewrite assets.
+ * The already-registered public query var reaches the same strict asset
+ * allowlist without needing a host-specific static-file location rule.
+ * Keeping sw.js on this directory also preserves the /manager/ worker scope.
+ *
  * @return array<string, string>
  */
 function app_asset_urls() {
 	$base    = app_base_url();
 	$version = app_asset_version();
 
-	return array(
-		'app'       => add_query_arg( 'ver', $version, $base . 'app.js' ),
-		'styles'    => add_query_arg( 'ver', $version, $base . 'styles.css' ),
-		'sw'        => add_query_arg( 'ver', $version, $base . 'sw.js' ),
-		'manifest'  => add_query_arg( 'ver', $version, $base . 'manifest.webmanifest' ),
-		'fonts'     => add_query_arg( 'ver', $version, $base . 'fonts.css' ),
-		'ui'        => add_query_arg( 'ver', $version, $base . 'ui.css' ),
-		'config'    => rest_url( REST_NAMESPACE . '/config' ),
-		'version'   => $version,
+	$files = array(
+		'app'      => 'app.js',
+		'styles'   => 'styles.css',
+		'sw'       => 'sw.js',
+		'manifest' => 'manifest.webmanifest',
+		'fonts'    => 'fonts.css',
+		'ui'       => 'ui.css',
 	);
+	$urls = array();
+	foreach ( $files as $key => $file ) {
+		$urls[ $key ] = add_query_arg(
+			array( APP_ASSET_QUERY_VAR => $file, 'ver' => $version ),
+			$base
+		);
+	}
+	$urls['config']  = rest_url( REST_NAMESPACE . '/config' );
+	$urls['version'] = $version;
+	return $urls;
 }
 
 /**
@@ -644,6 +643,7 @@ function get_public_icon_urls() {
 		'dashboard'     => 'fandoogh-dashboard.svg',
 		'orders'        => 'fandoogh-orders.svg',
 		'products'      => 'fandoogh-products.svg',
+		'bulk-price'    => 'fandoogh-Money.svg',
 		'inventory'     => 'fandoogh-inventory.svg',
 		'customers'     => 'fandoogh-customers.svg',
 		'coupons'       => 'fandoogh-coupons.svg',
@@ -1244,7 +1244,7 @@ function register_settings() {
 		OPTION_KEY,
 		array(
 			'type'              => 'array',
-			'sanitize_callback' => __NAMESPACE__ . '\\sanitize_settings',
+			'sanitize_callback' => __NAMESPACE__ . '\\sanitize_admin_settings',
 			'default'           => default_settings(),
 			'show_in_rest'      => false,
 		)
@@ -1272,7 +1272,7 @@ function register_settings() {
 			__NAMESPACE__ . '\\render_color_field',
 			'fandoogh-manager-settings',
 			'fandoogh_manager_theme_section',
-			array( 'key' => $color_key )
+			array( 'key' => $color_key, 'label_for' => 'fandoogh-manager-color-' . $color_key )
 		);
 	}
 
@@ -1281,8 +1281,10 @@ function register_settings() {
 		__( 'نامک وب‌اپ', 'fandoogh-manager' ),
 		__NAMESPACE__ . '\\render_slug_field',
 		'fandoogh-manager-settings',
-		'fandoogh_manager_theme_section'
+		'fandoogh_manager_connection_section',
+		array( 'label_for' => 'fandoogh-manager-slug' )
 	);
+	add_settings_section( 'fandoogh_manager_connection_section', __( 'نشانی وب‌اپ', 'fandoogh-manager' ), '__return_false', 'fandoogh-manager-settings' );
 
 	add_settings_section(
 		'fandoogh_manager_analytics_section',
@@ -1343,7 +1345,7 @@ function register_settings() {
 			__NAMESPACE__ . '\\render_number_field',
 			'fandoogh-manager-settings',
 			'fandoogh_manager_image_section',
-			array( 'key' => $field_key )
+			array( 'key' => $field_key, 'label_for' => 'fandoogh-manager-' . $field_key )
 		);
 	}
 
@@ -1389,7 +1391,7 @@ function render_theme_section() {
 	$colors = get_settings()['colors'];
 	$checks = theme_contrast_report( $colors );
 
-	echo '<table class="widefat striped fandoogh-contrast-table" style="max-width:640px">';
+	echo '<div class="fandoogh-admin-table-wrap"><table class="widefat striped fandoogh-contrast-table">';
 	echo '<thead><tr><th>' . esc_html__( 'ترکیب', 'fandoogh-manager' ) . '</th><th>' . esc_html__( 'نمونه', 'fandoogh-manager' ) . '</th><th>' . esc_html__( 'نسبت', 'fandoogh-manager' ) . '</th><th>' . esc_html__( 'حداقل', 'fandoogh-manager' ) . '</th><th>' . esc_html__( 'وضعیت', 'fandoogh-manager' ) . '</th></tr></thead><tbody>';
 	foreach ( $checks as $check ) {
 		$ok = $check['ratio'] + 0.005 >= $check['minimum'];
@@ -1401,7 +1403,7 @@ function render_theme_section() {
 		echo '<td data-contrast-status>' . ( $ok ? '✅' : '❌' ) . '</td>';
 		echo '</tr>';
 	}
-	echo '</tbody></table>';
+	echo '</tbody></table></div>';
 }
 
 /**
@@ -1567,10 +1569,10 @@ function enqueue_admin_assets( $hook_suffix ) {
 	);
 
 	$colors = get_settings()['colors'];
-	$inline = ':root{--fandoogh-primary:' . esc_attr( $colors['primary'] ) . ';--fandoogh-secondary:' . esc_attr( $colors['secondary'] ) . ';--fandoogh-accent:' . esc_attr( $colors['accent'] ) . ';--fandoogh-bg:' . esc_attr( $colors['background'] ) . ';--fandoogh-text:' . esc_attr( $colors['text'] ) . ';}';
+	$inline = '.fandoogh-manager-admin-page{--fandoogh-primary:' . esc_attr( $colors['primary'] ) . ';--fandoogh-secondary:' . esc_attr( $colors['secondary'] ) . ';--fandoogh-accent:' . esc_attr( $colors['accent'] ) . ';--fandoogh-bg:' . esc_attr( $colors['background'] ) . ';--fandoogh-text:' . esc_attr( $colors['text'] ) . ';}';
 	wp_add_inline_style( $handle, $inline );
 
-	if ( 'fandoogh-manager_page_fandoogh-manager-settings' === $hook_suffix ) {
+	if ( 'appearance' === admin_active_tab( 'toplevel_page_fandoogh-manager' === $hook_suffix ? 'overview' : 'appearance' ) ) {
 		wp_enqueue_script(
 			'fandoogh-manager-contrast',
 			plugins_url( 'assets/js/contrast-validator.js', __FILE__ ),
@@ -1609,6 +1611,11 @@ function register_admin_menu() {
  * @return void
  */
 function render_status_page() {
+	render_admin_page( 'overview' );
+}
+
+/** Render overview content inside the shared administrator shell. */
+function render_admin_overview() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		wp_die( esc_html__( 'شما اجازهٔ مشاهدهٔ این صفحه را ندارید.', 'fandoogh-manager' ) );
 	}
@@ -1622,10 +1629,9 @@ function render_status_page() {
 		$app_shell_label                               => app_base_url(),
 	);
 
-	echo '<div class="wrap fandoogh-manager-admin-page fandoogh-manager-status-page">';
-	echo '<div class="fandoogh-admin-hero"><div><p class="fandoogh-eyebrow">' . esc_html__( 'مرکز مدیریت', 'fandoogh-manager' ) . '</p><h1>' . esc_html__( 'وضعیت Fandoogh Manager', 'fandoogh-manager' ) . '</h1><p class="fandoogh-admin-lead">' . esc_html__( 'وضعیت اتصال وب‌اپ و قابلیت‌های محلی فروشگاه را در یک نگاه بررسی کنید.', 'fandoogh-manager' ) . '</p></div><span class="fandoogh-admin-mark">ف</span></div>';
 	echo '<div class="fandoogh-admin-card">';
-	echo '<table class="widefat striped"><tbody>';
+	echo '<h2>' . esc_html__( 'سلامت و وضعیت بستر', 'fandoogh-manager' ) . '</h2>';
+	echo '<table class="widefat striped fandoogh-health-table"><tbody>';
 
 	foreach ( $health as $label => $value ) {
 		echo '<tr><th scope="row">' . esc_html( $label ) . '</th><td>';
@@ -1637,7 +1643,7 @@ function render_status_page() {
 		echo '</td></tr>';
 	}
 
-	echo '</tbody></table>';		echo '<p><a class="button" href="' . esc_url( admin_url( 'admin.php?page=fandoogh-manager-settings' ) ) . '">' . esc_html__( 'باز کردن تنظیمات', 'fandoogh-manager' ) . '</a></p>';
+	echo '</tbody></table>';
 	echo '</div>';
 
 	$security_rows = admin_security_session_rows();
@@ -1652,7 +1658,7 @@ function render_status_page() {
 	}
 
 	echo '<section class="fandoogh-admin-card fandoogh-security-overview" aria-labelledby="fandoogh-security-overview-title">';
-	echo '<div class="fandoogh-section-heading"><div><p class="fandoogh-eyebrow">' . esc_html__( 'امنیت و دسترسی', 'fandoogh-manager' ) . '</p><h2 id="fandoogh-security-overview-title">' . esc_html__( 'اتصال‌های فعلی وب‌اپ', 'fandoogh-manager' ) . '</h2></div><a class="button button-secondary" href="' . esc_url( admin_url( 'admin.php?page=fandoogh-manager-settings#fandoogh-access-management' ) ) . '">' . esc_html__( 'مدیریت نشست‌ها و کاربران', 'fandoogh-manager' ) . '</a></div>';
+	echo '<div class="fandoogh-section-heading"><div><p class="fandoogh-eyebrow">' . esc_html__( 'امنیت و دسترسی', 'fandoogh-manager' ) . '</p><h2 id="fandoogh-security-overview-title">' . esc_html__( 'اتصال‌های فعلی وب‌اپ', 'fandoogh-manager' ) . '</h2></div><a class="button button-secondary fandoogh-admin-button" href="' . esc_url( admin_tab_url( 'sessions' ) ) . '">' . esc_html__( 'مدیریت نشست‌ها', 'fandoogh-manager' ) . '</a></div>';
 	echo '<div class="fandoogh-security-metrics">';
 	echo '<div class="fandoogh-security-metric"><strong>' . esc_html( number_format_i18n( $active_count ) ) . '</strong><span>' . esc_html__( 'دستگاه متصل', 'fandoogh-manager' ) . '</span></div>';
 	echo '<div class="fandoogh-security-metric"><strong>' . esc_html( number_format_i18n( count( $active_users ) ) ) . '</strong><span>' . esc_html__( 'کاربر فعال', 'fandoogh-manager' ) . '</span></div>';
@@ -1662,33 +1668,13 @@ function render_status_page() {
 		echo '<p class="fandoogh-empty-state">' . esc_html__( 'در حال حاضر دستگاه متصل فعالی ثبت نشده است.', 'fandoogh-manager' ) . '</p>';
 	}
 	echo '</section>';
-	echo '</div>';
 }
 
 /**
  * @return void
  */
 function render_settings_page() {
-	if ( ! current_user_can( 'manage_options' ) ) {
-		wp_die( esc_html__( 'شما اجازهٔ مشاهدهٔ این صفحه را ندارید.', 'fandoogh-manager' ) );
-	}
-
-	$pairing_code = maybe_handle_pairing_admin_post();
-	$font_action   = maybe_handle_font_admin_post();
-	$access_action = maybe_handle_access_admin_post();
-
-	echo '<div class="wrap fandoogh-manager-admin-page fandoogh-manager-settings-page">';
-	echo '<div class="fandoogh-admin-hero"><div><p class="fandoogh-eyebrow">' . esc_html__( 'تنظیمات بستر', 'fandoogh-manager' ) . '</p><h1>' . esc_html__( 'تنظیمات Fandoogh Manager', 'fandoogh-manager' ) . '</h1><p class="fandoogh-admin-lead">' . esc_html__( 'رنگ، فونت، رسانه، تحلیل و اتصال امن وب‌اپ را از همین صفحه مدیریت کنید.', 'fandoogh-manager' ) . '</p></div><span class="fandoogh-admin-mark">ف</span></div>';
-	settings_errors();
-	echo '<section class="fandoogh-admin-card fandoogh-settings-card"><form method="post" action="options.php">';
-	settings_fields( OPTION_GROUP );
-	do_settings_sections( 'fandoogh-manager-settings' );
-	submit_button();
-	echo '</form></section>';
-	render_pairing_admin_section( $pairing_code );
-	render_font_admin_section( $font_action );
-	render_access_admin_section( $access_action );
-	echo '</div>';
+	render_admin_page( 'appearance' );
 }
 
 /**
@@ -1815,9 +1801,9 @@ function maybe_handle_access_admin_post() {
  * @param array<string, string>|string $action_result Result from the POST handler.
  * @return void
  */
-function render_access_admin_section( $action_result = '' ) {
+function render_access_admin_section( $action_result = '', $view = 'access' ) {
 	$session_rows = admin_security_session_rows();
-	$users        = admin_security_users( $session_rows );
+	$users        = 'access' === $view ? admin_security_users( $session_rows ) : array();
 	$active_count = 0;
 	foreach ( $session_rows as $session_row ) {
 		if ( ! empty( $session_row['connected'] ) ) {
@@ -1826,14 +1812,15 @@ function render_access_admin_section( $action_result = '' ) {
 	}
 
 	echo '<section class="fandoogh-admin-card fandoogh-access-management" id="fandoogh-access-management" aria-labelledby="fandoogh-access-title">';
-	echo '<div class="fandoogh-section-heading"><div><p class="fandoogh-eyebrow">' . esc_html__( 'کنترل دسترسی', 'fandoogh-manager' ) . '</p><h2 id="fandoogh-access-title">' . esc_html__( 'کاربران، دستگاه‌ها و نشست‌ها', 'fandoogh-manager' ) . '</h2></div><span class="fandoogh-status-pill fandoogh-status-pill--active">' . esc_html( number_format_i18n( $active_count ) . ' ' . __( 'دستگاه متصل', 'fandoogh-manager' ) ) . '</span></div>';
-    echo '<p>' . esc_html__( 'در این بخش می‌توانید ببینید هر کاربر از چه دستگاه‌هایی متصل است، نشست‌ها را جداگانه یا یکجا حذف کنید و دسترسی‌های حساس وب‌اپ را محدود کنید. administrator اصلی برای جلوگیری از قفل‌شدن پنل، پروفایل محافظت‌شده دارد.', 'fandoogh-manager' ) . '</p>';
+	echo '<div class="fandoogh-section-heading"><div><p class="fandoogh-eyebrow">' . esc_html__( 'کنترل دسترسی', 'fandoogh-manager' ) . '</p><h2 id="fandoogh-access-title">' . esc_html( 'sessions' === $view ? __( 'دستگاه‌ها و نشست‌ها', 'fandoogh-manager' ) : __( 'مجوزهای کاربران', 'fandoogh-manager' ) ) . '</h2></div><span class="fandoogh-status-pill fandoogh-status-pill--active">' . esc_html( number_format_i18n( $active_count ) . ' ' . __( 'دستگاه متصل در فهرست', 'fandoogh-manager' ) ) . '</span></div>';
+	echo '<p>' . esc_html( 'sessions' === $view ? __( 'حداکثر ۵۰۰ نشست اخیر نمایش داده می‌شود. ابطال نشست، دسترسی همان دستگاه را قطع می‌کند؛ توکن خام، کوکی و کدهای محرمانه نمایش داده نمی‌شوند.', 'fandoogh-manager' ) : __( 'دسترسی‌های حساس وب‌اپ را برای هر کاربر مدیریت کنید. administrator اصلی برای جلوگیری از قفل‌شدن پنل، پروفایل محافظت‌شده دارد.', 'fandoogh-manager' ) ) . '</p>';
 
 	if ( is_array( $action_result ) && ! empty( $action_result['message'] ) ) {
 		$notice_class = 'error' === ( isset( $action_result['type'] ) ? $action_result['type'] : '' ) ? 'notice-error' : 'notice-success';
 		echo '<div class="notice ' . esc_attr( $notice_class ) . ' inline" role="status"><p>' . esc_html( $action_result['message'] ) . '</p></div>';
 	}
 
+	if ( 'access' === $view ) {
 	echo '<div class="fandoogh-access-policy-list">';
 	if ( empty( $users ) ) {
 		echo '<p class="fandoogh-empty-state">' . esc_html__( 'کاربر مدیری برای اتصال به وب‌اپ پیدا نشد.', 'fandoogh-manager' ) . '</p>';
@@ -1875,7 +1862,9 @@ function render_access_admin_section( $action_result = '' ) {
 		}
 	}
 	echo '</div>';
+	}
 
+	if ( 'sessions' === $view ) {
 	echo '<div class="fandoogh-session-list"><div class="fandoogh-section-heading"><div><h3>' . esc_html__( 'فهرست دستگاه‌های متصل و نشست‌ها', 'fandoogh-manager' ) . '</h3><p>' . esc_html__( 'نشست‌های فعال اول نمایش داده می‌شوند؛ حذف یک نشست، دسترسی همان دستگاه را فوراً قطع می‌کند.', 'fandoogh-manager' ) . '</p></div></div>';
 	if ( empty( $session_rows ) ) {
 		echo '<p class="fandoogh-empty-state">' . esc_html__( 'هنوز هیچ نشست مدیریتی ثبت نشده است.', 'fandoogh-manager' ) . '</p>';
@@ -1896,7 +1885,9 @@ function render_access_admin_section( $action_result = '' ) {
 		}
 		echo '</tbody></table></div>';
 	}
-	echo '</div></section>';
+	echo '</div>';
+	}
+	echo '</section>';
 }
 
 /**

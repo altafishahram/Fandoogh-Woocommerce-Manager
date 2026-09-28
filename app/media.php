@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/composition/media.php';
+
 const MEDIA_UPLOAD_HARD_LIMIT = 20971520;
 const MEDIA_RATE_LIMIT = 10;
 const MEDIA_RATE_WINDOW = 60;
@@ -142,6 +144,7 @@ function validate_media_upload( $file, $max_bytes ) {
  * @return string|\WP_Error WebP path.
  */
 function convert_media_to_webp( $source_path, $source_name, $settings ) {
+	$storage = compose_media_storage();
 	$editor = wp_get_image_editor( $source_path );
 	if ( is_wp_error( $editor ) ) {
 		return new \WP_Error( 'fandoogh_webp_editor', __( 'ویرایشگر تصویر روی سرور در دسترس نیست.', 'fandoogh-manager' ), array( 'status' => 503 ) );
@@ -187,7 +190,7 @@ function convert_media_to_webp( $source_path, $source_name, $settings ) {
 			return $webp_path;
 		}
 
-		wp_delete_file( $webp_path );
+		$storage->deleteFile( $webp_path );
 	}
 
 	if ( $save_failed ) {
@@ -202,6 +205,7 @@ function convert_media_to_webp( $source_path, $source_name, $settings ) {
  * @return \WP_REST_Response|\WP_Error
  */
 function upload_media( $request ) {
+	$storage = compose_media_storage();
 	$session = get_session_context();
 	if ( is_wp_error( $session ) ) {
 		return $session;
@@ -222,7 +226,7 @@ function upload_media( $request ) {
 	require_once ABSPATH . 'wp-admin/includes/file.php';
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 
-	$handled = wp_handle_sideload(
+	$handled = $storage->handleSideload(
 		array_merge(
 			$input,
 			array(
@@ -242,12 +246,12 @@ function upload_media( $request ) {
 	$webp_path   = convert_media_to_webp( $source_path, $valid['name'], $settings );
 	if ( is_wp_error( $webp_path ) ) {
 		if ( empty( $settings['keep_original'] ) ) {
-			wp_delete_file( $source_path );
+			$storage->deleteFile( $source_path );
 		}
 		return $webp_path;
 	}
 
-	$attachment_id = wp_insert_attachment(
+	$attachment_id = $storage->createAttachment(
 		array(
 			'post_mime_type' => 'image/webp',
 			'post_title'     => sanitize_text_field( pathinfo( $valid['name'], PATHINFO_FILENAME ) ),
@@ -257,25 +261,25 @@ function upload_media( $request ) {
 		$webp_path
 	);
 	if ( is_wp_error( $attachment_id ) || ! $attachment_id ) {
-		wp_delete_file( $webp_path );
+		$storage->deleteFile( $webp_path );
 		if ( empty( $settings['keep_original'] ) ) {
-			wp_delete_file( $source_path );
+			$storage->deleteFile( $source_path );
 		}
 		return new \WP_Error( 'fandoogh_media_attachment', __( 'ساخت رکورد رسانه انجام نشد.', 'fandoogh-manager' ), array( 'status' => 500 ) );
 	}
 
-	$metadata = wp_generate_attachment_metadata( $attachment_id, $webp_path );
+	$metadata = $storage->generateMetadata( $attachment_id, $webp_path );
 	if ( ! is_wp_error( $metadata ) && ! empty( $metadata ) ) {
-		wp_update_attachment_metadata( $attachment_id, $metadata );
+		$storage->updateMetadata( $attachment_id, $metadata );
 	}
 
 	if ( empty( $settings['keep_original'] ) ) {
-		wp_delete_file( $source_path );
+		$storage->deleteFile( $source_path );
 	}
 
 	$url = public_asset_url( wp_get_attachment_url( $attachment_id ) );
 	if ( ! $url ) {
-		wp_delete_attachment( $attachment_id, true );
+		$storage->deleteAttachment( $attachment_id, true );
 		return new \WP_Error( 'fandoogh_media_origin', __( 'رسانهٔ خروجی روی مبدأ مجاز سایت قرار نگرفت.', 'fandoogh-manager' ), array( 'status' => 500 ) );
 	}
 

@@ -12,6 +12,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/composition/orders.php';
+require_once __DIR__ . '/composition/products.php';
+
 const ANALYTICS_PAGE_SIZE = 100;
 const ANALYTICS_MAX_PAGES = 25;
 
@@ -40,12 +43,13 @@ function analytics_read_permission( $request ) {
 		return $session;
 	}
 
-	if ( ! session_has_scope( 'analytics.read', $session['scopes'] ) ) {
-		return new \WP_Error( 'fandoogh_analytics_forbidden', __( 'نشست فعلی مجوز مشاهدهٔ تحلیل فروش را ندارد.', 'fandoogh-manager' ), array( 'status' => 403 ) );
+	$settings = get_settings();
+	if ( empty( $settings['analytics_enabled'] ) ) {
+		return new \WP_Error( 'fandoogh_analytics_disabled', __( 'تحلیل فروش در تنظیمات افزونه خاموش است.', 'fandoogh-manager' ), array( 'status' => 403 ) );
 	}
 
-	if ( empty( get_settings()['analytics_enabled'] ) ) {
-		return new \WP_Error( 'fandoogh_analytics_disabled', __( 'تحلیل فروش در تنظیمات افزونه خاموش است.', 'fandoogh-manager' ), array( 'status' => 403 ) );
+	if ( ! session_has_scope( 'analytics.read', $session['scopes'] ) ) {
+		return new \WP_Error( 'fandoogh_analytics_forbidden', __( 'نشست فعلی مجوز مشاهدهٔ تحلیل فروش را ندارد. پس از تغییر دسترسی، یک اتصال امن جدید ایجاد کنید.', 'fandoogh-manager' ), array( 'status' => 403 ) );
 	}
 
 	apply_session_user_context( $session );
@@ -162,10 +166,11 @@ function analytics_fetch_orders( $range ) {
 
 	$orders    = array();
 	$truncated = false;
+	$repository = compose_order_repository();
 
 	try {
 		for ( $page = 1; $page <= ANALYTICS_MAX_PAGES; $page++ ) {
-			$result = wc_get_orders(
+			$result = $repository->query(
 				array(
 					'limit'       => ANALYTICS_PAGE_SIZE,
 					'paged'       => $page,
@@ -177,7 +182,11 @@ function analytics_fetch_orders( $range ) {
 				)
 			);
 
-			$page_orders = is_object( $result ) && isset( $result->orders ) ? (array) $result->orders : (array) $result;
+			if ( is_wp_error( $result ) || ! is_object( $result ) || ! isset( $result->orders ) || ! is_array( $result->orders ) ) {
+				return new \WP_Error( 'fandoogh_analytics_failed', __( 'خواندن داده‌های تحلیل فروش انجام نشد.', 'fandoogh-manager' ), array( 'status' => 503 ) );
+			}
+
+			$page_orders = $result->orders;
 			$orders      = array_merge( $orders, $page_orders );
 			$max_pages   = is_object( $result ) && isset( $result->max_num_pages ) ? absint( $result->max_num_pages ) : 1;
 
@@ -205,7 +214,7 @@ function analytics_fetch_orders( $range ) {
 function analytics_status_labels() {
 	$labels = array();
 	if ( function_exists( 'wc_get_order_statuses' ) ) {
-		foreach ( (array) wc_get_order_statuses() as $status => $label ) {
+		foreach ( compose_order_repository()->statuses() as $status => $label ) {
 			$key            = sanitize_key( preg_replace( '/^wc-/', '', (string) $status ) );
 			$labels[ $key ] = analytics_clean_text( $label, 80 );
 		}
@@ -223,7 +232,7 @@ function analytics_product_count() {
 	}
 
 	try {
-		$result = wc_get_products(
+		$result = compose_product_repository()->query(
 			array(
 				'limit'   => 1,
 				'paginate' => true,

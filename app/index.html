@@ -101,6 +101,7 @@
           <button class="sidebar-nav-item is-active" type="button" data-nav-target="dashboard" aria-current="page"><svg class="sidebar-nav-icon ui-icon" data-icon-name="dashboard" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 10 8-6 8 6v9H4Z"/><path d="M9 19v-5h6v5"/></svg><span>داشبورد</span></button>
           <button class="sidebar-nav-item" type="button" data-nav-target="orders"><svg class="sidebar-nav-icon ui-icon" data-icon-name="orders" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg><span>سفارش‌ها</span><span class="nav-count-badge" id="sidebarOrdersBadge" aria-hidden="true" hidden>۰</span></button>
           <button class="sidebar-nav-item" type="button" data-nav-target="products"><svg class="sidebar-nav-icon ui-icon" data-icon-name="products" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg><span>محصولات</span></button>
+          <button class="sidebar-nav-item" id="openBulkPrice" type="button" data-nav-target="bulk-price" aria-controls="bulkPricePanel"><svg class="sidebar-nav-icon ui-icon" data-icon-name="bulk-price" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.7 14.3c0 1.3 1 2.4 2.2 2.4h2.5c1.1 0 1.9-.9 1.9-2 0-1.2-.5-1.7-1.3-2l-4-1.4c-.8-.3-1.3-.7-1.3-1.9 0-1.1.9-2 1.9-2h2.5c1.2 0 2.2 1 2.2 2.3M12 6v12"/></svg><span>افزایش قیمت گروهی</span></button>
           <button class="sidebar-nav-item" type="button" data-nav-target="inventory"><svg class="sidebar-nav-icon ui-icon" data-icon-name="inventory" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M6 16V9M12 16V5M18 16v-3"/><path d="m6 6 2-2 2 2M12 2l2 2-2 2M18 9l2 2-2 2"/></svg><span>موجودی</span></button>
           <button class="sidebar-nav-item" type="button" data-nav-target="customers"><svg class="sidebar-nav-icon ui-icon" data-icon-name="customers" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5.5 19c.7-3.1 2.8-4.7 6.5-4.7s5.8 1.6 6.5 4.7"/></svg><span>مشتریان</span></button>
           <button class="sidebar-nav-item" type="button" data-nav-target="coupons"><svg class="sidebar-nav-icon ui-icon" data-icon-name="coupons" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v2a2.5 2.5 0 0 0 0 5v2a2.5 2.5 0 0 1-2.5 2h-11A2.5 2.5 0 0 1 4 16.5v-2a2.5 2.5 0 0 0 0-5Z"/><path d="M12 8v8M9 11h6M9 13h6"/></svg><span>کوپن‌ها</span></button>
@@ -367,14 +368,18 @@
 
               <div class="products-actions-row">
                 <button class="primary-button compact-button products-action-button" id="newProductButton" type="button">محصول جدید</button>
-                <button class="secondary-button compact-button products-action-button products-bulk-price-button" id="openBulkPrice" type="button" aria-expanded="false" aria-controls="bulkPricePanel">افزایش گروهی قیمت</button>
               </div>
 
               <div class="products-toolbar products-toolbar-controls">
                 <label class="sr-only" for="productSearch">جست‌وجوی محصولات</label>
                 <input id="productSearch" class="product-search" type="search" placeholder="جست‌وجوی محصول" autocomplete="off" enterkeyhint="search">
-                <button class="secondary-button compact-button products-filter-toggle" id="toggleProductFilters" type="button" aria-label="باز کردن فیلترهای محصولات" aria-controls="productFilterPanel" aria-expanded="false">
-                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z"/></svg>
+                <button class="secondary-button compact-button filter-toggle-button products-filter-toggle" id="toggleProductFilters" type="button" aria-label="باز کردن فیلترهای محصولات" aria-controls="productFilterPanel" aria-expanded="false">
+                  <svg class="ui-icon" data-icon-name="filter" viewBox="0 0 24 24" aria-hidden="true">
+                    <g fill="currentColor" stroke="none">
+                      <path d="M11.38 18.9004C11.05 18.9004 10.72 18.8204 10.42 18.6504C9.81 18.3104 9.44 17.6904 9.44 16.9904V13.9104C9.44 13.7204 9.29 13.3504 9.14 13.1604L6.97 10.8804C6.56 10.4704 6.25 9.75039 6.25 9.20039V7.87039C6.25 6.76039 7.09 5.90039 8.16 5.90039H15.83C16.88 5.90039 17.74 6.76039 17.74 7.81039V9.09039C17.74 9.79039 17.34 10.5604 16.94 10.9604L14.41 13.2004C14.25 13.3404 14.08 13.6904 14.08 13.9804V16.4804C14.08 17.1104 13.7 17.8104 13.19 18.1104L12.4 18.6204C12.09 18.8104 11.74 18.9004 11.38 18.9004ZM8.16 7.40039C7.92 7.40039 7.75 7.60039 7.75 7.87039V9.20039C7.75 9.33039 7.89 9.67039 8.05 9.83039L10.27 12.1704C10.61 12.6004 10.94 13.2904 10.94 13.9104V16.9904C10.94 17.1904 11.07 17.3004 11.15 17.3404C11.26 17.4004 11.44 17.4404 11.6 17.3404L12.4 16.8204C12.48 16.7604 12.58 16.5604 12.58 16.4604V13.9604C12.58 13.2504 12.93 12.4604 13.43 12.0504L15.91 9.85039C16.04 9.72039 16.24 9.32039 16.24 9.07039V7.81039C16.24 7.59039 16.05 7.40039 15.83 7.40039H8.16Z"/>
+                      <path d="M15 22.75H9C3.57 22.75 1.25 20.43 1.25 15V9C1.25 3.57 3.57 1.25 9 1.25H15C20.43 1.25 22.75 3.57 22.75 9V15C22.75 20.43 20.43 22.75 15 22.75ZM9 2.75C4.39 2.75 2.75 4.39 2.75 9V15C2.75 19.61 4.39 21.25 9 21.25H15C19.61 21.25 21.25 19.61 21.25 15V9C21.25 4.39 19.61 2.75 15 2.75H9Z"/>
+                    </g>
+                  </svg>
                   <span class="products-filter-label">فیلتر</span>
                 </button>
                 <div class="product-filter-backdrop" id="productFilterBackdrop" hidden aria-hidden="true"></div>
@@ -400,61 +405,6 @@
                   </div>
                 </div>
               </div>
-
-              <!-- UI: پنل عملیات گروهی قیمت محصولات. -->
-              <section class="bulk-price-panel" id="bulkPricePanel" aria-labelledby="bulkPriceTitle" hidden>
-                <div class="product-editor-heading">
-                  <div>
-                    <p class="card-kicker">عملیات گروهی امن</p>
-                    <h3 id="bulkPriceTitle">افزایش قیمت محصولات یک دسته</h3>
-                  </div>
-                  <button class="secondary-button compact-button" id="closeBulkPrice" type="button">بستن</button>
-                </div>
-                <p class="panel-description">ابتدا دسته‌ها و روش افزایش را مشخص کنید. پیش از هر تغییری، تعداد محصولات و نمونهٔ قیمت قبل و بعد نمایش داده می‌شود.</p>
-                <form id="bulkPriceForm">
-                  <div class="bulk-price-grid">
-                    <label class="field-label" for="bulkPriceCategories">دسته و زیردسته‌ها
-                      <select id="bulkPriceCategories" multiple size="6" required aria-describedby="bulkPriceCategoryHint"></select>
-                      <small id="bulkPriceCategoryHint">برای انتخاب چند دسته در ویندوز Ctrl و در macOS کلید Command را نگه دارید.</small>
-                    </label>
-                    <div class="bulk-price-fields">
-                      <label class="field-label bulk-price-control-field" for="bulkPriceType">روش افزایش
-                        <select id="bulkPriceType">
-                          <option value="percent">درصدی</option>
-                          <option value="fixed">مبلغ ثابت</option>
-                        </select>
-                      </label>
-                      <label class="field-label bulk-price-control-field" for="bulkPriceAmount"><span id="bulkPriceAmountLabel">درصد افزایش</span>
-                        <input id="bulkPriceAmount" type="text" inputmode="decimal" maxlength="20" placeholder="مثلاً ۱۰" required aria-describedby="bulkPriceAmountHint">
-                        <small id="bulkPriceAmountHint">فقط مقدار مثبت وارد کنید.</small>
-                      </label>
-                      <label class="field-label checkbox-field bulk-price-checkbox" for="bulkPriceIncludeChildren">
-                        <input id="bulkPriceIncludeChildren" type="checkbox" checked>
-                        زیردسته‌های دسته‌های انتخاب‌شده هم محاسبه شوند
-                      </label>
-                    </div>
-                  </div>
-                  <div class="bulk-price-notice" role="note">
-                    <strong>نحوهٔ محاسبه</strong>
-                    <p>قیمت عادی و قیمت فروش ویژهٔ موجود هر دو افزایش می‌یابند. محصولات بدون قیمت عادی تغییر نمی‌کنند.</p>
-                  </div>
-                  <div class="product-editor-actions bulk-price-actions">
-                    <button class="primary-button" id="previewBulkPrice" type="submit">نمایش پیش‌نمایش</button>
-                    <button class="danger-button" id="executeBulkPrice" type="button" disabled>تأیید و اعمال افزایش</button>
-                    <button class="secondary-button" id="resetBulkPrice" type="button">پاک‌کردن</button>
-                  </div>
-                  <span class="secure-note bulk-price-message" id="bulkPriceMessage" role="status" aria-live="polite" hidden></span>
-                </form>
-                <section class="bulk-price-preview" id="bulkPricePreview" aria-labelledby="bulkPricePreviewTitle" hidden>
-                  <div class="bulk-price-preview-heading">
-                    <div><p class="card-kicker">کنترل قبل از اجرا</p><h4 id="bulkPricePreviewTitle">پیش‌نمایش تغییرات</h4></div>
-                    <span class="state-badge" id="bulkPricePreviewBadge">آمادهٔ بررسی</span>
-                  </div>
-                  <div class="bulk-price-summary" id="bulkPriceSummary"></div>
-                  <div class="bulk-price-samples" id="bulkPriceSamples"></div>
-                  <p class="bulk-price-confirm-note">با تغییر هرکدام از تنظیمات، این پیش‌نمایش باطل می‌شود و باید دوباره محاسبه شود.</p>
-                </section>
-              </section>
 
               <!-- UI: مودال ساخت/ویرایش محصول؛ فرم و مراحل آن توسط app.js ساخته/پر می‌شوند. -->
               <div class="product-editor-overlay" id="productEditorOverlay" hidden>
@@ -570,12 +520,15 @@
               <div class="product-view-overlay" id="productViewOverlay" hidden>
                 <div class="product-view-backdrop" data-product-view-dismiss aria-hidden="true"></div>
                 <section class="product-view-dialog" id="productViewDialog" role="dialog" aria-modal="true" aria-labelledby="productViewTitle" aria-describedby="productViewTabContent">
-                  <header class="product-view-header">
+                  <header class="product-view-header product-editor-heading order-modal-heading">
                     <div>
                       <p class="card-kicker">نمایش محصول</p>
                       <h3 id="productViewTitle">جزئیات محصول</h3>
                     </div>
-                    <button class="secondary-button icon-button" id="closeProductView" type="button" aria-label="بستن جزئیات محصول" title="بستن"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg><span class="sr-only">بستن</span></button>
+                    <div class="product-view-header-actions" aria-label="عملیات محصول">
+                      <button class="primary-button compact-button" id="productViewEdit" type="button" disabled>ویرایش محصول</button>
+                      <button class="secondary-button compact-button" id="closeProductView" type="button">بستن</button>
+                    </div>
                   </header>
                   <nav class="product-view-tabs" id="productViewTabs" aria-label="تب‌های اطلاعات محصول" role="tablist">
                     <button class="product-view-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="productViewTabContent" data-product-view-tab="summary">اطلاعات اصلی</button>
@@ -588,8 +541,9 @@
                   <div class="product-view-state" id="productViewLoadingState" role="status" hidden><span class="products-state-icon products-spinner" aria-hidden="true"></span><div><strong>در حال دریافت جزئیات محصول</strong><p>اطلاعات کامل محصول و variationها از API داخلی دریافت می‌شود.</p></div></div>
                   <div class="product-view-state product-view-error-state" id="productViewErrorState" role="alert" hidden><span class="products-state-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 8v5M12 16.5h.01"></path></svg></span><div><strong>دریافت جزئیات ناموفق بود</strong><p id="productViewErrorText">اطلاعات محصول در دسترس نیست.</p></div></div>
                   <footer class="product-view-footer">
-                    <button class="primary-button" id="productViewEdit" type="button" disabled>ویرایش محصول</button>
-                    <button class="secondary-button" id="productViewCloseFooter" type="button">بستن</button>
+                    <button class="secondary-button compact-button" id="productViewPrevious" type="button" disabled>قبلی</button>
+                    <span class="product-view-navigation-status" id="productViewNavigationStatus" role="status" aria-live="polite"></span>
+                    <button class="primary-button compact-button" id="productViewNext" type="button" disabled>بعدی</button>
                   </footer>
                 </section>
               </div>
@@ -627,6 +581,153 @@
               </div>
 
                 <div class="products-grid" id="productsGrid" role="list" hidden></div>
+                <div class="products-infinite-state" id="productsLoadMoreState" role="status" aria-live="polite" hidden>
+                  <span class="products-spinner" aria-hidden="true"></span>
+                  <span>در حال دریافت محصولات بیشتر...</span>
+                </div>
+            </article>
+
+            <!-- UI: تب مستقل تغییر قیمت؛ ظاهر و گردش‌کار از پروتوتایپ تأییدشده گرفته شده است. -->
+            <article class="bulk-price-panel card-surface bulk-price-workflow" data-nav-section="bulk-price" id="bulkPricePanel" aria-labelledby="bulkPriceTitle" hidden>
+              <header class="bulk-price-panel-header">
+                <h2 id="bulkPriceTitle">تغییر قیمت محصولات</h2>
+                <button class="secondary-button compact-button bulk-price-button" id="closeBulkPrice" type="button">بازگشت به محصولات</button>
+              </header>
+
+              <ol class="bulk-price-steps" aria-label="مراحل تغییر قیمت">
+                <button class="secondary-button compact-button bulk-price-button bulk-price-reset" id="resetBulkPrice" type="button">شروع دوباره</button>
+                <li class="bulk-price-step is-active" data-bulk-price-step-indicator="1"><span class="bulk-price-step-number">۱</span><span class="bulk-price-step-label">انتخاب محصولات</span></li>
+                <li class="bulk-price-step" data-bulk-price-step-indicator="2"><span class="bulk-price-step-number">۲</span><span class="bulk-price-step-label">تنظیم تغییر</span></li>
+                <li class="bulk-price-step" data-bulk-price-step-indicator="3"><span class="bulk-price-step-number">۳</span><span class="bulk-price-step-label">پیش‌نمایش و ثبت</span></li>
+              </ol>
+
+              <form id="bulkPriceForm" novalidate>
+                <section data-bulk-price-stage="1">
+                  <h3 class="bulk-price-stage-title">یکی از دو روش زیر را انتخاب کنید.</h3>
+                  <p class="bulk-price-stage-copy">انتخاب‌های هر روش هنگام جابه‌جایی حفظ می‌شوند.</p>
+                  <div class="bulk-price-method-grid" role="radiogroup" aria-label="روش تغییر قیمت">
+                    <button class="bulk-price-method-card is-selected" type="button" data-bulk-price-method="category" role="radio" aria-checked="true">
+                      <span class="bulk-price-method-icon" aria-hidden="true">▦</span>
+                      <span><strong>براساس دسته‌بندی</strong></span>
+                    </button>
+                    <button class="bulk-price-method-card" type="button" data-bulk-price-method="product" role="radio" aria-checked="false">
+                      <span class="bulk-price-method-icon" aria-hidden="true">◫</span>
+                      <span><strong>براساس محصولات انتخابی</strong></span>
+                    </button>
+                  </div>
+
+                  <div class="bulk-price-selection-box" id="bulkPriceCategorySelection">
+                    <label class="bulk-price-field-label" for="bulkPriceCategorySearch">دسته‌بندی‌ها</label>
+                    <div class="bulk-price-search-wrap"><input class="bulk-price-search-input" id="bulkPriceCategorySearch" type="search" placeholder="جست‌وجوی دسته یا زیردسته..." autocomplete="off"></div>
+                    <div class="bulk-price-option-list" id="bulkPriceCategoryOptions"></div>
+                    <select id="bulkPriceCategories" multiple hidden aria-hidden="true" tabindex="-1"></select>
+                    <div class="bulk-price-selected-area">
+                      <div class="bulk-price-selected-head"><span id="bulkPriceCategoryCount">۰ دسته انتخاب شده</span><button class="bulk-price-clear-button" type="button" data-bulk-price-clear="category">پاک‌کردن همه</button></div>
+                      <div class="bulk-price-chips" id="bulkPriceCategoryChips"></div>
+                      <p class="bulk-price-empty" id="bulkPriceCategoryEmpty">هنوز دسته‌ای انتخاب نشده است.</p>
+                    </div>
+                  </div>
+
+                  <div class="bulk-price-selection-box" id="bulkPriceProductSelection" hidden>
+                    <label class="bulk-price-field-label" for="bulkPriceProductSearch">محصولات</label>
+                    <div class="bulk-price-search-wrap"><input class="bulk-price-search-input" id="bulkPriceProductSearch" type="search" placeholder="جست‌وجوی ایجکس براساس نام یا SKU..." autocomplete="off"></div>
+                    <div class="bulk-price-option-list" id="bulkPriceProductOptions"></div>
+                    <div class="bulk-price-selected-area">
+                      <div class="bulk-price-selected-head"><span id="bulkPriceProductCount">۰ محصول انتخاب شده</span><button class="bulk-price-clear-button" type="button" data-bulk-price-clear="product">پاک‌کردن همه</button></div>
+                      <div class="bulk-price-chips" id="bulkPriceProductChips"></div>
+                      <p class="bulk-price-empty" id="bulkPriceProductEmpty">هنوز محصولی انتخاب نشده است.</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section data-bulk-price-stage="2" hidden>
+                  <h3 class="bulk-price-stage-title">تنظیم مقدار تغییر</h3>
+                  <p class="bulk-price-stage-copy">انتخاب‌ها را کنترل کنید و سپس نوع و مقدار تغییر (افزایش یا کاهش) را مشخص کنید.</p>
+
+                  <div class="bulk-price-toggle-row" id="bulkPriceToggleRow" hidden>
+                    <div><strong>اعمال تغییر یکسان روی همه</strong><small>اگر خاموش باشد، قیمت جدید هر محصول را در فهرست پایین به‌صورت دستی وارد کنید.</small></div>
+                    <label class="bulk-price-switch" aria-label="اعمال تغییر یکسان روی همه"><input type="checkbox" id="bulkPriceEnableAdjustment"><span></span></label>
+                  </div>
+
+                  <div id="bulkPriceAdjustmentControls">
+                    <div class="bulk-price-adjustment-box">
+                      <span class="bulk-price-field-label">نوع تغییر</span>
+                      <div class="bulk-price-adjustment-types">
+                        <label class="bulk-price-radio-card"><input type="radio" name="bulkPriceAdjustment" value="percent" checked> تغییر درصدی</label>
+                        <label class="bulk-price-radio-card"><input type="radio" name="bulkPriceAdjustment" value="fixed"> تغییر با مبلغ ثابت</label>
+                      </div>
+                      <label class="bulk-price-field-label bulk-price-amount-field" for="bulkPriceAmount"><span id="bulkPriceAmountLabel">مقدار تغییر</span></label>
+                      <div class="bulk-price-amount-shell"><input id="bulkPriceAmount" type="text" inputmode="decimal" maxlength="20" placeholder="مثلاً ۱۰ یا ۱۰-" aria-describedby="bulkPriceAmountHint"><span class="bulk-price-amount-unit" id="bulkPriceAmountUnit">درصد</span></div>
+                      <p class="bulk-price-hint" id="bulkPriceAmountHint">برای کاهش قیمت، عدد منفی وارد کنید (مثلاً ۱۰- برای کاهش ۱۰٪ یا ۱۰٬۰۰۰- تومان).</p>
+                    </div>
+
+                    <div class="bulk-price-variation-option">
+                      <label><input type="checkbox" id="bulkPriceApplyVariations" checked><span>اعمال روی محصولات متغیر (Variation) هم<small>اگر فعال باشد، تغییر قیمت روی همهٔ variationهای محصولات انتخاب‌شده هم اعمال می‌شود.</small></span></label>
+                    </div>
+                  </div>
+
+                  <div class="bulk-price-schedule-box">
+                    <span class="bulk-price-field-label">زمان اجرای تغییر</span>
+                    <div class="bulk-price-schedule-options">
+                      <label class="bulk-price-radio-card"><input type="radio" name="bulkPriceSchedule" value="now" checked> اجرای فوری</label>
+                      <label class="bulk-price-radio-card"><input type="radio" name="bulkPriceSchedule" value="later"> زمان‌بندی برای بعد</label>
+                    </div>
+                    <div class="bulk-price-schedule-datetime" id="bulkPriceScheduleDatetime" hidden>
+                      <label class="bulk-price-field-label" for="bulkPriceScheduleDate">تاریخ
+                        <input id="bulkPriceScheduleDate" type="text" data-persian-date-type="date" data-persian-date-picker="1" lang="fa-IR" readonly autocomplete="off" placeholder="انتخاب تاریخ شمسی">
+                      </label>
+                      <label class="bulk-price-field-label" for="bulkPriceScheduleTime">ساعت
+                        <input id="bulkPriceScheduleTime" type="time" value="09:00">
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="bulk-price-review-card">
+                    <div class="bulk-price-review-header"><strong id="bulkPriceReviewTitle">دسته‌بندی‌های انتخاب‌شده</strong><button class="bulk-price-edit-link" type="button" data-bulk-price-go="1">ویرایش انتخاب‌ها</button></div>
+                    <div class="bulk-price-review-list" id="bulkPriceReviewList"></div>
+                  </div>
+                </section>
+
+                <section data-bulk-price-stage="3" id="bulkPricePreview" hidden>
+                  <h3 class="bulk-price-stage-title">پیش‌نمایش تغییرات</h3>
+                  <p class="bulk-price-stage-copy">قبل از ثبت نهایی، نمونهٔ قیمت فعلی و قیمت جدید را بررسی کنید.</p>
+                  <div class="bulk-price-preview-summary" id="bulkPriceSummary">
+                    <div class="bulk-price-summary-card"><strong id="bulkPriceSummarySelected">۰</strong><span>مورد انتخاب‌شده</span></div>
+                    <div class="bulk-price-summary-card"><strong id="bulkPriceSummaryChange">۰٪</strong><span>مقدار تغییر</span></div>
+                    <div class="bulk-price-summary-card"><strong id="bulkPriceSummaryAffected">۰</strong><span>محصول قابل تغییر</span></div>
+                    <div class="bulk-price-summary-card"><strong id="bulkPriceSummarySchedule">فوری</strong><span>زمان اجرا</span></div>
+                  </div>
+                  <div class="bulk-price-preview-table-wrap">
+                    <table>
+                      <thead><tr><th>محصول</th><th>روش انتخاب</th><th>قیمت فعلی</th><th>قیمت جدید</th><th>مقدار تغییر</th></tr></thead>
+                      <tbody id="bulkPriceSamples"></tbody>
+                    </table>
+                  </div>
+                </section>
+
+                <div class="bulk-price-actions">
+                  <button class="secondary-button compact-button bulk-price-button" id="bulkPriceBack" type="button" hidden>مرحله قبل</button>
+                  <div class="bulk-price-action-group">
+                    <button class="primary-button compact-button bulk-price-button" id="bulkPriceNext" type="button" disabled>مرحله بعد</button>
+                    <button class="primary-button compact-button bulk-price-button" id="previewBulkPrice" type="submit" hidden disabled>نمایش پیش‌نمایش</button>
+                    <button class="danger-button compact-button bulk-price-button" id="executeBulkPrice" type="button" hidden disabled>ثبت و اعمال تغییر</button>
+                  </div>
+                </div>
+                <p class="bulk-price-message" id="bulkPriceMessage" role="status" aria-live="polite" hidden></p>
+              </form>
+
+              <div class="bulk-price-modal-overlay" id="bulkPriceConfirmModal" hidden>
+                <div class="bulk-price-modal" role="dialog" aria-modal="true" aria-labelledby="bulkPriceModalTitle">
+                  <h3 id="bulkPriceModalTitle">تأیید نهایی تغییر قیمت</h3>
+                  <p>آیا از اعمال این تغییرات مطمئن هستید؟</p>
+                  <div class="bulk-price-modal-summary" id="bulkPriceModalSummary"></div>
+                  <div class="bulk-price-modal-warning">⚠ این عملیات پس از اجرا قابل بازگشت خودکار نیست. در صورت زمان‌بندی، در تاریخ مشخص‌شده اعمال خواهد شد.</div>
+                  <div class="bulk-price-modal-actions">
+                    <button class="secondary-button compact-button bulk-price-button" type="button" id="bulkPriceModalCancel">انصراف</button>
+                    <button class="danger-button compact-button bulk-price-button" type="button" id="bulkPriceModalConfirm">بله، اعمال شود</button>
+                  </div>
+                </div>
+              </div>
             </article>
 
             <!-- UI: مدیریت دسته‌بندی‌ها. -->
@@ -678,7 +779,7 @@
                 <div class="products-toolbar orders-toolbar-controls">
                   <label class="sr-only" for="orderSearch">جست‌وجوی سفارش‌ها</label>
                   <input id="orderSearch" class="product-search" type="search" placeholder="شماره یا نام مشتری" autocomplete="off">
-                  <button class="secondary-button compact-button orders-filter-toggle" id="toggleOrderFilters" type="button" aria-label="باز کردن فیلترهای سفارش" aria-controls="orderFilterPanel" aria-expanded="false">
+                  <button class="secondary-button compact-button filter-toggle-button orders-filter-toggle" id="toggleOrderFilters" type="button" aria-label="باز کردن فیلترهای سفارش" aria-controls="orderFilterPanel" aria-expanded="false">
                     <svg class="ui-icon" data-icon-name="filter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z"/></svg>
                     <span class="orders-filter-label">فیلتر</span>
                   </button>
@@ -816,9 +917,33 @@
                 <span class="state-badge products-state-badge" id="customersStateBadge" data-state="secure">نیازمند اتصال امن</span>
                 <button class="secondary-button icon-refresh-button products-refresh" id="refreshCustomers" type="button" aria-label="تلاش دوباره برای مشتریان" title="تلاش دوباره"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تلاش دوباره برای مشتریان</span></button>
               </div>
-              <div class="products-toolbar">
+              <div class="products-toolbar customers-toolbar-controls">
                 <label class="sr-only" for="customerSearch">جست‌وجوی مشتریان</label>
                 <input id="customerSearch" class="product-search" type="search" placeholder="نام، ایمیل یا نام کاربری" autocomplete="off">
+                <button class="secondary-button compact-button filter-toggle-button customers-filter-toggle" id="toggleCustomerFilters" type="button" aria-label="باز کردن فیلترهای مشتریان" aria-controls="customerFilterPanel" aria-expanded="false">
+                  <svg class="ui-icon" data-icon-name="filter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z"/></svg>
+                  <span class="customers-filter-label">فیلتر</span>
+                </button>
+                <button class="primary-button compact-button" id="newCustomerButton" type="button">مشتری جدید</button>
+                <div class="customer-filter-backdrop" id="customerFilterBackdrop" hidden aria-hidden="true"></div>
+                <div class="management-filter-panel customer-filter-panel" id="customerFilterPanel" role="dialog" aria-labelledby="customerFilterTitle" aria-modal="true" hidden>
+                  <div class="management-filter-header">
+                    <h3 id="customerFilterTitle">فیلترهای مشتریان</h3>
+                    <button class="secondary-button compact-button" id="closeCustomerFilters" type="button">بستن</button>
+                  </div>
+                  <div class="management-filter-grid customer-filter-grid">
+                    <label class="field-label" for="customerTypeFilter">نوع مشتری
+                      <select id="customerTypeFilter"><option value="any">همهٔ مشتریان</option><option value="paying">خریداران</option><option value="non-paying">بدون سفارش</option></select>
+                    </label>
+                    <label class="field-label" for="customerSort">مرتب‌سازی
+                      <select id="customerSort"><option value="recent">جدیدترین عضویت</option><option value="orders">بیشترین سفارش</option><option value="spent">بیشترین خرید</option><option value="name">نام</option></select>
+                    </label>
+                  </div>
+                  <div class="management-filter-actions">
+                    <button class="primary-button compact-button" id="applyCustomerFilters" type="button">اعمال فیلتر</button>
+                    <button class="secondary-button compact-button" id="resetCustomerFilters" type="button">پاک‌کردن فیلترها</button>
+                  </div>
+                </div>
               </div>
               <div class="products-state" id="customersSecureState" role="status"><span class="products-state-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><div><strong>نیازمند اتصال امن</strong><p>برای مشاهدهٔ مشتریان ابتدا اتصال امن مدیر را برقرار کنید.</p></div></div>
               <div class="products-state" id="customersLoadingState" role="status" hidden><span class="products-state-icon products-spinner" aria-hidden="true"></span><div><strong>در حال دریافت مشتریان</strong><p>اطلاعات مشتریان از API داخلی در حال دریافت است.</p></div></div>
@@ -830,11 +955,47 @@
                 <span class="list-pagination-label" id="customersPageLabel"></span>
                 <button class="secondary-button compact-button" id="customersNextPage" type="button">بعدی</button>
               </div>
-              <!-- UI: جزئیات مشتری انتخاب‌شده. -->
-              <section class="customer-detail-panel" id="customerDetailPanel" aria-labelledby="customerDetailTitle" hidden>
-                <div class="product-editor-heading"><div><p class="card-kicker">پروفایل عملیاتی</p><h3 id="customerDetailTitle">جزئیات مشتری</h3></div><button class="secondary-button compact-button" id="closeCustomerDetail" type="button">بستن</button></div>
-                <div class="customer-detail-content" id="customerDetailContent"></div>
-              </section>
+              <!-- UI: فرم ساخت و ویرایش مشتری. -->
+              <div class="customer-editor-overlay" id="customerEditorOverlay" hidden>
+                <div class="customer-editor-backdrop" data-close-customer-editor aria-hidden="true"></div>
+                <form class="customer-editor-dialog order-modal-dialog" id="customerEditor" role="dialog" aria-modal="true" aria-labelledby="customerEditorTitle" aria-describedby="customerEditorDescription">
+                  <div class="order-modal-heading">
+                    <div><p class="card-kicker">مدیریت مشتریان</p><h3 id="customerEditorTitle">مشتری جدید</h3><p class="customer-editor-description" id="customerEditorDescription">اطلاعات تماس مشتری را وارد کنید.</p></div>
+                    <button class="secondary-button compact-button" id="cancelCustomerEdit" type="button">بستن</button>
+                  </div>
+                  <div class="customer-editor-content">
+                    <div class="customer-editor-fields-grid">
+                      <label class="field-label" for="customerFirstName">نام<input id="customerFirstName" type="text" maxlength="120" required autocomplete="given-name"></label>
+                      <label class="field-label" for="customerLastName">نام خانوادگی<input id="customerLastName" type="text" maxlength="120" autocomplete="family-name"></label>
+                      <label class="field-label" for="customerEmail">ایمیل<input id="customerEmail" type="email" maxlength="160" autocomplete="email" placeholder="اختیاری"></label>
+                      <label class="field-label" for="customerPhone">تلفن<input id="customerPhone" type="tel" maxlength="80" autocomplete="tel" placeholder="اختیاری"></label>
+                      <label class="field-label customer-editor-wide-field" for="customerCity">شهر<input id="customerCity" type="text" maxlength="120" autocomplete="address-level2" placeholder="اختیاری"></label>
+                      <label class="field-label customer-editor-wide-field" for="customerAddress">نشانی<input id="customerAddress" type="text" maxlength="255" autocomplete="street-address" placeholder="اختیاری"></label>
+                    </div>
+                  </div>
+                  <footer class="order-modal-footer customer-editor-footer">
+                    <span class="secure-note customer-editor-message" id="customerEditorMessage" role="status" aria-live="polite" hidden></span>
+                    <button class="primary-button" id="saveCustomerButton" type="submit">ثبت مشتری</button>
+                    <button class="secondary-button" type="button" data-close-customer-editor>انصراف</button>
+                  </footer>
+                </form>
+              </div>
+
+              <!-- UI: جزئیات مشتری انتخاب‌شده در پاپ‌آپ. -->
+              <div class="customer-detail-overlay" id="customerDetailPanel" hidden>
+                <div class="customer-detail-backdrop" data-close-customer-detail aria-hidden="true"></div>
+                <section class="customer-detail-dialog order-modal-dialog" id="customerDetailDialog" role="dialog" aria-modal="true" aria-labelledby="customerDetailTitle">
+                  <div class="order-modal-heading">
+                    <div><p class="card-kicker">مشاهدهٔ مشتری</p><h3 id="customerDetailTitle">جزئیات مشتری</h3><p class="customer-detail-description">اطلاعات تماس، خرید و سفارش‌های مشتری</p></div>
+                    <button class="secondary-button compact-button" id="closeCustomerDetail" type="button">بستن</button>
+                  </div>
+                  <div class="customer-detail-content" id="customerDetailContent"></div>
+                  <footer class="order-modal-footer customer-detail-footer">
+                    <button class="primary-button" id="editCustomerFromDetail" type="button">ویرایش مشتری</button>
+                    <button class="secondary-button" type="button" data-close-customer-detail>بستن</button>
+                  </footer>
+                </section>
+              </div>
             </article>
 
             <!-- UI: مدیریت موجودی. -->
@@ -868,23 +1029,65 @@
                 <button class="secondary-button icon-refresh-button products-refresh" id="refreshCoupons" type="button" aria-label="تازه‌سازی کوپن‌ها" title="تازه‌سازی کوپن‌ها"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تازه‌سازی کوپن‌ها</span></button>
               </div>
               <div class="products-toolbar"><label class="sr-only" for="couponSearch">جست‌وجوی کوپن</label><input id="couponSearch" class="product-search" type="search" placeholder="کد کوپن" autocomplete="off"><button class="primary-button compact-button" id="newCouponButton" type="button">کوپن جدید</button></div>
-              <form class="coupon-editor" id="couponEditor" hidden>
-                <div class="product-editor-heading"><div><p class="card-kicker">ویرایش سریع</p><h3 id="couponEditorTitle">ساخت کوپن</h3></div><button class="secondary-button compact-button" id="cancelCouponEdit" type="button">بستن</button></div>
-                <div class="product-editor-grid">
-                  <label class="field-label" for="couponCode">کد کوپن<input id="couponCode" type="text" maxlength="80" required placeholder="مثلاً SUMMER10"></label>
-                  <label class="field-label" for="couponType">نوع تخفیف<select id="couponType"><option value="percent">درصدی</option><option value="fixed_cart">مبلغ ثابت سبد</option><option value="fixed_product">مبلغ ثابت محصول</option></select></label>
-                  <label class="field-label" for="couponAmount">مقدار تخفیف<input id="couponAmount" type="text" inputmode="decimal" maxlength="20" required></label>
-                  <label class="field-label" for="couponExpiry">تاریخ انقضا<input id="couponExpiry" type="text" data-persian-date-type="date" data-persian-date-picker="1" lang="fa-IR" readonly autocomplete="off" placeholder="انتخاب تاریخ شمسی"></label>
-                  <label class="field-label" for="couponMinAmount">حداقل خرید<input id="couponMinAmount" type="text" inputmode="decimal" placeholder="اختیاری"></label>
-                  <label class="field-label" for="couponMaxAmount">حداکثر خرید<input id="couponMaxAmount" type="text" inputmode="decimal" placeholder="اختیاری"></label>
-                  <label class="field-label" for="couponUsageLimit">سقف استفاده<input id="couponUsageLimit" type="text" inputmode="numeric" placeholder="نامحدود"></label>
-                  <label class="field-label" for="couponUsagePerUser">سقف برای هر کاربر<input id="couponUsagePerUser" type="text" inputmode="numeric" placeholder="نامحدود"></label>
-                  <label class="field-label checkbox-field" for="couponFreeShipping"><input id="couponFreeShipping" type="checkbox"> ارسال رایگان</label>
-                  <label class="field-label checkbox-field" for="couponIndividualUse"><input id="couponIndividualUse" type="checkbox"> عدم ترکیب با کوپن دیگر</label>
-                  <label class="field-label checkbox-field" for="couponExcludeSaleItems"><input id="couponExcludeSaleItems" type="checkbox"> عدم اعمال روی حراجی</label>
-                </div>
-                <div class="product-editor-actions"><button class="primary-button" id="saveCouponButton" type="submit">ذخیرهٔ کوپن</button><span class="secure-note" id="couponEditorMessage" role="status" hidden></span></div>
-              </form>
+              <!-- UI: مودال مشترک ساخت و ویرایش کوپن. -->
+              <div class="product-editor-overlay coupon-editor-overlay" id="couponEditorOverlay" hidden>
+                <div class="product-editor-backdrop" data-close-coupon-editor aria-hidden="true"></div>
+                <form class="coupon-editor" id="couponEditor" role="dialog" aria-modal="true" aria-labelledby="couponEditorTitle" aria-describedby="couponEditorDescription" hidden>
+                  <header class="product-editor-heading">
+                    <div><p class="card-kicker">مدیریت تخفیف‌ها</p><h3 id="couponEditorTitle">کوپن جدید</h3><p class="coupon-editor-description" id="couponEditorDescription">کد و مقدار تخفیف را وارد کنید؛ بقیه تنظیمات اختیاری است.</p></div>
+                    <button class="secondary-button compact-button" id="cancelCouponEdit" type="button" aria-label="بستن فرم کوپن">بستن</button>
+                  </header>
+                  <div class="coupon-editor-content">
+                    <fieldset class="coupon-editor-section">
+                      <legend>اطلاعات کوپن</legend>
+                      <div class="coupon-editor-grid">
+                        <label class="field-label" for="couponCode">کد کوپن <small>الزامی</small><input id="couponCode" type="text" dir="ltr" maxlength="80" required autocomplete="off" spellcheck="false" placeholder="SUMMER10" aria-describedby="couponCodeHint"><small id="couponCodeHint">حروف انگلیسی، عدد، خط تیره یا زیرخط</small></label>
+                        <label class="field-label" for="couponExpiry">تاریخ انقضا<input id="couponExpiry" type="text" data-persian-date-type="date" data-persian-date-picker="1" lang="fa-IR" readonly autocomplete="off" placeholder="انتخاب تاریخ شمسی"><small>خالی بگذارید تا تاریخ انقضا نداشته باشد.</small></label>
+                        <label class="field-label" for="couponType">نوع تخفیف<select id="couponType"><option value="percent">درصدی</option><option value="fixed_cart">مبلغ ثابت سبد</option><option value="fixed_product">مبلغ ثابت محصول</option></select></label>
+                        <label class="field-label" for="couponAmount"><span id="couponAmountLabel">مبلغ تخفیف</span> <small>الزامی</small><input id="couponAmount" type="text" inputmode="decimal" maxlength="20" required aria-describedby="couponAmountHint"><small id="couponAmountHint">بر اساس واحد پول فروشگاه</small></label>
+                      </div>
+                    </fieldset>
+                    <fieldset class="coupon-editor-section">
+                      <legend>محدودیت‌های استفاده</legend>
+                      <p class="coupon-editor-hint">برای اعمال بدون محدودیت، این فیلدها را خالی بگذارید.</p>
+                      <div class="coupon-editor-grid">
+                        <label class="field-label" for="couponMinAmount">حداقل خرید<input id="couponMinAmount" type="text" inputmode="decimal" placeholder="بدون حداقل"></label>
+                        <label class="field-label" for="couponMaxAmount">حداکثر خرید<input id="couponMaxAmount" type="text" inputmode="decimal" placeholder="بدون حداکثر"></label>
+                        <label class="field-label" for="couponUsageLimit">سقف استفاده از کوپن<input id="couponUsageLimit" type="text" inputmode="numeric" placeholder="نامحدود"></label>
+                        <label class="field-label" for="couponUsagePerUser">سقف برای هر کاربر<input id="couponUsagePerUser" type="text" inputmode="numeric" placeholder="نامحدود"></label>
+                      </div>
+                    </fieldset>
+                    <fieldset class="coupon-editor-section">
+                      <legend>تنظیمات تکمیلی</legend>
+                      <div class="coupon-editor-options">
+                        <label class="coupon-editor-option" for="couponFreeShipping"><input id="couponFreeShipping" type="checkbox"><span>ارسال رایگان<small>نیازمند فعال بودن روش ارسال رایگان با کوپن در فروشگاه</small></span></label>
+                        <label class="coupon-editor-option" for="couponIndividualUse"><input id="couponIndividualUse" type="checkbox"><span>عدم ترکیب با کوپن دیگر<small>این کوپن به‌تنهایی استفاده شود.</small></span></label>
+                        <label class="coupon-editor-option" for="couponExcludeSaleItems"><input id="couponExcludeSaleItems" type="checkbox"><span>عدم اعمال روی حراجی<small>محصولات حراج‌شده مشمول تخفیف نشوند.</small></span></label>
+                      </div>
+                    </fieldset>
+                  </div>
+                  <footer class="coupon-editor-footer">
+                    <span class="secure-note" id="couponEditorMessage" role="status" aria-live="polite" hidden></span>
+                    <div class="coupon-editor-actions"><button class="primary-button" id="saveCouponButton" type="submit">ثبت کوپن</button><button class="secondary-button" type="button" data-close-coupon-editor>انصراف</button></div>
+                  </footer>
+                </form>
+              </div>
+              <!-- UI: مودال مشاهدهٔ جزئیات کوپن، هماهنگ با جزئیات سفارش. -->
+              <div class="coupon-detail-overlay" id="couponDetailOverlay" hidden>
+                <div class="coupon-detail-backdrop" data-close-coupon-detail aria-hidden="true"></div>
+                <section class="coupon-detail-dialog order-modal-dialog" id="couponDetailDialog" role="dialog" aria-modal="true" aria-labelledby="couponDetailTitle" aria-describedby="couponDetailDescription">
+                  <header class="product-editor-heading order-modal-heading">
+                    <div><p class="card-kicker">مشاهدهٔ کوپن</p><h3 id="couponDetailTitle">جزئیات کوپن</h3><p class="coupon-detail-description" id="couponDetailDescription">اطلاعات تخفیف و محدودیت‌های استفاده</p></div>
+                    <button class="secondary-button compact-button" id="closeCouponDetail" type="button">بستن</button>
+                  </header>
+                  <div class="coupon-detail-content" id="couponDetailContent"></div>
+                  <footer class="order-modal-footer coupon-detail-footer">
+                    <span class="secure-note coupon-detail-message" id="couponDetailMessage" role="status" aria-live="polite" hidden></span>
+                    <button class="primary-button" id="editCouponFromDetail" type="button">ویرایش کوپن</button>
+                    <button class="secondary-button danger-outline-button" id="deleteCouponFromDetail" type="button">حذف کوپن</button>
+                  </footer>
+                </section>
+              </div>
               <div class="products-state" id="couponsSecureState" role="status"><span class="products-state-icon" aria-hidden="true">▣</span><div><strong>نیازمند اتصال امن</strong><p>برای مدیریت کوپن‌ها اتصال امن مدیر لازم است.</p></div></div>
               <div class="products-state" id="couponsLoadingState" role="status" hidden><span class="products-state-icon products-spinner" aria-hidden="true"></span><div><strong>در حال دریافت کوپن‌ها</strong><p>کوپن‌ها از API داخلی ووکامرس دریافت می‌شوند.</p></div></div>
               <div class="products-state" id="couponsEmptyState" role="status" hidden><span class="products-state-icon" aria-hidden="true">—</span><div><strong>کوپنی پیدا نشد</strong><p>هنوز کوپنی برای نمایش وجود ندارد.</p></div></div>
@@ -978,7 +1181,7 @@
         <button class="mobile-nav-item is-active" type="button" data-nav-target="dashboard" aria-current="page"><svg class="ui-icon" data-icon-name="dashboard" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 10 8-6 8 6v9H4Z"/><path d="M9 19v-5h6v5"/></svg><small>داشبورد</small></button>
         <button class="mobile-nav-item" type="button" data-nav-target="orders"><svg class="ui-icon" data-icon-name="orders" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg><small>سفارش‌ها</small><span class="nav-count-badge" id="mobileOrdersBadge" aria-hidden="true" hidden>۰</span></button>
         <button class="mobile-nav-item" type="button" data-nav-target="products"><svg class="ui-icon" data-icon-name="products" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg><small>محصولات</small></button>
-        <button class="mobile-nav-item" type="button" data-action="open-menu" aria-label="بازکردن منوی مدیریت" aria-controls="appSidebar" aria-expanded="false"><svg class="ui-icon" data-icon-name="more" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg><small>بیشتر</small></button>
+        <button class="mobile-nav-item" type="button" data-nav-target="bulk-price" aria-label="افزایش قیمت" aria-controls="bulkPricePanel"><svg class="ui-icon" data-icon-name="bulk-price" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.7 14.3c0 1.3 1 2.4 2.2 2.4h2.5c1.1 0 1.9-.9 1.9-2 0-1.2-.5-1.7-1.3-2l-4-1.4c-.8-.3-1.3-.7-1.3-1.9 0-1.1.9-2 1.9-2h2.5c1.2 0 2.2 1 2.2 2.3M12 6v12"/></svg><small>افزایش قیمت</small></button>
       </nav>
 
       <!-- UI: فوتر و یادداشت وضعیت runtime. -->

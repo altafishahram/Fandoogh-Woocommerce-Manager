@@ -38,7 +38,7 @@ test('serves the PWA asset contract and semantic UI hooks', async ({ page, reque
   ]));
 });
 
-test('shows browser-install guidance only on iOS', async ({ browser }, testInfo) => {
+test('supports browser install prompts and the manual iOS guide', async ({ browser }, testInfo) => {
   // A desktop browser with an iPhone user agent exercises the code path. The
   // narrow Chromium projects emulate layout, not Safari's installation API.
   test.skip(!['desktop-1280', 'webkit-desktop'].includes(testInfo.project.name), 'Synthetic iOS install test runs on desktop browser projects.');
@@ -46,6 +46,17 @@ test('shows browser-install guidance only on iOS', async ({ browser }, testInfo)
   const desktopContext = await browser.newContext();
   const desktopPage = await desktopContext.newPage();
   await desktopPage.goto('/?preview=1', { waitUntil: 'domcontentloaded' });
+  await expect(desktopPage.locator('#installAppButton')).toBeHidden();
+  await desktopPage.evaluate(() => {
+    window.__installPromptCalls = 0;
+    const event = new Event('beforeinstallprompt', { cancelable: true });
+    event.prompt = () => { window.__installPromptCalls += 1; };
+    event.userChoice = Promise.resolve({ outcome: 'accepted' });
+    window.dispatchEvent(event);
+  });
+  await expect(desktopPage.locator('#installAppButton')).toBeVisible();
+  await desktopPage.locator('#installAppButton').click();
+  await expect.poll(() => desktopPage.evaluate(() => window.__installPromptCalls)).toBe(1);
   await expect(desktopPage.locator('#installAppButton')).toBeHidden();
   await desktopContext.close();
 

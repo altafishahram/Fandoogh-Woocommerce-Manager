@@ -6,6 +6,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/composition/orders.php';
+require_once __DIR__ . '/composition/customers.php';
+require_once __DIR__ . '/composition/products.php';
+require_once __DIR__ . '/composition/coupons.php';
+
 /**
  * Register authenticated order read and status-update endpoints.
  *
@@ -749,7 +754,7 @@ function orders_create_idempotency_claim( $session, $values ) {
 		}
 		if ( 'completed' === ( isset( $existing['state'] ) ? $existing['state'] : '' ) && absint( isset( $existing['order_id'] ) ? $existing['order_id'] : 0 ) > 0 ) {
 			try {
-				$previous_order = function_exists( 'wc_get_order' ) ? wc_get_order( absint( $existing['order_id'] ) ) : false;
+				$previous_order = compose_order_repository()->findById( absint( $existing['order_id'] ) );
 			} catch ( \Throwable $exception ) {
 				$previous_order = false;
 			}
@@ -922,7 +927,7 @@ function orders_refund_idempotency_lookup( $session, $order_id, $idempotency_key
 	if ( 'completed' === $state ) {
 		$refund_id = absint( isset( $existing['refund_id'] ) ? $existing['refund_id'] : 0 );
 		try {
-			$previous_refund = $refund_id && function_exists( 'wc_get_order' ) ? wc_get_order( $refund_id ) : false;
+			$previous_refund = compose_order_repository()->findById( $refund_id );
 		} catch ( \Throwable $exception ) {
 			$previous_refund = false;
 		}
@@ -1037,11 +1042,7 @@ function orders_create_customer( $values ) {
 		if ( ! class_exists( '\\WC_Customer' ) ) {
 			return orders_error( 'fandoogh_customer_unavailable', __( 'API مشتری WooCommerce در دسترس نیست.', 'fandoogh-manager' ), 503 );
 		}
-		try {
-			$customer = new \WC_Customer( absint( $values['customer_id'] ) );
-		} catch ( \Throwable $exception ) {
-			$customer = false;
-		}
+		$customer = compose_customer_repository()->findById( absint( $values['customer_id'] ) );
 		if ( ! is_object( $customer ) || ! method_exists( $customer, 'get_id' ) || absint( $customer->get_id() ) !== absint( $values['customer_id'] ) ) {
 			return orders_error( 'fandoogh_customer_not_found', __( 'مشتری انتخاب‌شده پیدا نشد.', 'fandoogh-manager' ), 404 );
 		}
@@ -1079,6 +1080,7 @@ function orders_create_customer( $values ) {
  * @return object|\WP_Error
  */
 function orders_create_product( $line ) {
+	$repository = compose_product_repository();
 	if ( ! function_exists( 'wc_get_product' ) ) {
 		return orders_error( 'fandoogh_product_unavailable', __( 'API محصول WooCommerce در دسترس نیست.', 'fandoogh-manager' ), 503 );
 	}
@@ -1087,7 +1089,7 @@ function orders_create_product( $line ) {
 	$variation_id = absint( $line['variation_id'] );
 	$lookup_id    = $variation_id > 0 ? $variation_id : $product_id;
 	try {
-		$product = wc_get_product( $lookup_id );
+		$product = $repository->findById( $lookup_id );
 	} catch ( \Throwable $exception ) {
 		$product = false;
 	}
@@ -1153,7 +1155,7 @@ function orders_create_add_shipping_line( $order, $shipping ) {
 	}
 
 	try {
-		$item = new \WC_Order_Item_Shipping();
+		$item = compose_order_repository()->createShippingItem();
 		$item->set_method_title( $shipping['method_title'] );
 		$item->set_method_id( $shipping['method_id'] );
 		if ( method_exists( $item, 'set_instance_id' ) && absint( $shipping['instance_id'] ) > 0 ) {
@@ -1252,7 +1254,7 @@ function create_order( $request ) {
 	$order_persisted  = false;
 	$payment_attempted = false;
 	try {
-		$order = wc_create_order(
+		$order = compose_order_repository()->create(
 			array(
 				'customer_id' => absint( $customer['id'] ),
 				'created_via' => 'fandoogh-manager',
@@ -1311,7 +1313,7 @@ function create_order( $request ) {
 			if ( ! method_exists( $order, 'apply_coupon' ) || ! class_exists( '\\WC_Coupon' ) ) {
 				throw new \RuntimeException( 'coupon_unavailable' );
 			}
-			$coupon = new \WC_Coupon( $coupon_code );
+			$coupon = compose_order_coupon( $coupon_code );
 			if ( ! method_exists( $coupon, 'get_id' ) || absint( $coupon->get_id() ) < 1 ) {
 				throw new \RuntimeException( 'coupon_invalid' );
 			}
@@ -1341,7 +1343,7 @@ function create_order( $request ) {
 			}
 			$order->payment_complete();
 		}
-		$order = wc_get_order( $order_id );
+		$order = compose_order_repository()->findById( $order_id );
 		if ( ! orders_is_readable_order( $order ) ) {
 			throw new \RuntimeException( 'order_reload_failed' );
 		}
@@ -1424,7 +1426,7 @@ function update_order_status( $request ) {
 	$order_id = absint( $request->get_param( 'id' ) );
 	apply_session_user_context( $session );
 	try {
-		$order = $order_id ? wc_get_order( $order_id ) : false;
+		$order = compose_order_repository()->findById( $order_id );
 	} catch ( \Throwable $exception ) {
 		return orders_error( 'fandoogh_order_read_failed', __( 'خواندن سفارش انجام نشد.', 'fandoogh-manager' ), 500 );
 	}
@@ -1443,10 +1445,10 @@ function update_order_status( $request ) {
 
 	try {
 		$order->update_status( preg_replace( '/^wc-/', '', $status ), $note, true );
-		$order = wc_get_order( $order_id );
+		$order = compose_order_repository()->findById( $order_id );
 	} catch ( \Throwable $exception ) {
 		try {
-			$order = wc_get_order( $order_id );
+			$order = compose_order_repository()->findById( $order_id );
 		} catch ( \Throwable $read_exception ) {
 			$order = false;
 		}
@@ -1494,13 +1496,13 @@ function add_order_note( $request ) {
 	}
 	$order_id = absint( $request->get_param( 'id' ) );
 	apply_session_user_context( $session );
-	$order = $order_id ? wc_get_order( $order_id ) : false;
+	$order = compose_order_repository()->findById( $order_id );
 	if ( ! orders_is_readable_order( $order ) ) {
 		return orders_error( 'fandoogh_order_not_found', __( 'سفارش پیدا نشد.', 'fandoogh-manager' ), 404 );
 	}
 	try {
 		$note_id = $order->add_order_note( $content, $customer_note );
-		$order   = wc_get_order( $order_id );
+		$order   = compose_order_repository()->findById( $order_id );
 	} catch ( \Throwable $exception ) {
 		return orders_error( 'fandoogh_order_note_failed', __( 'ثبت یادداشت سفارش انجام نشد.', 'fandoogh-manager' ), 500 );
 	}
@@ -1613,7 +1615,7 @@ function serialize_order_refund( $refund ) {
  */
 function orders_refund_replay_response( $order, $order_id, $refund ) {
 	try {
-		$fresh_order = wc_get_order( absint( $order_id ) );
+		$fresh_order = compose_order_repository()->findById( absint( $order_id ) );
 		if ( orders_is_readable_order( $fresh_order ) ) {
 			$order = $fresh_order;
 		}
@@ -1635,12 +1637,12 @@ function refund_order( $request ) {
 	if ( is_wp_error( $session ) ) {
 		return orders_private_error( $session );
 	}
-	if ( ! orders_available() || ! function_exists( 'wc_create_refund' ) ) {
+	if ( ! orders_available() || ! compose_order_repository()->isRefundAvailable() ) {
 		return orders_error( 'fandoogh_refund_unavailable', __( 'امکان بازپرداخت در نسخهٔ فعلی WooCommerce در دسترس نیست.', 'fandoogh-manager' ), 503 );
 	}
 	$order_id = absint( $request->get_param( 'id' ) );
 	apply_session_user_context( $session );
-	$order = $order_id ? wc_get_order( $order_id ) : false;
+	$order = compose_order_repository()->findById( $order_id );
 	if ( ! orders_is_readable_order( $order ) ) {
 		return orders_error( 'fandoogh_order_not_found', __( 'سفارش پیدا نشد.', 'fandoogh-manager' ), 404 );
 	}
@@ -1698,7 +1700,7 @@ function refund_order( $request ) {
 		$args['line_items'] = $values['line_items'];
 	}
 	try {
-		$refund = wc_create_refund( $args );
+		$refund = compose_order_repository()->createRefund( $args );
 	} catch ( \Throwable $exception ) {
 		// A gateway/storage adapter may persist before throwing; retain the
 		// short in-flight claim rather than risking a duplicate refund.
@@ -1709,7 +1711,7 @@ function refund_order( $request ) {
 		return is_wp_error( $refund ) ? orders_private_error( $refund ) : orders_error( 'fandoogh_refund_failed', __( 'بازپرداخت سفارش انجام نشد.', 'fandoogh-manager' ), 422 );
 	}
 	orders_refund_idempotency_complete( $claim, absint( $refund->get_id() ) );
-	$fresh_order = wc_get_order( $order_id );
+	$fresh_order = compose_order_repository()->findById( $order_id );
 	if ( orders_is_readable_order( $fresh_order ) ) {
 		$order = $fresh_order;
 	}
@@ -1721,7 +1723,7 @@ function refund_order( $request ) {
  * @return bool
  */
 function orders_available() {
-	return function_exists( 'wc_get_orders' ) && function_exists( 'wc_get_order' ) && function_exists( 'wc_get_order_statuses' ) && class_exists( '\\WC_Order' );
+	return compose_order_repository()->isAvailable();
 }
 
 /**
@@ -1732,7 +1734,7 @@ function orders_available() {
  * @return bool
  */
 function orders_create_available() {
-	return orders_available() && function_exists( 'wc_create_order' ) && function_exists( 'wc_get_product' );
+	return compose_order_repository()->isCreateAvailable() && function_exists( 'wc_get_product' );
 }
 
 /**
@@ -1744,11 +1746,7 @@ function orders_create_available() {
  */
 function orders_allowed_statuses() {
 	$allowed = array();
-	if ( ! function_exists( 'wc_get_order_statuses' ) ) {
-		return $allowed;
-	}
-
-	foreach ( (array) wc_get_order_statuses() as $status => $label ) {
+	foreach ( compose_order_repository()->statuses() as $status => $label ) {
 		$status = sanitize_key( $status );
 		if ( 0 !== strpos( $status, 'wc-' ) || strlen( $status ) > 64 ) {
 			continue;
@@ -1973,10 +1971,11 @@ function orders_search_ids( $term ) {
 		return array();
 	}
 
+	$repository = compose_order_repository();
 	$found = array();
 	if ( function_exists( 'wc_order_search' ) ) {
 		try {
-			$found = wc_order_search( $term );
+			$found = $repository->search( $term );
 		} catch ( \Throwable $exception ) {
 			$found = array();
 		}
@@ -1986,7 +1985,7 @@ function orders_search_ids( $term ) {
 	}
 	if ( empty( $found ) && function_exists( 'wc_get_orders' ) ) {
 		try {
-			$found = wc_get_orders(
+			$found = $repository->query(
 				array(
 					'limit'  => 500,
 					'return' => 'ids',
@@ -2008,7 +2007,7 @@ function orders_search_ids( $term ) {
 		// consistently. Keep the fallback bounded and use CRUD getters for the
 		// final comparison instead of querying post storage directly.
 		try {
-			$found = wc_get_orders(
+			$found = $repository->query(
 				array(
 					'limit'  => 500,
 					'return' => 'objects',
@@ -2027,7 +2026,7 @@ function orders_search_ids( $term ) {
 		$matches = false;
 		if ( $order_id > 0 && function_exists( 'wc_get_order' ) ) {
 			try {
-				$order = is_object( $candidate ) && method_exists( $candidate, 'get_id' ) ? $candidate : wc_get_order( $order_id );
+				$order = is_object( $candidate ) && method_exists( $candidate, 'get_id' ) ? $candidate : $repository->findById( $order_id );
 				$matches = orders_order_matches_search( $order, $normalized_term );
 			} catch ( \Throwable $exception ) {
 				$matches = false;
@@ -2415,7 +2414,7 @@ function serialize_order_notes( $order ) {
 	}
 
 	try {
-		$notes = wc_get_order_notes(
+		$notes = compose_order_repository()->queryNotes(
 			array(
 				'order_id' => $order_id,
 				'limit'    => 50,
@@ -2670,7 +2669,7 @@ function list_orders( $request ) {
 		);
 	} else {
 		try {
-			$results = wc_get_orders( $args );
+			$results = compose_order_repository()->query( $args );
 		} catch ( \Throwable $exception ) {
 			return orders_error( 'fandoogh_orders_query_failed', __( 'خواندن فهرست سفارش‌ها انجام نشد.', 'fandoogh-manager' ), 500 );
 		}
@@ -2734,7 +2733,7 @@ function get_order_detail( $request ) {
 
 	apply_session_user_context( $session );
 	try {
-		$order = wc_get_order( $order_id );
+		$order = compose_order_repository()->findById( $order_id );
 	} catch ( \Throwable $exception ) {
 		return orders_error( 'fandoogh_order_read_failed', __( 'خواندن سفارش انجام نشد.', 'fandoogh-manager' ), 500 );
 	}

@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/composition/security.php';
+
 const SECURITY_SCHEMA_OPTION = 'fandoogh_manager_security_schema';
 const SECURITY_SCHEMA_VERSION = '3';
 const SESSION_COOKIE_NAME = 'fandoogh_manager_session';
@@ -20,6 +22,7 @@ const CSRF_HEADER_NAME = 'X-Fandoogh-CSRF';
 const CSRF_GRACE_TTL = 90;
 const ACCESS_POLICY_META_KEY = 'fandoogh_manager_access_policy';
 const SESSION_ALERT_OPTION_KEY = 'fandoogh_manager_session_alert_state';
+const SESSION_ALERT_CRON_HOOK = 'fandoogh_manager_send_session_alert';
 const SECURITY_CLEANUP_HOOK = 'fandoogh_manager_cleanup';
 const SECURITY_PAIRING_RETENTION = 86400;
 const SECURITY_SESSION_RETENTION = 7776000;
@@ -35,11 +38,10 @@ const SECURITY_CLEANUP_BATCH = 500;
  * @return void
  */
 function ensure_security_schema() {
-	global $wpdb;
-
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-	$charset_collate = $wpdb->get_charset_collate();
+	$database        = compose_security_database();
+	$charset_collate = $database->charsetCollate();
 	$pairings_table  = security_pairings_table();
 	$sessions_table  = security_sessions_table();
 	$audit_table     = security_audit_table();
@@ -101,14 +103,14 @@ function ensure_security_schema() {
 	dbDelta( $pairings_sql );
 	dbDelta( $sessions_sql );
 	dbDelta( $audit_sql );
-	update_option( SECURITY_SCHEMA_OPTION, SECURITY_SCHEMA_VERSION, false );
+	compose_security_state_store()->updateOption( SECURITY_SCHEMA_OPTION, SECURITY_SCHEMA_VERSION, false );
 }
 
 /**
  * @return void
  */
 function maybe_ensure_security_schema() {
-	if ( SECURITY_SCHEMA_VERSION !== (string) get_option( SECURITY_SCHEMA_OPTION, '' ) ) {
+	if ( SECURITY_SCHEMA_VERSION !== (string) compose_security_state_store()->getOption( SECURITY_SCHEMA_OPTION, '' ) ) {
 		ensure_security_schema();
 	}
 }
@@ -136,7 +138,7 @@ function maybe_schedule_security_cleanup() {
  * @return void
  */
 function cleanup_security_data() {
-	global $wpdb;
+	$database = compose_security_database();
 
 	$now                 = time();
 	$pairing_cutoff      = security_mysql_from_timestamp( $now - SECURITY_PAIRING_RETENTION );
@@ -144,15 +146,15 @@ function cleanup_security_data() {
 	$session_idle_cutoff = security_mysql_from_timestamp( $now - SECURITY_SESSION_RETENTION - SESSION_IDLE_TTL );
 	$audit_cutoff        = security_mysql_from_timestamp( $now - SECURITY_AUDIT_RETENTION );
 
-	$wpdb->query(
-		$wpdb->prepare(
+	$database->query(
+		$database->prepare(
 			'DELETE FROM ' . security_pairings_table() . ' WHERE expires_at < %s LIMIT ' . SECURITY_CLEANUP_BATCH,
 			$pairing_cutoff
 		)
 	);
 
-	$wpdb->query(
-		$wpdb->prepare(
+	$database->query(
+		$database->prepare(
 			'DELETE FROM ' . security_sessions_table() . ' WHERE ((status <> %s AND COALESCE(revoked_at, expires_at, last_seen_at, created_at) < %s) OR (status = %s AND (expires_at < %s OR last_seen_at < %s))) LIMIT ' . SECURITY_CLEANUP_BATCH,
 			'active',
 			$session_cutoff,
@@ -162,8 +164,8 @@ function cleanup_security_data() {
 		)
 	);
 
-	$wpdb->query(
-		$wpdb->prepare(
+	$database->query(
+		$database->prepare(
 			'DELETE FROM ' . security_audit_table() . ' WHERE created_at < %s LIMIT ' . SECURITY_CLEANUP_BATCH,
 			$audit_cutoff
 		)
@@ -171,10 +173,10 @@ function cleanup_security_data() {
 
 	cleanup_security_idempotency_options( $now - SECURITY_IDEMPOTENCY_RETENTION );
 
-	$state       = get_option( SESSION_ALERT_OPTION_KEY, array() );
+	$state       = compose_security_state_store()->getOption( SESSION_ALERT_OPTION_KEY, array() );
 	$clean_state = sanitize_session_alert_state( $state );
 	if ( $clean_state !== $state ) {
-		update_option( SESSION_ALERT_OPTION_KEY, $clean_state, false );
+		compose_security_state_store()->updateOption( SESSION_ALERT_OPTION_KEY, $clean_state, false );
 	}
 }
 
@@ -186,7 +188,7 @@ function cleanup_security_data() {
  * @return void
  */
 function cleanup_security_idempotency_options( $cutoff ) {
-	global $wpdb;
+	$database = compose_security_database();
 
 	$prefixes = array(
 		'fandoogh_order_create_',
@@ -195,15 +197,15 @@ function cleanup_security_idempotency_options( $cutoff ) {
 	);
 
 	foreach ( $prefixes as $prefix ) {
-		$option_names = $wpdb->get_col(
-			$wpdb->prepare(
-				'SELECT option_name FROM ' . $wpdb->options . ' WHERE option_name LIKE %s ORDER BY option_id ASC LIMIT ' . SECURITY_CLEANUP_BATCH,
-				$wpdb->esc_like( $prefix ) . '%'
+		$option_names = $database->getCol(
+			$database->prepare(
+				'SELECT option_name FROM ' . $database->optionsTable() . ' WHERE option_name LIKE %s ORDER BY option_id ASC LIMIT ' . SECURITY_CLEANUP_BATCH,
+				$database->escLike( $prefix ) . '%'
 			)
 		);
 
 		foreach ( (array) $option_names as $option_name ) {
-			$value     = get_option( $option_name, false );
+			$value     = compose_security_state_store()->getOption( $option_name, false );
 			$timestamp = 0;
 			if ( is_array( $value ) ) {
 				$timestamp = max(
@@ -213,7 +215,7 @@ function cleanup_security_idempotency_options( $cutoff ) {
 			}
 
 			if ( $timestamp < absint( $cutoff ) ) {
-				delete_option( $option_name );
+				compose_security_state_store()->deleteOption( $option_name );
 			}
 		}
 	}
@@ -223,24 +225,21 @@ function cleanup_security_idempotency_options( $cutoff ) {
  * @return string
  */
 function security_pairings_table() {
-	global $wpdb;
-	return $wpdb->prefix . 'fandoogh_manager_pairings';
+	return compose_security_database()->prefix() . 'fandoogh_manager_pairings';
 }
 
 /**
  * @return string
  */
 function security_sessions_table() {
-	global $wpdb;
-	return $wpdb->prefix . 'fandoogh_manager_sessions';
+	return compose_security_database()->prefix() . 'fandoogh_manager_sessions';
 }
 
 /**
  * @return string
  */
 function security_audit_table() {
-	global $wpdb;
-	return $wpdb->prefix . 'fandoogh_manager_audit';
+	return compose_security_database()->prefix() . 'fandoogh_manager_audit';
 }
 
 /**
@@ -382,7 +381,10 @@ function default_pairing_scopes() {
 			'write' => true,
 		),
 		'customers' => array(
-			'read' => true,
+			'read'   => true,
+			'write'  => true,
+			'create' => true,
+			'update' => true,
 		),
 		'devices' => array(
 			'read'   => true,
@@ -704,6 +706,7 @@ function allowed_audit_events() {
 			'access_removed',
 			'product_created',
 			'product_updated',
+			'product_bulk_price_scheduled',
 			'product_bulk_price_updated',
 			'category_created',
 			'category_updated',
@@ -810,8 +813,8 @@ function record_audit_event( $event_type, $user_id = 0, $session_id = 0, $device
 		return false;
 	}
 
-	global $wpdb;
-	$inserted = $wpdb->insert(
+	$database = compose_security_database();
+	$inserted = $database->insert(
 		security_audit_table(),
 		array(
 			'user_id'       => $user_id,
@@ -886,8 +889,8 @@ function issue_pairing_code( $user_id ) {
 		$raw_code = str_pad( substr( $raw_code, 0, 12 ), 12, '0', STR_PAD_LEFT );
 	}
 
-	global $wpdb;
-	$inserted = $wpdb->insert(
+	$database = compose_security_database();
+	$inserted = $database->insert(
 		security_pairings_table(),
 		array(
 			'token_hash'   => security_hash_secret( normalize_pairing_code( $raw_code ) ),
@@ -922,13 +925,13 @@ function pairing_rate_key() {
  */
 function consume_pairing_rate_limit() {
 	$key   = pairing_rate_key();
-	$count = absint( get_transient( $key ) );
+	$count = absint( compose_security_state_store()->getTransient( $key ) );
 
 	if ( $count >= PAIRING_RATE_LIMIT ) {
 		return false;
 	}
 
-	set_transient( $key, $count + 1, PAIRING_RATE_WINDOW );
+	compose_security_state_store()->setTransient( $key, $count + 1, PAIRING_RATE_WINDOW );
 	return true;
 }
 
@@ -936,11 +939,11 @@ function consume_pairing_rate_limit() {
  * @return object|null
  */
 function find_pairing_record( $code ) {
-	global $wpdb;
+	$database = compose_security_database();
 	$hash = security_hash_secret( normalize_pairing_code( $code ) );
 
-	return $wpdb->get_row(
-		$wpdb->prepare(
+	return $database->getRow(
+		$database->prepare(
 			'SELECT * FROM ' . security_pairings_table() . ' WHERE token_hash = %s AND status = %s AND expires_at > %s AND attempts < max_attempts LIMIT 1',
 			$hash,
 			'active',
@@ -958,10 +961,10 @@ function find_pairing_record( $code ) {
  * @return object|null
  */
 function find_pairing_record_state( $code ) {
-	global $wpdb;
+	$database = compose_security_database();
 
-	return $wpdb->get_row(
-		$wpdb->prepare(
+	return $database->getRow(
+		$database->prepare(
 			"SELECT id, status, used_at FROM " . security_pairings_table() . " WHERE token_hash = %s LIMIT 1",
 			security_hash_secret( normalize_pairing_code( $code ) )
 		)
@@ -973,9 +976,9 @@ function find_pairing_record_state( $code ) {
  * @return void
  */
 function increment_pairing_attempts( $pairing_id ) {
-	global $wpdb;
-	$wpdb->query(
-		$wpdb->prepare(
+	$database = compose_security_database();
+	$database->query(
+		$database->prepare(
 			"UPDATE " . security_pairings_table() . " SET attempts = attempts + 1, status = IF(attempts + 1 >= max_attempts, 'locked', status) WHERE id = %d AND status = %s",
 			absint( $pairing_id ),
 			'active'
@@ -988,9 +991,9 @@ function increment_pairing_attempts( $pairing_id ) {
  * @return bool
  */
 function consume_pairing_record( $pairing_id ) {
-	global $wpdb;
-	$updated = $wpdb->query(
-		$wpdb->prepare(
+	$database = compose_security_database();
+	$updated = $database->query(
+		$database->prepare(
 			"UPDATE " . security_pairings_table() . " SET used_at = %s, status = %s WHERE id = %d AND status = %s AND used_at IS NULL AND expires_at > %s AND attempts < max_attempts",
 			security_now_mysql(),
 			'used',
@@ -1059,8 +1062,8 @@ function create_session_record( $user_id, $device_id, $device_label, $scopes ) {
 	$raw_csrf    = security_random_token( 32 );
 	$now         = time();
 
-	global $wpdb;
-	$inserted = $wpdb->insert(
+	$database = compose_security_database();
+	$inserted = $database->insert(
 		security_sessions_table(),
 		array(
 			'session_hash' => session_hash( $raw_session ),
@@ -1083,7 +1086,7 @@ function create_session_record( $user_id, $device_id, $device_label, $scopes ) {
 		return new \WP_Error( 'fandoogh_session_storage', __( 'ساخت نشست امن ممکن نشد.', 'fandoogh-manager' ), array( 'status' => 500 ) );
 	}
 
-	$session_id = absint( $wpdb->insert_id );
+	$session_id = $database->insertId();
 	record_audit_event( 'session_created', $user_id, $session_id, $device_label, 'session', $session_id );
 
 	set_session_cookie( $raw_session, $now + SESSION_TTL );
@@ -1160,6 +1163,77 @@ function send_session_alert_email( $user, $device_label, $session_id ) {
 }
 
 /**
+ * Queue the optional new-session alert outside the pairing response path.
+ *
+ * Scheduled arguments deliberately contain only identifiers and the bounded
+ * device label. Session cookies, CSRF tokens, pairing codes, and passwords
+ * must never enter the cron queue.
+ *
+ * @param int    $user_id Session owner ID.
+ * @param int    $session_id New session ID.
+ * @param string $device_label Human-readable device label.
+ * @return bool Whether an alert is already queued or was scheduled.
+ */
+function queue_session_alert_email( $user_id, $session_id, $device_label ) {
+	$settings = get_settings();
+	if ( empty( $settings['session_alerts_enabled'] ) ) {
+		return false;
+	}
+
+	$recipient = session_alert_recipient();
+	if ( '' === $recipient || ! is_email( $recipient ) ) {
+		return false;
+	}
+
+	$user_id      = absint( $user_id );
+	$session_id   = absint( $session_id );
+	$device_label = security_clean_label( $device_label, 120 );
+	if ( $user_id < 1 || $session_id < 1 || ! function_exists( 'wp_next_scheduled' ) || ! function_exists( 'wp_schedule_single_event' ) ) {
+		return false;
+	}
+
+	$args = array( $user_id, $session_id, $device_label );
+
+	try {
+		if ( false !== wp_next_scheduled( SESSION_ALERT_CRON_HOOK, $args ) ) {
+			return true;
+		}
+
+		$scheduled = wp_schedule_single_event( time() + 1, SESSION_ALERT_CRON_HOOK, $args, true );
+		return true === $scheduled;
+	} catch ( \Throwable $exception ) {
+		return false;
+	}
+}
+
+/**
+ * Deliver a queued new-session alert. Cron execution is best-effort and must
+ * never expose or propagate mail transport failures.
+ *
+ * @param int    $user_id Session owner ID.
+ * @param int    $session_id New session ID.
+ * @param string $device_label Human-readable device label.
+ * @return void
+ */
+function send_scheduled_session_alert_email( $user_id, $session_id, $device_label ) {
+	try {
+		$user_id    = absint( $user_id );
+		$session_id = absint( $session_id );
+		$user       = $user_id ? get_user_by( 'id', $user_id ) : false;
+
+		if ( $session_id < 1 || ! $user instanceof \WP_User ) {
+			return;
+		}
+
+		send_session_alert_email( $user, security_clean_label( $device_label, 120 ), $session_id );
+	} catch ( \Throwable $exception ) {
+		return;
+	}
+}
+
+add_action( SESSION_ALERT_CRON_HOOK, __NAMESPACE__ . '\\send_scheduled_session_alert_email', 10, 3 );
+
+/**
  * Count active sessions of the current user created after this session and
  * remember which ones have already been acknowledged. The count and the
  * acknowledged marker both live in one site option so no schema change and
@@ -1171,7 +1245,7 @@ function send_session_alert_email( $user, $device_label, $session_id ) {
  * @return int Number of unacknowledged newer active sessions.
  */
 function session_alert_unacknowledged_count( $user_id, $session_id, $rows ) {
-	$state = get_option( SESSION_ALERT_OPTION_KEY, array() );
+	$state = compose_security_state_store()->getOption( SESSION_ALERT_OPTION_KEY, array() );
 	$state = is_array( $state ) ? $state : array();
 	$key   = (string) absint( $user_id );
 	$seen  = isset( $state[ $key ] ) && is_array( $state[ $key ] ) ? $state[ $key ] : array();
@@ -1194,7 +1268,7 @@ function session_alert_unacknowledged_count( $user_id, $session_id, $rows ) {
 	if ( 0 === $count && isset( $state[ $key ] ) ) {
 		unset( $state[ $key ] );
 		$state = sanitize_session_alert_state( $state );
-		update_option( SESSION_ALERT_OPTION_KEY, $state, false );
+		compose_security_state_store()->updateOption( SESSION_ALERT_OPTION_KEY, $state, false );
 	}
 
 	return $count;
@@ -1209,7 +1283,7 @@ function session_alert_unacknowledged_count( $user_id, $session_id, $rows ) {
  * @return void
  */
 function session_alert_acknowledge( $user_id, $session_id, $rows ) {
-	$state = get_option( SESSION_ALERT_OPTION_KEY, array() );
+	$state = compose_security_state_store()->getOption( SESSION_ALERT_OPTION_KEY, array() );
 	$state = is_array( $state ) ? $state : array();
 	$key   = (string) absint( $user_id );
 	$seen  = isset( $state[ $key ] ) && is_array( $state[ $key ] ) ? $state[ $key ] : array();
@@ -1227,7 +1301,7 @@ function session_alert_acknowledge( $user_id, $session_id, $rows ) {
 
 	$state[ $key ] = $seen;
 	$state = sanitize_session_alert_state( $state );
-	update_option( SESSION_ALERT_OPTION_KEY, $state, false );
+	compose_security_state_store()->updateOption( SESSION_ALERT_OPTION_KEY, $state, false );
 }
 
 /**
@@ -1292,9 +1366,9 @@ function get_session_context() {
 		return new \WP_Error( 'fandoogh_not_authenticated', __( 'نشست مدیریتی معتبر نیست.', 'fandoogh-manager' ), array( 'status' => 401 ) );
 	}
 
-	global $wpdb;
-	$row = $wpdb->get_row(
-		$wpdb->prepare(
+	$database = compose_security_database();
+	$row = $database->getRow(
+		$database->prepare(
 			"SELECT * FROM " . security_sessions_table() . " WHERE session_hash = %s LIMIT 1",
 			session_hash( $raw_session )
 		)
@@ -1309,7 +1383,7 @@ function get_session_context() {
 	$expires_at   = security_timestamp_from_mysql( $row->expires_at );
 	$last_seen_at = security_timestamp_from_mysql( $row->last_seen_at );
 	if ( $expires_at <= $now || ( $last_seen_at && $last_seen_at + SESSION_IDLE_TTL <= $now ) ) {
-		$wpdb->update(
+		$database->update(
 			security_sessions_table(),
 			array(
 				'status'     => 'expired',
@@ -1339,7 +1413,7 @@ function get_session_context() {
 	// prevents a stale session snapshot from retaining a revoked capability.
 	$scopes = intersect_pairing_scopes( $scopes, scopes_for_user( $user->ID ) );
 	if ( ! session_has_scope( 'products.read', $scopes ) ) {
-		$wpdb->update(
+		$database->update(
 			security_sessions_table(),
 			array(
 				'status'     => 'revoked',
@@ -1354,7 +1428,7 @@ function get_session_context() {
 	}
 
 	if ( ! $last_seen_at || $last_seen_at + 300 <= $now ) {
-		$wpdb->update(
+		$database->update(
 			security_sessions_table(),
 			array( 'last_seen_at' => security_now_mysql() ),
 			array( 'id' => absint( $row->id ) ),
@@ -1395,13 +1469,13 @@ function apply_session_user_context( $session ) {
  * @return bool
  */
 function rotate_session_csrf( $session_id, $raw_csrf ) {
-	global $wpdb;
+	$database = compose_security_database();
 
 	// One SQL statement makes the old current hash the short-lived previous
 	// hash at the same time that the new current hash is installed. The raw
 	// token is never sent to the database, logs, or audit context.
-	$updated = $wpdb->query(
-		$wpdb->prepare(
+	$updated = $database->query(
+		$database->prepare(
 			"UPDATE " . security_sessions_table() . " SET csrf_previous_hash = csrf_hash, csrf_previous_expires_at = %s, csrf_hash = %s WHERE id = %d AND status = %s",
 			security_mysql_from_timestamp( time() + CSRF_GRACE_TTL ),
 			security_hash_secret( $raw_csrf ),
@@ -1418,8 +1492,8 @@ function rotate_session_csrf( $session_id, $raw_csrf ) {
  * @return void
  */
 function revoke_session( $session_id ) {
-	global $wpdb;
-	$wpdb->update(
+	$database = compose_security_database();
+	$database->update(
 		security_sessions_table(),
 		array(
 			'status'     => 'revoked',
@@ -1683,9 +1757,9 @@ function list_manager_devices() {
 		return $session;
 	}
 
-	global $wpdb;
-	$rows = $wpdb->get_results(
-		$wpdb->prepare(
+	$database = compose_security_database();
+	$rows = $database->getResults(
+		$database->prepare(
 			"SELECT id, device_label, status, created_at, last_seen_at, expires_at, revoked_at FROM " . security_sessions_table() . " WHERE user_id = %d ORDER BY id DESC LIMIT 100",
 			absint( $session['user']->ID )
 		)
@@ -1727,9 +1801,9 @@ function revoke_manager_device( $request ) {
 		return new \WP_Error( 'fandoogh_device_not_found', __( 'دستگاه پیدا نشد.', 'fandoogh-manager' ), array( 'status' => 404 ) );
 	}
 
-	global $wpdb;
-	$target = $wpdb->get_row(
-		$wpdb->prepare(
+	$database = compose_security_database();
+	$target = $database->getRow(
+		$database->prepare(
 			"SELECT id, device_label, status FROM " . security_sessions_table() . " WHERE id = %d AND user_id = %d LIMIT 1",
 			$target_id,
 			absint( $session['user']->ID )
@@ -1743,8 +1817,8 @@ function revoke_manager_device( $request ) {
 		return new \WP_Error( 'fandoogh_device_inactive', __( 'این دستگاه قبلاً غیرفعال شده است.', 'fandoogh-manager' ), array( 'status' => 409 ) );
 	}
 
-	$updated = $wpdb->query(
-		$wpdb->prepare(
+	$updated = $database->query(
+		$database->prepare(
 			"UPDATE " . security_sessions_table() . " SET status = %s, revoked_at = %s WHERE id = %d AND user_id = %d AND status = %s",
 			'revoked',
 			security_now_mysql(),
@@ -1784,9 +1858,9 @@ function revoke_all_manager_devices() {
 		return $session;
 	}
 
-	global $wpdb;
-	$revoked_count = $wpdb->query(
-		$wpdb->prepare(
+	$database = compose_security_database();
+	$revoked_count = $database->query(
+		$database->prepare(
 			"UPDATE " . security_sessions_table() . " SET status = %s, revoked_at = %s WHERE user_id = %d AND status = %s AND id <> %d",
 			'revoked',
 			security_now_mysql(),
@@ -1814,9 +1888,9 @@ function acknowledge_new_sessions() {
 		return $session;
 	}
 
-	global $wpdb;
-	$rows = $wpdb->get_results(
-		$wpdb->prepare(
+	$database = compose_security_database();
+	$rows = $database->getResults(
+		$database->prepare(
 			"SELECT id, status FROM " . security_sessions_table() . " WHERE user_id = %d ORDER BY id DESC LIMIT 100",
 			absint( $session['user']->ID )
 		)
@@ -1835,12 +1909,13 @@ function acknowledge_new_sessions() {
  * @return array<int, array<string, mixed>>
  */
 function admin_security_session_rows() {
-	global $wpdb;
+	$database = compose_security_database();
+	$users_table = $database->usersTable();
 
-	$rows = $wpdb->get_results(
+	$rows = $database->getResults(
 		"SELECT s.id, s.user_id, s.device_label, s.status, s.created_at, s.last_seen_at, s.expires_at, s.revoked_at, u.user_login, u.display_name
 		FROM " . security_sessions_table() . " s
-		LEFT JOIN {$wpdb->users} u ON u.ID = s.user_id
+		LEFT JOIN {$users_table} u ON u.ID = s.user_id
 		ORDER BY CASE WHEN s.status = 'active' THEN 0 ELSE 1 END, s.last_seen_at DESC, s.id DESC
 		LIMIT 500"
 	);
@@ -1954,9 +2029,9 @@ function admin_revoke_session( $session_id, $reason = 'admin_revoke' ) {
 		return new \WP_Error( 'fandoogh_session_not_found', __( 'نشست انتخاب‌شده معتبر نیست.', 'fandoogh-manager' ), array( 'status' => 404 ) );
 	}
 
-	global $wpdb;
-	$row = $wpdb->get_row(
-		$wpdb->prepare(
+	$database = compose_security_database();
+	$row = $database->getRow(
+		$database->prepare(
 			"SELECT id, user_id, device_label, status FROM " . security_sessions_table() . " WHERE id = %d LIMIT 1",
 			$session_id
 		)
@@ -1969,8 +2044,8 @@ function admin_revoke_session( $session_id, $reason = 'admin_revoke' ) {
 		return false;
 	}
 
-	$updated = $wpdb->query(
-		$wpdb->prepare(
+	$updated = $database->query(
+		$database->prepare(
 			"UPDATE " . security_sessions_table() . " SET status = %s, revoked_at = %s WHERE id = %d AND status = %s",
 			'revoked',
 			security_now_mysql(),
@@ -2003,9 +2078,9 @@ function admin_revoke_user_sessions( $user_id, $reason = 'admin_revoke_user' ) {
 		return new \WP_Error( 'fandoogh_user_not_found', __( 'کاربر انتخاب‌شده پیدا نشد.', 'fandoogh-manager' ), array( 'status' => 404 ) );
 	}
 
-	global $wpdb;
-	$revoked_count = $wpdb->query(
-		$wpdb->prepare(
+	$database = compose_security_database();
+	$revoked_count = $database->query(
+		$database->prepare(
 			"UPDATE " . security_sessions_table() . " SET status = %s, revoked_at = %s WHERE user_id = %d AND status = %s",
 			'revoked',
 			security_now_mysql(),
@@ -2050,11 +2125,11 @@ function admin_set_user_access( $user_id, $enabled ) {
 		return $revoked_count;
 	}
 
-	global $wpdb;
+	$database = compose_security_database();
 	$pairing_revoked = 0;
 	if ( ! $enabled ) {
-		$pairing_revoked = $wpdb->query(
-			$wpdb->prepare(
+		$pairing_revoked = $database->query(
+			$database->prepare(
 				"UPDATE " . security_pairings_table() . " SET status = %s WHERE user_id = %d AND status = %s",
 				'revoked',
 				$user_id,
@@ -2099,16 +2174,16 @@ function list_audit_events( $request ) {
 	}
 	$where_sql = empty( $where ) ? '' : ' WHERE ' . implode( ' AND ', $where );
 	$table     = security_audit_table();
-	global $wpdb;
+	$database = compose_security_database();
 	$count_sql = "SELECT COUNT(*) FROM {$table}{$where_sql}";
-	$count_sql = empty( $params ) ? $count_sql : $wpdb->prepare( $count_sql, $params );
+	$count_sql = empty( $params ) ? $count_sql : $database->prepare( $count_sql, $params );
 
-	$total = absint( $wpdb->get_var( $count_sql ) );
+	$total = absint( $database->getVar( $count_sql ) );
 	$offset = ( $page - 1 ) * $per_page;
 	$list_sql = "SELECT id, user_id, session_id, event_type, resource_type, resource_id, device_label, context, created_at FROM {$table}{$where_sql} ORDER BY id DESC LIMIT %d OFFSET %d";
 	$list_params = array_merge( $params, array( $per_page, $offset ) );
-	$list_sql = $wpdb->prepare( $list_sql, $list_params );
-	$rows = $wpdb->get_results( $list_sql );
+	$list_sql = $database->prepare( $list_sql, $list_params );
+	$rows = $database->getResults( $list_sql );
 
 	$items = array();
 	foreach ( (array) $rows as $row ) {
@@ -2209,7 +2284,7 @@ function pair_session( $request ) {
 		return $session;
 	}
 	record_audit_event( 'pairing_success', $user->ID, $session['id'], $device_label, 'auth', 0, array( 'outcome' => 'paired' ) );
-	send_session_alert_email( $user, $device_label, $session['id'] );
+	queue_session_alert_email( $user->ID, $session['id'], $device_label );
 
 	return security_no_store_response( array(
 		'data' => array(

@@ -5,27 +5,63 @@
  */
 "use strict";
 
-var CACHE_NAME = "fandoogh-manager-shell-v34";
-var WORKER_VERSION = new URL(self.location.href).searchParams.get("ver") || "base";
-var MANAGER_BASE = new URL("./", self.location.href).pathname;
-var PUBLIC_ASSET_PATHS = [
-  MANAGER_BASE,
-  MANAGER_BASE + "styles.css",
-  MANAGER_BASE + "app.js",
-  MANAGER_BASE + "fonts.css",
-  MANAGER_BASE + "ui.css",
-  MANAGER_BASE + "manifest.webmanifest"
+var CACHE_NAME = "fandoogh-manager-shell-v39";
+var WORKER_URL = new URL(self.location.href);
+var WORKER_VERSION = WORKER_URL.searchParams.get("ver") || "base";
+var MANAGER_BASE = new URL("./", WORKER_URL).pathname;
+var ASSET_QUERY_VAR = "fandoogh_manager_asset";
+var USE_QUERY_ASSETS = WORKER_URL.searchParams.get(ASSET_QUERY_VAR) === "sw.js";
+var PUBLIC_ASSET_FILENAMES = [
+  "styles.css",
+  "app.js",
+  "fonts.css",
+  "ui.css",
+  "manifest.webmanifest"
 ];
-var PUBLIC_ASSETS = [MANAGER_BASE].concat(PUBLIC_ASSET_PATHS.slice(1).map(function (assetPath) {
-  return WORKER_VERSION === "base" ? assetPath : assetPath + "?ver=" + encodeURIComponent(WORKER_VERSION);
+var PUBLIC_ASSET_PATHS = PUBLIC_ASSET_FILENAMES.map(function (filename) {
+  return MANAGER_BASE + filename;
+});
+var PUBLIC_ASSETS = [MANAGER_BASE].concat(PUBLIC_ASSET_FILENAMES.map(function (filename) {
+  // Query-served workers must also fetch assets through PHP on Nginx hosts.
+  var assetUrl = USE_QUERY_ASSETS ? MANAGER_BASE + "?" + ASSET_QUERY_VAR + "=" + filename : MANAGER_BASE + filename;
+  return WORKER_VERSION === "base" ? assetUrl : assetUrl + (USE_QUERY_ASSETS ? "&" : "?") + "ver=" + encodeURIComponent(WORKER_VERSION);
 }));
 
 function isWpJsonPath(url) {
-  return url.pathname === "/wp-json" || url.pathname.indexOf("/wp-json/") === 0;
+  return /\/wp-json(?:\/|$)/.test(url.pathname) || url.searchParams.has("rest_route");
 }
 
 function isPublicAsset(url) {
-  return url.origin === self.location.origin && PUBLIC_ASSET_PATHS.indexOf(url.pathname) !== -1;
+  if (url.origin !== self.location.origin) {
+    return false;
+  }
+
+  var isBasePath = url.pathname === MANAGER_BASE;
+  var isQueryAsset = url.searchParams.has(ASSET_QUERY_VAR);
+  if (isQueryAsset) {
+    if (!isBasePath || PUBLIC_ASSET_FILENAMES.indexOf(url.searchParams.get(ASSET_QUERY_VAR)) === -1) {
+      return false;
+    }
+  } else if (!isBasePath && PUBLIC_ASSET_PATHS.indexOf(url.pathname) === -1) {
+    return false;
+  }
+
+  var allowed = true;
+  url.searchParams.forEach(function (value, key) {
+    // Reject ambiguous duplicate parameters as well as private/unknown routes.
+    if (url.searchParams.getAll(key).length !== 1) {
+      allowed = false;
+    } else if (key === "ver" || (isQueryAsset && key === ASSET_QUERY_VAR)) {
+      return;
+    } else if (isBasePath && !isQueryAsset && key === "preview" && ["1", "true", "demo"].indexOf(value) !== -1) {
+      return;
+    } else {
+      allowed = false;
+    }
+  });
+
+  // Fragments are client-side navigation; they do not select a server route.
+  return allowed;
 }
 
 function isGetRequest(request) {

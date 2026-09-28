@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+require_once __DIR__ . '/composition/products.php';
+
 /**
  * Register the first authenticated WooCommerce use case. All reads go through
  * the WooCommerce data abstraction; this module contains no SQL or postmeta
@@ -156,7 +158,7 @@ function product_user_can_edit_existing( $user_id, $product_id ) {
  * @return bool
  */
 function products_available() {
-    return function_exists( 'wc_get_products' ) && function_exists( 'wc_get_product' ) && class_exists( '\\WC_Product' );
+    return compose_product_repository()->isAvailable();
 }
 
 /**
@@ -265,7 +267,7 @@ function list_products( $request ) {
         $args['product_category_id'] = array( $category_id );
     }
 
-    $results = wc_get_products( $args );
+    $results = compose_product_repository()->query( $args );
     if ( ! is_object( $results ) || ! isset( $results->products ) ) {
         $results = (object) array(
             'products'      => is_array( $results ) ? $results : array(),
@@ -313,7 +315,7 @@ function get_product_detail( $request ) {
 
     apply_session_user_context( $session );
     $product_id = absint( $request['id'] );
-    $product    = $product_id ? wc_get_product( $product_id ) : false;
+    $product    = compose_product_repository()->findById( $product_id );
     if ( ! $product || ! method_exists( $product, 'get_id' ) ) {
         return new \WP_Error( 'fandoogh_product_not_found', __( 'محصول پیدا نشد.', 'fandoogh-manager' ), array( 'status' => 404 ) );
     }
@@ -366,7 +368,7 @@ function list_product_shipping_classes() {
  * @return bool
  */
 function products_write_available() {
-    return products_available() && class_exists( '\\WC_Product_Simple' ) && class_exists( '\\WC_Product_Variable' ) && class_exists( '\\WC_Product_Attribute' );
+    return compose_product_repository()->isWriteAvailable();
 }
 
 /**
@@ -684,7 +686,7 @@ function product_write_product_ids( $value, $field ) {
         return $ids;
     }
     foreach ( $ids as $product_id ) {
-        if ( ! function_exists( 'wc_get_product' ) || ! wc_get_product( $product_id ) ) {
+        if ( ! compose_product_repository()->findById( $product_id ) ) {
             return product_write_error( 'fandoogh_product_related_not_found', __( 'یکی از محصولات مرتبط پیدا نشد.', 'fandoogh-manager' ) );
         }
     }
@@ -1075,7 +1077,7 @@ function product_write_values( $body, $user_id, $is_create = false, $product = n
         }
 
         if ( 'sku' === $field && '' !== $values[ $field ] && function_exists( 'wc_get_product_id_by_sku' ) ) {
-            $existing_id = absint( wc_get_product_id_by_sku( $values[ $field ] ) );
+            $existing_id = compose_product_repository()->findIdBySku( $values[ $field ] );
             $current_id  = $product && method_exists( $product, 'get_id' ) ? absint( $product->get_id() ) : 0;
             if ( $existing_id && $existing_id !== $current_id ) {
                 return product_write_error( 'fandoogh_product_duplicate_sku', __( 'این SKU قبلاً استفاده شده است.', 'fandoogh-manager' ), 409 );
@@ -1363,7 +1365,7 @@ function product_write_apply_values( $product, $values ) {
         if ( array_key_exists( 'attributes', $values ) ) {
             $attribute_objects = array();
             foreach ( $values['attributes'] as $position => $attribute_data ) {
-                $attribute = new \WC_Product_Attribute();
+                $attribute = compose_product_repository()->createAttribute();
                 $attribute->set_id( absint( $attribute_data['id'] ) );
                 $attribute->set_name( $attribute_data['name'] );
                 $attribute->set_options( $attribute_data['options'] );
@@ -1405,7 +1407,7 @@ function product_write_save( $product ) {
         $saved_id = absint( $product->get_id() );
     }
 
-    $saved_product = $saved_id ? wc_get_product( $saved_id ) : false;
+    $saved_product = compose_product_repository()->findById( $saved_id );
     if ( ! $saved_product || ! method_exists( $saved_product, 'get_id' ) ) {
         return product_write_error( 'fandoogh_product_save_failed', __( 'محصول پس از ذخیره قابل بازیابی نیست.', 'fandoogh-manager' ), 500 );
     }
@@ -1444,16 +1446,9 @@ function create_product( $request ) {
     }
 
     $product_type = isset( $values['type'] ) ? $values['type'] : 'simple';
-    if ( 'variable' === $product_type ) {
-        $product = new \WC_Product_Variable();
-    } elseif ( 'subscription' === $product_type && class_exists( '\\WC_Product_Subscription' ) ) {
-        $product = new \WC_Product_Subscription();
-    } elseif ( 'variable-subscription' === $product_type && class_exists( '\\WC_Product_Variable_Subscription' ) ) {
-        $product = new \WC_Product_Variable_Subscription();
-    } elseif ( in_array( $product_type, array( 'subscription', 'variable-subscription' ), true ) ) {
+    $product = compose_product_repository()->create( $product_type );
+    if ( null === $product && in_array( $product_type, array( 'subscription', 'variable-subscription' ), true ) ) {
         return product_write_error( 'fandoogh_subscriptions_required', __( 'ساخت محصول اشتراکی به کلاس محصول افزونهٔ WooCommerce Subscriptions نیاز دارد.', 'fandoogh-manager' ), 503 );
-    } else {
-        $product = new \WC_Product_Simple();
     }
     $applied = product_write_apply_values( $product, $values );
     if ( is_wp_error( $applied ) ) {
@@ -1488,7 +1483,7 @@ function update_product( $request ) {
     apply_session_user_context( $session );
     $user_id    = absint( $session['user']->ID );
     $product_id = absint( $request->get_param( 'id' ) );
-    $product    = $product_id ? wc_get_product( $product_id ) : false;
+    $product    = compose_product_repository()->findById( $product_id );
 
     if ( ! $product || ! method_exists( $product, 'get_id' ) || ( method_exists( $product, 'is_type' ) && $product->is_type( 'variation' ) ) || ( method_exists( $product, 'get_status' ) && 'trash' === $product->get_status() ) ) {
         return new \WP_Error( 'fandoogh_product_not_found', __( 'محصول پیدا نشد.', 'fandoogh-manager' ), array( 'status' => 404 ) );

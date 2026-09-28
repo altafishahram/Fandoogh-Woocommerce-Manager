@@ -35,8 +35,9 @@ async function expectCardLayout(page) {
     expect(card.nameStyle).toEqual({ whiteSpace: 'nowrap', textOverflow: 'ellipsis' });
     expect(card.name.height).toBeLessThanOrEqual(22);
     expect(card.image.left).toBeGreaterThanOrEqual(card.title.right - 1);
-    expect(card.image.width).toBe(100);
-    expect(card.image.height).toBe(100);
+    // Browser transforms can introduce subpixel floating-point roundoff.
+    expect(card.image.width).toBeCloseTo(100, 2);
+    expect(card.image.height).toBeCloseTo(100, 2);
     expect(card.image.top).toBeGreaterThanOrEqual(card.bounds.top + 8);
     expect(card.image.bottom).toBeLessThanOrEqual(card.bounds.bottom - 8);
     expect(card.category.top).toBeGreaterThanOrEqual(card.title.bottom - 1);

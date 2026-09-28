@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/composition/products.php';
+
 /**
  * Inventory overview and bounded stock adjustments. The module uses the
  * WooCommerce product CRUD/query layer and deliberately leaves reservations,
@@ -171,7 +173,7 @@ function list_inventory( $request ) {
 		$args['stock_status'] = $stock_status;
 	}
 	try {
-		$result = wc_get_products( $args );
+		$result = compose_product_repository()->query( $args );
 	} catch ( \Throwable $exception ) {
 		return inventory_error( 'fandoogh_inventory_query_failed', __( 'خواندن موجودی انجام نشد.', 'fandoogh-manager' ), 500 );
 	}
@@ -327,7 +329,7 @@ function update_inventory_item( $request ) {
 		return $session;
 	}
 	$product_id = absint( $request->get_param( 'id' ) );
-	$product = function_exists( 'wc_get_product' ) ? wc_get_product( $product_id ) : false;
+	$product = compose_product_repository()->findById( $product_id );
 	if ( ! $product || ! method_exists( $product, 'get_id' ) || ( method_exists( $product, 'is_type' ) && $product->is_type( 'variation' ) ) ) {
 		return inventory_error( 'fandoogh_inventory_not_found', __( 'محصول موجودی پیدا نشد.', 'fandoogh-manager' ), 404 );
 	}
@@ -366,7 +368,7 @@ function update_inventory_item( $request ) {
 			$product->set_low_stock_amount( $body['low_stock_amount'] );
 		}
 		$product->save();
-		$product = wc_get_product( $product_id );
+		$product = compose_product_repository()->findById( $product_id );
 	} catch ( \Throwable $exception ) {
 		return inventory_error( 'fandoogh_inventory_save_failed', __( 'ذخیرهٔ موجودی انجام نشد.', 'fandoogh-manager' ), 500 );
 	}

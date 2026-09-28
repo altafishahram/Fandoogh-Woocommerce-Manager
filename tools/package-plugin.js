@@ -20,7 +20,6 @@ const PACKAGE_DIRECTORIES = ['app', 'assets', 'languages'];
 const EXCLUDED_PACKAGE_PATHS = new Set([
   'app/UI-EDITING-GUIDE.md',
   'assets/ASSET-STRUCTURE.md',
-  'assets/twa/assetlinks.example.json',
 ]);
 const FIXED_DATE = new Date(1980, 0, 1, 0, 0, 0);
 

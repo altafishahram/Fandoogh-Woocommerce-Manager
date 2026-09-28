@@ -6,6 +6,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/composition/settings.php';
+require_once __DIR__ . '/composition/media.php';
+
 const LOCAL_FONT_MAX_BYTES = 10485760;
 
 /**
@@ -196,12 +199,12 @@ function delete_local_font( $font_path ) {
 
 	$file_path = managed_font_absolute_path( $font_path );
 	if ( '' !== $file_path && file_exists( $file_path ) ) {
-		wp_delete_file( $file_path );
+		compose_media_storage()->deleteFile( $file_path );
 	}
 
 	$settings = get_settings();
 	$settings['local_fonts'] = array_values( array_diff( $settings['local_fonts'], array( $font_path ) ) );
-	update_option( OPTION_KEY, sanitize_settings( $settings ) );
+	compose_settings_store()->write( $settings );
 	return true;
 }
 
@@ -228,7 +231,7 @@ function maybe_handle_font_admin_post() {
 
 		$settings = get_settings();
 		$settings['local_fonts'][] = $path;
-		update_option( OPTION_KEY, sanitize_settings( $settings ) );
+		compose_settings_store()->write( $settings );
 		record_audit_event( 'font_uploaded', get_current_user_id(), 0, 'wp-admin', 'font', 0, array( 'file_type' => strtolower( pathinfo( $path, PATHINFO_EXTENSION ) ) ) );
 		return __( 'فونت محلی با موفقیت اضافه شد.', 'fandoogh-manager' );
 	}
@@ -252,7 +255,7 @@ function maybe_handle_font_admin_post() {
  * @return void
  */
 function render_font_admin_section( $result = '' ) {
-	echo '<section class="fandoogh-admin-card fandoogh-admin-card--fonts"><p class="fandoogh-eyebrow">' . esc_html__( 'فونت محلی', 'fandoogh-manager' ) . '</p><h2>' . esc_html__( 'Local font upload', 'fandoogh-manager' ) . '</h2>';
+	echo '<section class="fandoogh-admin-card fandoogh-admin-card--fonts"><p class="fandoogh-eyebrow">' . esc_html__( 'فونت محلی', 'fandoogh-manager' ) . '</p><h2>' . esc_html__( 'بارگذاری و مدیریت فونت', 'fandoogh-manager' ) . '</h2>';
 
 	if ( is_wp_error( $result ) ) {
 		echo '<div class="notice notice-error inline"><p>' . esc_html( $result->get_error_message() ) . '</p></div>';
@@ -263,9 +266,9 @@ function render_font_admin_section( $result = '' ) {
 	echo '<form method="post" action="" enctype="multipart/form-data">';
 	wp_nonce_field( 'fandoogh_manager_font_upload', 'fandoogh_manager_font_nonce' );
 	echo '<input type="hidden" name="fandoogh_manager_font_action" value="upload">';
-	echo '<input type="file" name="fandoogh_font_file" accept=".woff,.woff2,.ttf,.otf" required>';
+	echo '<label for="fandoogh-font-file">' . esc_html__( 'فایل فونت', 'fandoogh-manager' ) . '</label> <input id="fandoogh-font-file" type="file" name="fandoogh_font_file" accept=".woff,.woff2,.ttf,.otf" required>';
 	echo '<p class="description">' . esc_html__( 'حداکثر ۱۰ مگابایت؛ فایل باید امضای واقعی فونت داشته باشد.', 'fandoogh-manager' ) . '</p>';
-	submit_button( __( 'Upload local font', 'fandoogh-manager' ), 'secondary', 'submit', false );
+	submit_button( __( 'بارگذاری فونت', 'fandoogh-manager' ), 'secondary fandoogh-admin-button', 'submit', false );
 	echo '</form>';
 
 	$fonts = get_settings()['local_fonts'];

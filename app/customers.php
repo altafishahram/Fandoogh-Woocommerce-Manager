@@ -6,12 +6,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/composition/customers.php';
+require_once __DIR__ . '/composition/orders.php';
+
 /**
- * Register read-only customer endpoints.
+ * Register customer endpoints.
  *
- * This module intentionally uses WooCommerce's customer data store and
- * WC_Customer getters. It does not expose WordPress user meta, passwords,
- * payment tokens, or customer mutations.
+ * This module intentionally uses WooCommerce's customer data store and a
+ * narrow allowlist. It does not expose WordPress passwords, payment tokens,
+ * arbitrary user meta, or account credentials.
  *
  * @return void
  */
@@ -20,9 +23,16 @@ function register_customer_routes() {
 		REST_NAMESPACE,
 		'/customers',
 		array(
-			'methods'             => \WP_REST_Server::READABLE,
-			'callback'            => __NAMESPACE__ . '\\list_customers',
-			'permission_callback' => __NAMESPACE__ . '\\customers_read_permission',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => __NAMESPACE__ . '\\list_customers',
+				'permission_callback' => __NAMESPACE__ . '\\customers_read_permission',
+			),
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => __NAMESPACE__ . '\\create_customer',
+				'permission_callback' => __NAMESPACE__ . '\\customers_write_permission',
+			),
 		)
 	);
 
@@ -40,9 +50,16 @@ function register_customer_routes() {
 		REST_NAMESPACE,
 		'/customers/(?P<id>\\d+)',
 		array(
-			'methods'             => \WP_REST_Server::READABLE,
-			'callback'            => __NAMESPACE__ . '\\get_customer_detail',
-			'permission_callback' => __NAMESPACE__ . '\\customers_read_permission',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => __NAMESPACE__ . '\\get_customer_detail',
+				'permission_callback' => __NAMESPACE__ . '\\customers_read_permission',
+			),
+			array(
+				'methods'             => 'PUT, PATCH',
+				'callback'            => __NAMESPACE__ . '\\update_customer',
+				'permission_callback' => __NAMESPACE__ . '\\customers_write_permission',
+			),
 		)
 	);
 }
@@ -103,7 +120,7 @@ function customers_private_error( $error ) {
  * @param array<string, mixed> $extra Extra WP_Error data.
  * @return \WP_Error
  */
-function customers_error( $code, $message, $status, $extra = array() ) {
+function customers_error( $code, $message, $status = 422, $extra = array() ) {
 	$data         = is_array( $extra ) ? $extra : array();
 	$data['status'] = absint( $status );
 	return customers_private_error( new \WP_Error( $code, $message, $data ) );
@@ -136,6 +153,36 @@ function customers_read_permission( $request ) {
 }
 
 /**
+ * Check the write scope and the major-change guard before customer mutation.
+ *
+ * @param \WP_REST_Request $request REST request.
+ * @return true|\WP_Error
+ */
+function customers_write_permission( $request ) {
+	$csrf = csrf_permission( $request );
+	if ( is_wp_error( $csrf ) ) {
+		return $csrf;
+	}
+
+	$session = get_session_context();
+	if ( is_wp_error( $session ) ) {
+		return customers_private_error( $session );
+	}
+	if ( ! session_has_scope( 'customers.write', $session['scopes'] ) ) {
+		return customers_error( 'fandoogh_customers_write_forbidden', __( 'نشست فعلی مجوز تغییر مشتریان را ندارد.', 'fandoogh-manager' ), 403 );
+	}
+	if ( ! session_has_major_changes_access( $session ) ) {
+		return customers_error( 'fandoogh_customers_major_changes_forbidden', __( 'این کاربر مجوز تغییرات اساسی و مدیریت مشتریان را ندارد.', 'fandoogh-manager' ), 403 );
+	}
+	apply_session_user_context( $session );
+	if ( ! current_user_can( 'manage_woocommerce' ) && ! current_user_can( 'manage_options' ) ) {
+		return customers_error( 'fandoogh_customers_forbidden', __( 'کاربر WordPress مجوز تغییر مشتریان را ندارد.', 'fandoogh-manager' ), 403 );
+	}
+
+	return true;
+}
+
+/**
  * Customer order history needs both customer-profile and order-read scopes.
  * Keeping the second capability check here prevents the nested endpoint from
  * becoming an accidental order-data bypass for a profile-only session.
@@ -156,7 +203,7 @@ function customer_orders_read_permission( $request ) {
  * @return bool
  */
 function customers_available() {
-	return class_exists( '\\WC_Customer' ) && class_exists( '\\WC_Customer_Data_Store' );
+	return compose_customer_repository()->isAvailable();
 }
 
 /**
@@ -206,61 +253,7 @@ function customers_search_term( $value ) {
  * @return array<int, int>
  */
 function customers_search_ids( $term ) {
-	$ids = array();
-	if ( '' === $term ) {
-		return $ids;
-	}
-
-	try {
-		$store = new \WC_Customer_Data_Store();
-		if ( method_exists( $store, 'search_customers' ) ) {
-			$found = $store->search_customers( $term, 200 );
-			foreach ( (array) $found as $customer_id ) {
-				$customer_id = absint( $customer_id );
-				if ( $customer_id > 0 ) {
-					$ids[ $customer_id ] = $customer_id;
-				}
-			}
-		}
-	} catch ( \Throwable $exception ) {
-		// The WordPress user query below can still resolve the search.
-	}
-
-	if ( function_exists( 'get_users' ) && empty( $ids ) ) {
-		$user_query = array(
-			'role'           => 'customer',
-			'number'         => 200,
-			'fields'         => 'ID',
-			'search'         => '*' . $term . '*',
-			'search_columns' => array( 'user_login', 'user_email', 'display_name' ),
-		);
-		foreach ( (array) get_users( $user_query ) as $customer_id ) {
-			$customer_id = absint( $customer_id );
-			if ( $customer_id > 0 ) {
-				$ids[ $customer_id ] = $customer_id;
-			}
-		}
-
-		$meta_query = array(
-			'relation' => 'OR',
-			array( 'key' => 'first_name', 'value' => $term, 'compare' => 'LIKE' ),
-			array( 'key' => 'last_name', 'value' => $term, 'compare' => 'LIKE' ),
-		);
-		$meta_user_query = array(
-			'role'       => 'customer',
-			'number'     => 200,
-			'fields'     => 'ID',
-			'meta_query' => $meta_query,
-		);
-		foreach ( (array) get_users( $meta_user_query ) as $customer_id ) {
-			$customer_id = absint( $customer_id );
-			if ( $customer_id > 0 ) {
-				$ids[ $customer_id ] = $customer_id;
-			}
-		}
-	}
-
-	return array_values( $ids );
+	return compose_customer_repository()->searchIds( $term );
 }
 
 /**
@@ -409,26 +402,105 @@ function serialize_customer( $customer, $detail = false ) {
 }
 
 /**
+ * Parse the small, explicit customer form payload accepted by the app.
+ *
+ * @param \WP_REST_Request $request REST request.
+ * @param bool              $is_create Whether this is a new customer.
+ * @return array<string, mixed>|\WP_Error
+ */
+function customer_request_values( $request, $is_create = false ) {
+	$body = method_exists( $request, 'get_json_params' ) ? $request->get_json_params() : array();
+	if ( ! is_array( $body ) ) {
+		return customers_error( 'fandoogh_customer_invalid_payload', __( 'اطلاعات مشتری معتبر نیست.', 'fandoogh-manager' ) );
+	}
+
+	$values = array();
+	foreach ( array( 'first_name' => 120, 'last_name' => 120, 'phone' => 80 ) as $field => $max_length ) {
+		if ( array_key_exists( $field, $body ) ) {
+			$values[ $field ] = customers_clean_text( $body[ $field ], $max_length );
+		}
+	}
+	if ( array_key_exists( 'email', $body ) ) {
+		$email = customers_clean_email( $body['email'] );
+		if ( '' !== $email && ! is_email( $email ) ) {
+			return customers_error( 'fandoogh_customer_invalid_email', __( 'ایمیل مشتری معتبر نیست.', 'fandoogh-manager' ) );
+		}
+		$values['email'] = $email;
+	}
+
+	foreach ( array( 'billing', 'shipping' ) as $address_type ) {
+		if ( ! array_key_exists( $address_type, $body ) ) {
+			continue;
+		}
+		if ( ! is_array( $body[ $address_type ] ) ) {
+			return customers_error( 'fandoogh_customer_invalid_address', __( 'نشانی مشتری معتبر نیست.', 'fandoogh-manager' ) );
+		}
+		$address = array();
+		foreach ( array( 'city' => 120, 'address_1' => 255, 'address_2' => 255, 'state' => 120, 'postcode' => 32, 'country' => 8 ) as $field => $max_length ) {
+			if ( array_key_exists( $field, $body[ $address_type ] ) ) {
+				$address[ $field ] = customers_clean_text( $body[ $address_type ][ $field ], $max_length );
+			}
+		}
+		$values[ $address_type ] = $address;
+	}
+
+	if ( $is_create && ( empty( $values['first_name'] ) && empty( $values['last_name'] ) ) ) {
+		return customers_error( 'fandoogh_customer_name_required', __( 'نام مشتری را وارد کنید.', 'fandoogh-manager' ) );
+	}
+	if ( empty( $values ) ) {
+		return customers_error( 'fandoogh_customer_empty_update', __( 'حداقل یک فیلد برای ویرایش مشتری ارسال کنید.', 'fandoogh-manager' ) );
+	}
+
+	return $values;
+}
+
+/**
+ * Apply the customer form allowlist to a WooCommerce customer.
+ *
+ * @param object                $customer WooCommerce customer.
+ * @param array<string, mixed> $values Validated values.
+ * @return true|\WP_Error
+ */
+function customer_apply_values( $customer, $values ) {
+	$setters = array(
+		'first_name' => 'set_first_name',
+		'last_name'  => 'set_last_name',
+		'email'      => 'set_email',
+		'phone'      => 'set_billing_phone',
+	);
+	try {
+		foreach ( $setters as $field => $setter ) {
+			if ( array_key_exists( $field, $values ) && method_exists( $customer, $setter ) ) {
+				$customer->{$setter}( $values[ $field ] );
+			}
+		}
+		foreach ( array( 'billing', 'shipping' ) as $address_type ) {
+			if ( empty( $values[ $address_type ] ) ) {
+				continue;
+			}
+			foreach ( $values[ $address_type ] as $field => $value ) {
+				$setter = 'set_' . $address_type . '_' . $field;
+				if ( method_exists( $customer, $setter ) ) {
+					$customer->{$setter}( $value );
+				}
+			}
+		}
+		if ( ! $customer->save() ) {
+			throw new \RuntimeException( 'Customer save did not return an ID.' );
+		}
+	} catch ( \Throwable $exception ) {
+		return customers_error( 'fandoogh_customer_save_failed', __( 'ذخیرهٔ مشتری انجام نشد.', 'fandoogh-manager' ), 500 );
+	}
+
+	return true;
+}
+
+/**
  * @param mixed $value Query result entry.
  * @return \WC_Customer|false
  */
 function customers_normalize_query_entry( $value ) {
-	if ( $value instanceof \WC_Customer ) {
-		return $value;
-	}
-
-	$customer_id = is_object( $value ) && method_exists( $value, 'get_id' ) ? absint( $value->get_id() ) : absint( $value );
-	if ( $customer_id < 1 ) {
-		return false;
-	}
-
-	try {
-		$customer = new \WC_Customer( $customer_id );
-	} catch ( \Throwable $exception ) {
-		return false;
-	}
-
-	return $customer instanceof \WC_Customer ? $customer : false;
+	return compose_customer_repository()->normalizeQueryEntry( $value );
 }
 
 /**
@@ -470,9 +542,10 @@ function list_customers( $request ) {
 
 	$skip_query = false;
 	try {
-		$store = new \WC_Customer_Data_Store();
+		$repository = compose_customer_repository();
+		$repository->initializeQuery();
 		if ( '' !== $search ) {
-			$search_ids      = customers_search_ids( $search );
+			$search_ids      = $repository->searchIds( $search );
 			$args['search']  = '';
 			if ( empty( $search_ids ) ) {
 				// Avoid include=[0], which some data stores interpret as an
@@ -482,7 +555,7 @@ function list_customers( $request ) {
 				$args['include'] = $search_ids;
 			}
 		}
-		$result = $skip_query ? (object) array( 'customers' => array(), 'total' => 0, 'max_num_pages' => 0 ) : $store->query_customers( $args );
+		$result = $skip_query ? (object) array( 'customers' => array(), 'total' => 0, 'max_num_pages' => 0 ) : $repository->query( $args );
 	} catch ( \Throwable $exception ) {
 		return customers_error( 'fandoogh_customers_read_failed', __( 'خواندن فهرست مشتریان انجام نشد.', 'fandoogh-manager' ), 500 );
 	}
@@ -529,15 +602,82 @@ function get_customer_detail( $request ) {
 		return customers_error( 'fandoogh_customer_not_found', __( 'مشتری پیدا نشد.', 'fandoogh-manager' ), 404 );
 	}
 
-	try {
-		$customer = new \WC_Customer( $customer_id );
-	} catch ( \Throwable $exception ) {
-		return customers_error( 'fandoogh_customer_not_found', __( 'مشتری پیدا نشد.', 'fandoogh-manager' ), 404 );
-	}
+	$customer = compose_customer_repository()->findById( $customer_id );
 
 	if ( ! customers_is_readable( $customer ) ) {
 		return customers_error( 'fandoogh_customer_not_found', __( 'مشتری پیدا نشد.', 'fandoogh-manager' ), 404 );
 	}
+
+	return customers_no_store_response( array( 'data' => serialize_customer( $customer, true ) ) );
+}
+
+/**
+ * Create a registered WooCommerce customer from the narrow app form.
+ *
+ * @param \WP_REST_Request $request REST request.
+ * @return \WP_REST_Response|\WP_Error
+ */
+function create_customer( $request ) {
+	if ( ! customers_available() ) {
+		return customers_error( 'fandoogh_woocommerce_inactive', __( 'WooCommerce فعال نیست یا API مشتریان در دسترس نیست.', 'fandoogh-manager' ), 503 );
+	}
+	$values = customer_request_values( $request, true );
+	if ( is_wp_error( $values ) ) {
+		return $values;
+	}
+	if ( ! empty( $values['email'] ) && email_exists( $values['email'] ) ) {
+		return customers_error( 'fandoogh_customer_duplicate_email', __( 'این ایمیل قبلاً برای یک کاربر ثبت شده است.', 'fandoogh-manager' ), 409 );
+	}
+
+	try {
+		$customer = compose_customer_repository()->create();
+	} catch ( \Throwable $exception ) {
+		return customers_error( 'fandoogh_customer_create_failed', __( 'ساخت مشتری انجام نشد.', 'fandoogh-manager' ), 500 );
+	}
+	$applied = customer_apply_values( $customer, $values );
+	if ( is_wp_error( $applied ) ) {
+		return $applied;
+	}
+	$session = get_session_context();
+	record_audit_event( 'customer_created', $session['user']->ID, $session['id'], $session['device_label'], 'customer', $customer->get_id() );
+
+	return customers_no_store_response( array( 'data' => serialize_customer( $customer, true ) ) );
+}
+
+/**
+ * Update a registered WooCommerce customer from the narrow app form.
+ *
+ * @param \WP_REST_Request $request REST request.
+ * @return \WP_REST_Response|\WP_Error
+ */
+function update_customer( $request ) {
+	if ( ! customers_available() ) {
+		return customers_error( 'fandoogh_woocommerce_inactive', __( 'WooCommerce فعال نیست یا API مشتریان در دسترس نیست.', 'fandoogh-manager' ), 503 );
+	}
+	$customer_id = absint( $request->get_param( 'id' ) );
+	if ( $customer_id < 1 ) {
+		return customers_error( 'fandoogh_customer_not_found', __( 'مشتری پیدا نشد.', 'fandoogh-manager' ), 404 );
+	}
+	$customer = compose_customer_repository()->findById( $customer_id );
+	if ( ! customers_is_readable( $customer ) ) {
+		return customers_error( 'fandoogh_customer_not_found', __( 'مشتری پیدا نشد.', 'fandoogh-manager' ), 404 );
+	}
+	$values = customer_request_values( $request, false );
+	if ( is_wp_error( $values ) ) {
+		return $values;
+	}
+	if ( array_key_exists( 'email', $values ) && '' !== $values['email'] ) {
+		$existing = email_exists( $values['email'] );
+		if ( $existing && absint( $existing ) !== $customer_id ) {
+			return customers_error( 'fandoogh_customer_duplicate_email', __( 'این ایمیل قبلاً برای یک کاربر ثبت شده است.', 'fandoogh-manager' ), 409 );
+		}
+	}
+	$applied = customer_apply_values( $customer, $values );
+	if ( is_wp_error( $applied ) ) {
+		return $applied;
+	}
+	$session = get_session_context();
+	record_audit_event( 'customer_updated', $session['user']->ID, $session['id'], $session['device_label'], 'customer', $customer_id );
 
 	return customers_no_store_response( array( 'data' => serialize_customer( $customer, true ) ) );
 }
@@ -558,11 +698,7 @@ function list_customer_orders( $request ) {
 		return customers_error( 'fandoogh_customer_not_found', __( 'مشتری پیدا نشد.', 'fandoogh-manager' ), 404 );
 	}
 
-	try {
-		$customer = new \WC_Customer( $customer_id );
-	} catch ( \Throwable $exception ) {
-		return customers_error( 'fandoogh_customer_not_found', __( 'مشتری پیدا نشد.', 'fandoogh-manager' ), 404 );
-	}
+	$customer = compose_customer_repository()->findById( $customer_id );
 
 	if ( ! customers_is_readable( $customer ) ) {
 		return customers_error( 'fandoogh_customer_not_found', __( 'مشتری پیدا نشد.', 'fandoogh-manager' ), 404 );
@@ -584,7 +720,7 @@ function list_customer_orders( $request ) {
 	);
 
 	try {
-		$results = wc_get_orders( $args );
+		$results = compose_order_repository()->query( $args );
 	} catch ( \Throwable $exception ) {
 		return customers_error( 'fandoogh_customer_orders_read_failed', __( 'خواندن سفارش‌های مشتری انجام نشد.', 'fandoogh-manager' ), 500 );
 	}

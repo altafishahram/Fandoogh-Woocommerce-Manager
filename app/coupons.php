@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/composition/coupons.php';
+
 /**
  * Site-local coupon management built on the WooCommerce CRUD API. The PWA
  * exposes only the fields required for day-to-day promotion management and
@@ -74,7 +76,7 @@ function coupons_error( $code, $message, $status = 422 ) {
 }
 
 function coupons_available() {
-	return class_exists( '\\WC_Coupon' ) && function_exists( 'wc_get_coupon_id_by_code' );
+	return compose_coupon_repository()->isAvailable();
 }
 
 function coupons_read_permission( $request ) {
@@ -179,19 +181,7 @@ function coupon_date( $value ) {
 }
 
 function coupon_request_body( $request ) {
-	$content_type = strtolower( (string) $request->get_header( 'content-type' ) );
-	if ( false === strpos( $content_type, 'application/json' ) ) {
-		return coupons_error( 'fandoogh_coupon_json_required', __( 'بدنهٔ درخواست کوپن باید JSON باشد.', 'fandoogh-manager' ), 415 );
-	}
-	$body = $request->get_json_params();
-	if ( ! is_array( $body ) ) {
-		return coupons_error( 'fandoogh_coupon_invalid_body', __( 'بدنهٔ درخواست کوپن معتبر نیست.', 'fandoogh-manager' ) );
-	}
-	$allowed = array( 'code', 'description', 'discount_type', 'amount', 'date_expires', 'free_shipping', 'individual_use', 'exclude_sale_items', 'minimum_amount', 'maximum_amount', 'usage_limit', 'usage_limit_per_user', 'product_ids', 'excluded_product_ids', 'product_categories', 'excluded_product_categories', 'status' );
-	if ( ! empty( array_diff( array_keys( $body ), $allowed ) ) ) {
-		return coupons_error( 'fandoogh_coupon_unknown_field', __( 'یکی از فیلدهای کوپن مجاز نیست.', 'fandoogh-manager' ) );
-	}
-	return $body;
+	return compose_coupon_request_parser()->parse( $request );
 }
 
 function coupon_values( $body, $is_create = false ) {
@@ -328,14 +318,8 @@ function coupon_apply_values( $coupon, $values ) {
 }
 
 function coupon_from_id( $id ) {
-	if ( ! coupons_available() ) {
-		return false;
-	}
-	try {
-		return new \WC_Coupon( absint( $id ) );
-	} catch ( \Throwable $exception ) {
-		return false;
-	}
+	$coupon = compose_coupon_repository()->findById( absint( $id ) );
+	return null === $coupon ? false : $coupon;
 }
 
 function list_coupons( $request ) {
@@ -373,7 +357,7 @@ function list_coupons( $request ) {
 		if ( isset( $wpdb->last_error ) ) {
 			$wpdb->last_error = '';
 		}
-		$query = new \WP_Query( $args );
+		$query = compose_coupon_repository()->query( $args );
 		if ( ! is_array( $query->posts ) || ! isset( $query->found_posts, $query->max_num_pages ) || ! empty( $wpdb->last_error ) ) {
 			throw new \RuntimeException( 'Coupon query failed.' );
 		}
@@ -381,7 +365,10 @@ function list_coupons( $request ) {
 		$pages = absint( $query->max_num_pages );
 		$items = array();
 		foreach ( $query->posts as $coupon_id ) {
-			$coupon = new \WC_Coupon( absint( $coupon_id ) );
+			$coupon = compose_coupon_repository()->findById( absint( $coupon_id ) );
+			if ( ! $coupon ) {
+				throw new \RuntimeException( 'Coupon could not be read.' );
+			}
 			if ( ! $coupon->get_id() ) {
 				throw new \RuntimeException( 'Coupon could not be read.' );
 			}
@@ -417,10 +404,10 @@ function create_coupon( $request ) {
 	if ( is_wp_error( $values ) ) {
 		return $values;
 	}
-	if ( wc_get_coupon_id_by_code( $values['code'] ) ) {
+	if ( compose_coupon_repository()->findIdByCode( $values['code'] ) ) {
 		return coupons_error( 'fandoogh_coupon_duplicate', __( 'این کد کوپن قبلاً وجود دارد.', 'fandoogh-manager' ), 409 );
 	}
-	$coupon = new \WC_Coupon();
+	$coupon = compose_coupon_repository()->create();
 	$applied = coupon_apply_values( $coupon, $values );
 	if ( is_wp_error( $applied ) ) {
 		return $applied;
@@ -444,7 +431,7 @@ function update_coupon( $request ) {
 		return $values;
 	}
 	if ( isset( $values['code'] ) && function_exists( 'wc_get_coupon_id_by_code' ) ) {
-		$existing = absint( wc_get_coupon_id_by_code( $values['code'] ) );
+		$existing = compose_coupon_repository()->findIdByCode( $values['code'] );
 		if ( $existing && $existing !== absint( $coupon->get_id() ) ) {
 			return coupons_error( 'fandoogh_coupon_duplicate', __( 'این کد کوپن قبلاً وجود دارد.', 'fandoogh-manager' ), 409 );
 		}

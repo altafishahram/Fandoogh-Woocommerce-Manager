@@ -11,6 +11,7 @@ const SECTIONS = [
   'dashboard',
   'orders',
   'products',
+  'bulk-price',
   'inventory',
   'customers',
   'coupons',
@@ -342,7 +343,9 @@ test.describe('preview-mode browser checks', () => {
       await expect(page.locator('#appSidebar a, #appSidebar button, #appSidebar input, #appSidebar select, #appSidebar textarea').first()).toBeFocused();
       assertNoHorizontalOverflow(await measure(page));
       await tabThrough(page, '#appSidebar', 4);
-      await page.locator('#sidebarScrim').click();
+      // On a narrow RTL viewport the scrim center is behind the open drawer.
+      // Click the exposed left edge, without bypassing pointer hit-testing.
+      await page.locator('#sidebarScrim').click({ position: { x: 8, y: 8 } });
       await expect(page.locator('#appSidebar')).not.toHaveClass(/is-open/);
       await expect(menuButton).toBeFocused();
     }

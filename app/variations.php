@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/composition/products.php';
+
 /**
  * Register the limited variation contract under a parent product. The module
  * uses WC_Product_Variation CRUD only; arbitrary post fields and variation
@@ -55,7 +57,7 @@ function register_variation_routes() {
  */
 function product_variation_parent( $request ) {
 	$parent_id = absint( $request->get_param( 'product_id' ) );
-	$parent    = $parent_id && function_exists( 'wc_get_product' ) ? wc_get_product( $parent_id ) : false;
+	$parent    = compose_product_repository()->findById( $parent_id );
 
 	if ( ! $parent || ! method_exists( $parent, 'get_id' ) || ( method_exists( $parent, 'is_type' ) && $parent->is_type( 'variation' ) ) || ( method_exists( $parent, 'get_status' ) && 'trash' === $parent->get_status() ) ) {
 		return new \WP_Error( 'fandoogh_variation_parent_not_found', __( 'محصول والد variation پیدا نشد.', 'fandoogh-manager' ), array( 'status' => 404 ) );
@@ -192,7 +194,7 @@ function list_product_variations( $request ) {
 	$items    = array();
 
 	foreach ( $children as $child_id ) {
-		$variation = function_exists( 'wc_get_product' ) ? wc_get_product( absint( $child_id ) ) : false;
+		$variation = compose_product_repository()->findById( absint( $child_id ) );
 		if ( ! $variation || ! method_exists( $variation, 'is_type' ) || ! $variation->is_type( 'variation' ) ) {
 			continue;
 		}
@@ -232,7 +234,7 @@ function list_product_variations( $request ) {
  */
 function product_variation_from_request( $request ) {
 	$variation_id = absint( $request->get_param( 'id' ) );
-	$variation    = $variation_id && function_exists( 'wc_get_product' ) ? wc_get_product( $variation_id ) : false;
+	$variation    = compose_product_repository()->findById( $variation_id );
 	$parent_id    = absint( $request->get_param( 'product_id' ) );
 
 	if ( ! $variation || ! method_exists( $variation, 'is_type' ) || ! $variation->is_type( 'variation' ) || absint( $variation->get_parent_id() ) !== $parent_id ) {
@@ -341,7 +343,7 @@ function product_variation_values( $body, $user_id, $parent, $is_create = false,
 		}
 
 		if ( '' !== $values['sku'] && function_exists( 'wc_get_product_id_by_sku' ) ) {
-			$existing_id = absint( wc_get_product_id_by_sku( $values['sku'] ) );
+			$existing_id = compose_product_repository()->findIdBySku( $values['sku'] );
 			$current_id  = $variation && method_exists( $variation, 'get_id' ) ? absint( $variation->get_id() ) : 0;
 			if ( $existing_id && $existing_id !== $current_id ) {
 				return new \WP_Error( 'fandoogh_variation_duplicate_sku', __( 'این SKU قبلاً استفاده شده است.', 'fandoogh-manager' ), array( 'status' => 409 ) );
@@ -475,7 +477,7 @@ function product_variation_save( $variation ) {
 		$saved_id = absint( $variation->get_id() );
 	}
 
-	$saved_variation = $saved_id && function_exists( 'wc_get_product' ) ? wc_get_product( $saved_id ) : false;
+	$saved_variation = compose_product_repository()->findById( $saved_id );
 	if ( ! $saved_variation || ! method_exists( $saved_variation, 'is_type' ) || ! $saved_variation->is_type( 'variation' ) ) {
 		return new \WP_Error( 'fandoogh_variation_save_failed', __( 'variation پس از ذخیره قابل بازیابی نیست.', 'fandoogh-manager' ), array( 'status' => 500 ) );
 	}
@@ -523,7 +525,7 @@ function create_product_variation( $request ) {
 		return $values;
 	}
 
-	$variation = new \WC_Product_Variation();
+	$variation = compose_product_repository()->createVariation();
 	$variation->set_parent_id( absint( $parent->get_id() ) );
 	$applied = product_variation_apply_values( $variation, $values );
 	if ( is_wp_error( $applied ) ) {
