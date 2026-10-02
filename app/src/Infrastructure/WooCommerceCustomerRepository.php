@@ -95,6 +95,13 @@ final class WooCommerceCustomerRepository implements CustomerRepository {
 			}
 		}
 
+		// Woo's name/email search does not consistently include billing_phone.
+		if ( preg_match('/^[+0-9۰-۹٠-٩() .-]{2,80}$/u', $term) ) {
+			$phone_term = strtr($term,array('۰'=>'0','۱'=>'1','۲'=>'2','۳'=>'3','۴'=>'4','۵'=>'5','۶'=>'6','۷'=>'7','۸'=>'8','۹'=>'9','٠'=>'0','١'=>'1','٢'=>'2','٣'=>'3','٤'=>'4','٥'=>'5','٦'=>'6','٧'=>'7','٨'=>'8','٩'=>'9'));
+			foreach ( (array) ($this->userQuery)(array('role'=>'customer','number'=>200,'fields'=>'ID','meta_query'=>array(array('key'=>'billing_phone','value'=>$phone_term,'compare'=>'LIKE')))) as $customer_id ) {
+				$customer_id=absint($customer_id); if($customer_id>0) { $ids[$customer_id]=$customer_id; }
+			}
+		}
 		return array_values( $ids );
 	}
 

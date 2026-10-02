@@ -11,6 +11,12 @@ async function openBulkPricing(page) {
   await expect(page.locator('.products-panel')).toBeHidden();
 }
 
+async function openProducts(page) {
+  const mobileProducts = page.locator('#mobileBottomNav [data-nav-target="products"]');
+  if (await mobileProducts.isVisible()) await mobileProducts.click();
+  else await page.locator('#appSidebar [data-nav-target="products"]').click();
+}
+
 test('bulk pricing has its own tab, deep link and browser history', async ({ page }) => {
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -18,12 +24,13 @@ test('bulk pricing has its own tab, deep link and browser history', async ({ pag
   await expect(page.locator('.products-panel')).toBeVisible();
   await expect(page.locator('.products-panel #bulkPricePanel, .products-panel #openBulkPrice')).toHaveCount(0);
   await openBulkPricing(page);
+  await expect(page.locator('#closeBulkPrice')).toHaveCount(0);
   await expect(page.locator('#appSidebar')).not.toHaveClass(/is-open/);
   const categoryId = await page.locator('#bulkPriceCategories option').first().getAttribute('value');
   await page.locator(`#bulkPriceCategoryOptions input[value="${categoryId}"]`).check();
   await page.locator('#bulkPriceNext').click();
   await page.locator('#bulkPriceAmount').fill('۱۰');
-  await page.locator('#closeBulkPrice').click();
+  await openProducts(page);
   await expect(page).toHaveURL(/#products$/);
   await expect(page.locator('#bulkPricePanel')).toBeHidden();
   await page.goBack();
@@ -107,7 +114,7 @@ test('the standalone form preserves preview, invalidation and confirmed API payl
   await page.locator('#bulkPriceAmount').fill('۱۰');
   await page.locator('#previewBulkPrice').click();
   await expect(page.locator('#executeBulkPrice')).toBeEnabled();
-  await page.locator('#closeBulkPrice').click();
+  await openProducts(page);
   const icon = page.locator('#toggleProductFilters .ui-icon-asset');
   await expect(icon).toBeVisible();
   expect(await icon.evaluate((node) => getComputedStyle(node).getPropertyValue('--ui-icon-url'))).toContain('/assets/icon/fandoogh-filter.svg');

@@ -7,8 +7,9 @@
 | `app/index.html` | shell، metadata نصب و قرارداد id/data |
 | `app/styles.css` | قواعد قدیمی/کامپوننتی که رفتار صفحه به آن‌ها متکی است |
 | `app/ui.css` | لایهٔ نهایی برند، کلاس‌های semantic و responsive safeguards |
-| `app/fonts.css` | ورودی fallback برای preview؛ وردپرس در runtime CSS فونت محلی را تولید می‌کند |
-| `assets/brand/fandoogh-mark.svg` | favicon، Apple touch icon و آیکون پایهٔ manifest |
+| `app/fonts.css` | تعریف فونت وزیر؛ وردپرس مسیر فونت را در CSS تولیدشده به نشانی افزونه تبدیل می‌کند |
+| `assets/fonts/vazir/` | فونت متغیر وزیر همراه مجوز SIL OFL 1.1 |
+| `assets/brand/fandoogh-mark.svg` | نشان پیش‌فرض داخل رابط؛ آیکون نصب و مرورگر از آیکون سایت خوانده می‌شوند |
 | `assets/icon/fandoogh-*.svg` | iconهای محلی navigation/action که PHP در config عمومی map می‌کند |
 
 ## قرارداد icon

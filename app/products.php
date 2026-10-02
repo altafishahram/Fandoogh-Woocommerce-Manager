@@ -260,6 +260,15 @@ function list_products( $request ) {
         // The official WooCommerce query layer passes this bounded search to
         // the product data store without direct SQL in this plugin.
         $args['s'] = $search;
+        // A scanned SKU must resolve even when it is absent from the title.
+        $sku_id = compose_product_repository()->findIdBySku( $search );
+        if ( $sku_id ) {
+            $match = compose_product_repository()->findById( $sku_id );
+            if ( $match ) {
+                $args['include'] = array( $match->is_type( 'variation' ) ? $match->get_parent_id() : $sku_id );
+                unset( $args['s'] );
+            }
+        }
     }
 
     $category_id = product_query_integer( $request->get_param( 'category_id' ), 0, 0, PHP_INT_MAX );

@@ -700,6 +700,8 @@ function allowed_audit_events() {
 			'pairing_replay',
 			'pairing_issued',
 			'session_created',
+			'push_subscribed',
+			'push_unsubscribed',
 			'session_revoked',
 			'session_revoke_all',
 			'access_policy_updated',
@@ -2403,8 +2405,8 @@ function render_pairing_admin_section( $pairing_result = '' ) {
 		$pairing_code = $pairing_result;
 	}
 
-	echo '<section class="fandoogh-admin-card fandoogh-admin-card--pairing"><p class="fandoogh-eyebrow">' . esc_html__( 'اتصال امن', 'fandoogh-manager' ) . '</p><h2>' . esc_html__( 'Secure pairing', 'fandoogh-manager' ) . '</h2>';
-	echo '<p>' . esc_html__( 'Administrator می‌تواند کد یک‌بارمصرف را برای هر کاربر واجد شرایط بسازد. کاربر هدف باید با نام کاربری و رمز خودش وارد وب‌اپ شود؛ کد به حساب صادرکننده منتقل نمی‌شود.', 'fandoogh-manager' ) . '</p>';
+	echo '<section class="fandoogh-admin-card fandoogh-admin-card--pairing"><p class="fandoogh-eyebrow">' . esc_html__( 'قدم دوم راه‌اندازی', 'fandoogh-manager' ) . '</p><h2>' . esc_html__( 'ساخت کد اتصال', 'fandoogh-manager' ) . '</h2>';
+	echo '<p>' . esc_html__( 'کاربر فروشگاه را انتخاب کنید و برای دستگاه او کد یک‌بارمصرف بسازید. کاربر با نام کاربری و رمز خودش وارد وب‌اپ می‌شود.', 'fandoogh-manager' ) . '</p>';
 
 	if ( is_wp_error( $pairing_result ) ) {
 		echo '<div class="notice notice-error inline"><p>' . esc_html( $pairing_result->get_error_message() ) . '</p></div>';
@@ -2417,7 +2419,7 @@ function render_pairing_admin_section( $pairing_result = '' ) {
 	echo '<form method="post" action="">';
 	wp_nonce_field( 'fandoogh_manager_generate_pairing', 'fandoogh_manager_pairing_nonce' );
 	echo '<input type="hidden" name="fandoogh_manager_generate_pairing" value="1">';
-	echo '<p><label for="fandoogh-manager-pairing-user"><strong>' . esc_html__( 'کاربر هدف', 'fandoogh-manager' ) . '</strong></label><br>';
+	echo '<p><label for="fandoogh-manager-pairing-user"><strong>' . esc_html__( 'این دستگاه برای کدام کاربر است؟', 'fandoogh-manager' ) . '</strong></label><br>';
 	if ( empty( $target_users ) ) {
 		echo '<span class="description">' . esc_html__( 'هیچ کاربر واجد شرایطی برای مدیریت فندوق پیدا نشد.', 'fandoogh-manager' ) . '</span></p>';
 	} else {
@@ -2431,8 +2433,8 @@ function render_pairing_admin_section( $pairing_result = '' ) {
 			echo '<option value="' . esc_attr( $target_id ) . '" ' . selected( $target_user_id, $target_id, false ) . '>' . esc_html( pairing_user_label( $target_user ) ) . '</option>';
 		}
 		echo '</select></p>';
-		echo '<p class="description">' . esc_html__( 'Scopeها بر اساس capability فعلی کاربر هدف صادر می‌شوند و هنگام ورود دوباره بررسی خواهند شد.', 'fandoogh-manager' ) . '</p>';
-		submit_button( __( 'ساخت کد Pairing برای کاربر هدف', 'fandoogh-manager' ), 'secondary', 'submit', false );
+		echo '<p class="description">' . esc_html__( 'دسترسی این اتصال بر اساس مجوزهای فعلی کاربر تعیین می‌شود و هنگام ورود دوباره بررسی خواهد شد.', 'fandoogh-manager' ) . '</p>';
+		submit_button( __( 'ساخت کد یک‌بارمصرف', 'fandoogh-manager' ), 'primary', 'submit', false );
 	}
 	echo '</form>';
 	echo '</section>';

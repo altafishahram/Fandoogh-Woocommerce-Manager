@@ -26,11 +26,12 @@ namespace {
 	$repository = \Fandoogh_Manager\compose_customer_repository();
 	if ( ! $repository->isAvailable() ) { throw new \RuntimeException( 'Customer availability contract failed.' ); }
 	if ( array( 5 ) !== $repository->searchIds( 'ali' ) ) { throw new \RuntimeException( 'Customer search delegation changed.' ); }
+	if ( array( 5, 9 ) !== $repository->searchIds( '۰۹۱۲' ) || '0912' !== end($GLOBALS['customer_user_queries'])['meta_query'][0]['value'] ) { throw new \RuntimeException( 'Phone search must merge Woo results with billing phone matches.' ); }
 	$args = array( 'page' => 2, 'role' => 'customer' );
 	if ( $repository->query( $args ) !== $GLOBALS['customer_query_result'] || $GLOBALS['customer_query_args'] !== $args ) { throw new \RuntimeException( 'Customer query delegation changed.' ); }
 	$customer = $repository->findById( 7 );
 	if ( ! $customer instanceof WC_Customer || 7 !== $customer->get_id() ) { throw new \RuntimeException( 'Customer lookup delegation changed.' ); }
 	if ( ! $repository->create() instanceof WC_Customer ) { throw new \RuntimeException( 'Customer factory delegation changed.' ); }
 	if ( ! $repository->normalizeQueryEntry( 8 ) instanceof WC_Customer ) { throw new \RuntimeException( 'Customer query normalization changed.' ); }
-	echo "Customer repository: 5 contract checks passed.\n";
+	echo "Customer repository: 6 contract checks passed.\n";
 }

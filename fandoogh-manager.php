@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fandoogh Manager
  * Description: A dependency-free WordPress/WooCommerce management PWA foundation.
- * Version: 1.3.13
+ * Version: 1.4.2
  * Requires at least: 6.4
  * Requires PHP: 7.4
  * Author: Fandoogh
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const VERSION = '1.3.13';
+const VERSION = '1.4.2';
 const REST_NAMESPACE = 'fandoogh-manager/v1';
 const OPTION_KEY = 'fandoogh_manager_settings';
 const OPTION_GROUP = 'fandoogh_manager_settings_group';
@@ -41,12 +41,16 @@ require_once plugin_dir_path( __FILE__ ) . 'app/customers.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/orders.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/shipping.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/order-tracking.php';
+require_once plugin_dir_path( __FILE__ ) . 'app/pos.php';
+require_once plugin_dir_path( __FILE__ ) . 'app/invoice.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/analytics.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/media.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/fonts.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/coupons.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/reviews.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/inventory.php';
+require_once plugin_dir_path( __FILE__ ) . 'app/operations.php';
+require_once plugin_dir_path( __FILE__ ) . 'app/push.php';
 require_once plugin_dir_path( __FILE__ ) . 'app/admin.php';
 
 require_once plugin_dir_path( __FILE__ ) . 'app/composition/settings.php';
@@ -118,6 +122,10 @@ function activate() {
  * @return void
  */
 function deactivate() {
+	wp_unschedule_hook( OPERATIONS_PUSH_HOOK );
+	wp_unschedule_hook( OPERATIONS_BATCH_HOOK );
+	wp_unschedule_hook( OPERATIONS_FLUSH_HOOK );
+	wp_clear_scheduled_hook( OPERATIONS_TICK_HOOK );
 	wp_clear_scheduled_hook( SECURITY_CLEANUP_HOOK );
 	// Alerts have per-session arguments; clear every argument variant on shutdown.
 	wp_unschedule_hook( SESSION_ALERT_CRON_HOOK );
@@ -456,7 +464,7 @@ function register_rewrite_rules() {
 		);
 
 		add_rewrite_rule(
-			'^' . preg_quote( $slug, '#' ) . '/(manifest\\.webmanifest|sw\\.js|app\\.js|styles\\.css|fonts\\.css|ui\\.css)$',
+			'^' . preg_quote( $slug, '#' ) . '/(manifest\\.webmanifest|sw\\.js|app\\.js|operations\\.js|pos\\.js|pos\\.css|invoice\\.css|barcode-reader\\.js|styles\\.css|fonts\\.css|ui\\.css)$',
 			'index.php?' . APP_ASSET_QUERY_VAR . '=$matches[1]',
 			'top'
 		);
@@ -562,6 +570,11 @@ function app_asset_version() {
 		__FILE__,
 		plugin_dir_path( __FILE__ ) . 'app/index.html',
 		plugin_dir_path( __FILE__ ) . 'app/app.js',
+		plugin_dir_path( __FILE__ ) . 'app/operations.js',
+		plugin_dir_path( __FILE__ ) . 'app/pos.js',
+		plugin_dir_path( __FILE__ ) . 'app/pos.css',
+		plugin_dir_path( __FILE__ ) . 'app/invoice.css',
+		plugin_dir_path( __FILE__ ) . 'app/vendor/zxing-0.21.3.min.js',
 		plugin_dir_path( __FILE__ ) . 'app/styles.css',
 		plugin_dir_path( __FILE__ ) . 'app/fonts.css',
 		plugin_dir_path( __FILE__ ) . 'app/ui.css',
@@ -613,6 +626,11 @@ function app_asset_urls() {
 
 	$files = array(
 		'app'      => 'app.js',
+		'operations' => 'operations.js',
+		'pos' => 'pos.js',
+		'pos_styles' => 'pos.css',
+		'invoice_styles' => 'invoice.css',
+		'barcode' => 'barcode-reader.js',
 		'styles'   => 'styles.css',
 		'sw'       => 'sw.js',
 		'manifest' => 'manifest.webmanifest',
@@ -714,6 +732,11 @@ function maybe_serve_app_asset() {
 
 	$asset_map = array(
 		'app.js'     => array( 'file' => 'app/app.js', 'type' => 'application/javascript; charset=utf-8' ),
+		'operations.js' => array( 'file' => 'app/operations.js', 'type' => 'application/javascript; charset=utf-8' ),
+		'pos.js' => array( 'file' => 'app/pos.js', 'type' => 'application/javascript; charset=utf-8' ),
+		'pos.css' => array( 'file' => 'app/pos.css', 'type' => 'text/css; charset=utf-8' ),
+		'invoice.css' => array( 'file' => 'app/invoice.css', 'type' => 'text/css; charset=utf-8' ),
+		'barcode-reader.js' => array( 'file' => 'app/vendor/zxing-0.21.3.min.js', 'type' => 'application/javascript; charset=utf-8' ),
 		'styles.css' => array( 'file' => 'app/styles.css', 'type' => 'text/css; charset=utf-8' ),
 		'ui.css'     => array( 'file' => 'app/ui.css', 'type' => 'text/css; charset=utf-8' ),
 		'sw.js'      => array( 'file' => 'app/sw.js', 'type' => 'application/javascript; charset=utf-8' ),
@@ -751,7 +774,6 @@ function maybe_serve_app_asset() {
 function serve_manifest() {
 	$branding = get_public_branding();
 	$settings = get_settings();
-	$urls     = app_asset_urls();
 	$manifest = array(
 		'id'                          => app_base_url(),
 		'name'                        => ! empty( $branding['site_name'] ) ? $branding['site_name'] . ' — مدیریت' : 'مدیریت فروشگاه',
@@ -770,35 +792,16 @@ function serve_manifest() {
 		'launch_handler'              => array( 'client_mode' => 'navigate-existing' ),
 	);
 
-	$icons = array();
-	foreach ( array( $branding['site_icon_url'], $branding['logo_url'] ) as $icon_url ) {
-		if ( is_string( $icon_url ) && '' !== $icon_url ) {
-			$icons[] = array(
-				'src'   => $icon_url,
-				'sizes' => '512x512',
-				'type'  => 'image/png',
-				'purpose' => 'any maskable',
-			);
-			break;
-		}
-	}
-
-	$bundled_icon_path = plugin_dir_path( __FILE__ ) . 'assets/brand/fandoogh-mark.svg';
-	if ( is_readable( $bundled_icon_path ) ) {
-		$bundled_icon_url = public_asset_url( add_query_arg( 'ver', $urls['version'], plugins_url( 'assets/brand/fandoogh-mark.svg', __FILE__ ) ) );
-		if ( $bundled_icon_url ) {
-			$icons[] = array(
-				'src'    => $bundled_icon_url,
-				'sizes'  => 'any',
-				'type'   => 'image/svg+xml',
-				'purpose' => 'any maskable',
-			);
-		}
-	}
-
-	if ( ! empty( $icons ) ) {
-		$manifest['icons'] = $icons;
-	}
+	// Installed apps use the site's favicon exclusively, never the plugin mark
+	// or theme logo. Do not claim an arbitrary favicon is a maskable image.
+	$site_icon_url = ! empty( $branding['site_icon_url'] ) ? $branding['site_icon_url'] : public_asset_url( home_url( '/favicon.ico' ) );
+	$manifest['icons'] = array(
+		array(
+			'src'     => $site_icon_url,
+			'sizes'   => ! empty( $branding['site_icon_url'] ) ? '512x512' : 'any',
+			'purpose' => 'any',
+		),
+	);
 
 	nocache_headers();
 	header( 'Content-Type: application/manifest+json; charset=utf-8' );
@@ -825,6 +828,10 @@ function register_rest_routes() {
 	register_coupon_routes();
 	register_review_routes();
 	register_inventory_routes();
+	register_operations_routes();
+	register_pos_routes();
+	register_invoice_routes();
+	register_push_routes();
 
 	register_rest_route(
 		REST_NAMESPACE,
@@ -1119,7 +1126,14 @@ function get_config_response() {
 				'media'    => rest_url( REST_NAMESPACE . '/media' ),
 				'coupons'  => rest_url( REST_NAMESPACE . '/coupons' ),
 				'reviews'  => rest_url( REST_NAMESPACE . '/reviews' ),
-			'inventory' => rest_url( REST_NAMESPACE . '/inventory' ),
+				'inventory' => rest_url( REST_NAMESPACE . '/inventory' ),
+				'pos_catalog' => rest_url( REST_NAMESPACE . '/pos/catalog' ),
+				'pos_quote' => rest_url( REST_NAMESPACE . '/pos/quote' ),
+				'pos_sales' => rest_url( REST_NAMESPACE . '/pos/sales' ),
+				'today' => rest_url( REST_NAMESPACE . '/operations/today' ),
+				'barcode' => rest_url( REST_NAMESPACE . '/operations/barcode' ),
+				'push' => rest_url( REST_NAMESPACE . '/operations/push' ),
+				'push_test' => rest_url( REST_NAMESPACE . '/operations/push-test' ),
 			),
 			'analytics' => array(
 				'enabled' => ! empty( $settings['analytics_enabled'] ),
@@ -1185,9 +1199,11 @@ function maybe_render_app_shell() {
 	$meta .= '<meta name="fandoogh-service-worker-url" content="' . esc_attr( $urls['sw'] ) . '">';
 	$meta .= '<meta name="fandoogh-app-scope" content="' . esc_attr( app_base_url() ) . '">';
 	$meta .= '<meta name="fandoogh-app-version" content="' . esc_attr( $urls['version'] ) . '">';
+	$meta .= '<meta name="fandoogh-barcode-reader-url" content="' . esc_attr( $urls['barcode'] ) . '">';
 
 	$branding = get_public_branding();
-	$apple_icon = ! empty( $branding['site_icon_url'] ) ? $branding['site_icon_url'] : $branding['logo_url'];
+	$site_icon_url = ! empty( $branding['site_icon_url'] ) ? $branding['site_icon_url'] : public_asset_url( home_url( '/favicon.ico' ) );
+	$apple_icon = ! empty( $branding['site_icon_url'] ) ? $branding['site_icon_url'] : '';
 	if ( is_string( $apple_icon ) && '' !== $apple_icon ) {
 		$meta .= '<link rel="apple-touch-icon" href="' . esc_url( $apple_icon ) . '">';
 	}
@@ -1201,6 +1217,7 @@ function maybe_render_app_shell() {
 	$html = str_replace(
 		array(
 			'href="/manager/manifest.webmanifest"',
+			'href="/favicon.ico"',
 			'href="./styles.css"',
 			'href="./fonts.css"',
 			'href="./ui.css"',
@@ -1208,9 +1225,14 @@ function maybe_render_app_shell() {
 			'src="/assets/brand/fandoogh-mark.svg"',
 			'data-default-logo="/assets/brand/fandoogh-mark.svg"',
 			'src="./app.js"',
+			'src="./operations.js"',
+			'src="./pos.js"',
+			'href="./pos.css"',
+			'href="./invoice.css"',
 		),
 		array(
 			'href="' . esc_url( $urls['manifest'] ) . '"',
+			'href="' . esc_url( $site_icon_url ) . '"',
 			'href="' . esc_url( $urls['styles'] ) . '"',
 			'href="' . esc_url( $urls['fonts'] ) . '"',
 			'href="' . esc_url( $urls['ui'] ) . '"',
@@ -1218,6 +1240,10 @@ function maybe_render_app_shell() {
 			'src="' . esc_url( $bundled_icon_url ) . '"',
 			'data-default-logo="' . esc_url( $bundled_icon_url ) . '"',
 			'src="' . esc_url( $urls['app'] ) . '"',
+			'src="' . esc_url( $urls['operations'] ) . '"',
+			'src="' . esc_url( $urls['pos'] ) . '"',
+			'href="' . esc_url( $urls['pos_styles'] ) . '"',
+			'href="' . esc_url( $urls['invoice_styles'] ) . '"',
 		),
 		$html
 	);
@@ -1562,10 +1588,29 @@ function enqueue_admin_assets( $hook_suffix ) {
 
 	$handle = 'fandoogh-manager-admin';
 	wp_enqueue_style(
-		$handle,
-		plugins_url( 'assets/css/admin.css', __FILE__ ),
+		'fandoogh-manager-fonts',
+		plugins_url( 'app/fonts.css', __FILE__ ),
 		array(),
 		FANDOOGH_MANAGER_VERSION
+	);
+	wp_enqueue_style(
+		$handle,
+		plugins_url( 'assets/css/admin.css', __FILE__ ),
+		array( 'fandoogh-manager-fonts' ),
+		FANDOOGH_MANAGER_VERSION
+	);
+	wp_enqueue_style(
+		'fandoogh-manager-admin-friendly',
+		plugins_url( 'assets/css/admin-friendly.css', __FILE__ ),
+		array( $handle ),
+		FANDOOGH_MANAGER_VERSION
+	);
+	wp_enqueue_script(
+		'fandoogh-manager-admin-guide',
+		plugins_url( 'assets/js/admin-guide.js', __FILE__ ),
+		array(),
+		FANDOOGH_MANAGER_VERSION,
+		true
 	);
 
 	$colors = get_settings()['colors'];
@@ -1615,7 +1660,7 @@ function render_status_page() {
 }
 
 /** Render overview content inside the shared administrator shell. */
-function render_admin_overview() {
+function render_admin_overview( $connections = null ) {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		wp_die( esc_html__( 'شما اجازهٔ مشاهدهٔ این صفحه را ندارید.', 'fandoogh-manager' ) );
 	}
@@ -1629,7 +1674,7 @@ function render_admin_overview() {
 		$app_shell_label                               => app_base_url(),
 	);
 
-	echo '<div class="fandoogh-admin-card">';
+	echo '<details class="fandoogh-admin-card fandoogh-admin-technical" id="fandoogh-admin-health"><summary><span>' . admin_icon( 'dashboard' ) . esc_html__( 'جزئیات فنی و وضعیت بستر', 'fandoogh-manager' ) . '</span>' . admin_icon( 'chevron' ) . '</summary><div class="fandoogh-admin-technical-content">';
 	echo '<h2>' . esc_html__( 'سلامت و وضعیت بستر', 'fandoogh-manager' ) . '</h2>';
 	echo '<table class="widefat striped fandoogh-health-table"><tbody>';
 
@@ -1644,30 +1689,21 @@ function render_admin_overview() {
 	}
 
 	echo '</tbody></table>';
-	echo '</div>';
-
-	$security_rows = admin_security_session_rows();
-	$active_count  = 0;
-	$active_users  = array();
-	foreach ( $security_rows as $security_row ) {
-		if ( empty( $security_row['connected'] ) ) {
-			continue;
-		}
-		$active_count++;
-		$active_users[ absint( $security_row['user_id'] ) ] = true;
-	}
+	$connections = null === $connections ? admin_device_summary() : $connections;
+	$active_count = $connections['active'];
 
 	echo '<section class="fandoogh-admin-card fandoogh-security-overview" aria-labelledby="fandoogh-security-overview-title">';
 	echo '<div class="fandoogh-section-heading"><div><p class="fandoogh-eyebrow">' . esc_html__( 'امنیت و دسترسی', 'fandoogh-manager' ) . '</p><h2 id="fandoogh-security-overview-title">' . esc_html__( 'اتصال‌های فعلی وب‌اپ', 'fandoogh-manager' ) . '</h2></div><a class="button button-secondary fandoogh-admin-button" href="' . esc_url( admin_tab_url( 'sessions' ) ) . '">' . esc_html__( 'مدیریت نشست‌ها', 'fandoogh-manager' ) . '</a></div>';
 	echo '<div class="fandoogh-security-metrics">';
 	echo '<div class="fandoogh-security-metric"><strong>' . esc_html( number_format_i18n( $active_count ) ) . '</strong><span>' . esc_html__( 'دستگاه متصل', 'fandoogh-manager' ) . '</span></div>';
-	echo '<div class="fandoogh-security-metric"><strong>' . esc_html( number_format_i18n( count( $active_users ) ) ) . '</strong><span>' . esc_html__( 'کاربر فعال', 'fandoogh-manager' ) . '</span></div>';
-	echo '<div class="fandoogh-security-metric"><strong>' . esc_html( number_format_i18n( count( $security_rows ) ) ) . '</strong><span>' . esc_html__( 'نشست ثبت‌شده', 'fandoogh-manager' ) . '</span></div>';
+	echo '<div class="fandoogh-security-metric"><strong>' . esc_html( number_format_i18n( $connections['users'] ) ) . '</strong><span>' . esc_html__( 'کاربر فعال', 'fandoogh-manager' ) . '</span></div>';
+	echo '<div class="fandoogh-security-metric"><strong>' . esc_html( number_format_i18n( $connections['total'] ) ) . '</strong><span>' . esc_html__( 'نشست ثبت‌شده', 'fandoogh-manager' ) . '</span></div>';
 	echo '</div>';
+	echo '<p class="description">' . esc_html__( 'شمارش‌ها بر اساس حداکثر ۵۰۰ نشست اخیر هستند.', 'fandoogh-manager' ) . '</p>';
 	if ( 0 === $active_count ) {
 		echo '<p class="fandoogh-empty-state">' . esc_html__( 'در حال حاضر دستگاه متصل فعالی ثبت نشده است.', 'fandoogh-manager' ) . '</p>';
 	}
-	echo '</section>';
+	echo '</section></div></details>';
 }
 
 /**

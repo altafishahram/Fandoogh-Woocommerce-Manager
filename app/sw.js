@@ -5,7 +5,7 @@
  */
 "use strict";
 
-var CACHE_NAME = "fandoogh-manager-shell-v39";
+var CACHE_NAME = "fandoogh-manager-shell-v43";
 var WORKER_URL = new URL(self.location.href);
 var WORKER_VERSION = WORKER_URL.searchParams.get("ver") || "base";
 var MANAGER_BASE = new URL("./", WORKER_URL).pathname;
@@ -14,6 +14,11 @@ var USE_QUERY_ASSETS = WORKER_URL.searchParams.get(ASSET_QUERY_VAR) === "sw.js";
 var PUBLIC_ASSET_FILENAMES = [
   "styles.css",
   "app.js",
+  "operations.js",
+  "pos.js",
+  "pos.css",
+  "invoice.css",
+  "barcode-reader.js",
   "fonts.css",
   "ui.css",
   "manifest.webmanifest"
@@ -139,4 +144,31 @@ self.addEventListener("fetch", function (event) {
   event.respondWith(
     networkFirst(request)
   );
+});
+
+// Notifications contain operational categories only, never names or order details.
+self.addEventListener("push", function (event) {
+  var payload = {};
+  try { payload = event.data ? event.data.json() : {}; } catch (error) { /* Generic fallback. */ }
+  var kinds = ["new_order", "low_stock", "delayed_order", "test"];
+  var kind = kinds.indexOf(payload.kind) !== -1 ? payload.kind : "operations";
+  var body = typeof payload.body === "string" ? payload.body.slice(0, 240) : "کارهای فروشگاه را در پنل بررسی کنید.";
+  event.waitUntil(self.registration.showNotification("فندوق · هشدار فروشگاه", {
+    body: body, tag: "fandoogh-" + kind, lang: "fa", dir: "rtl",
+    data: { url: MANAGER_BASE + "#dashboard" }
+  }));
+});
+
+self.addEventListener("notificationclick", function (event) {
+  event.notification.close();
+  // Ignore notification-provided URLs; always open this worker's own app scope.
+  var target = new URL(MANAGER_BASE + "#dashboard", self.location.origin).href;
+  event.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (windows) {
+    var existing = windows.filter(function (client) {
+      var url = new URL(client.url);
+      return url.origin === self.location.origin && url.pathname === MANAGER_BASE;
+    })[0];
+    if (existing) return existing.navigate(target).then(function (client) { return (client || existing).focus(); });
+    return self.clients.openWindow(target);
+  }));
 });

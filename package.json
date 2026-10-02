@@ -25,6 +25,8 @@
     "test:admin": "php tests/admin-panel-contract.php",
     "test:bulk-pricing": "php tests/bulk-pricing-contract.php",
     "test:analytics": "php tests/analytics-contract.php",
+    "test:pos": "php tests/pos-contract.php",
+    "test:operations": "php tests/operations-contract.php && node tests/push-crypto-contract.js",
     "package": "node tools/package-plugin.js",
     "package:check": "node tools/verify-package.js"
   },

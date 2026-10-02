@@ -167,6 +167,14 @@ function list_inventory( $request ) {
 	$search = inventory_clean_text( $request->get_param( 'search' ), 80 );
 	if ( '' !== $search ) {
 		$args['s'] = $search;
+		$sku_id = compose_product_repository()->findIdBySku( $search );
+		if ( $sku_id ) {
+			$match = compose_product_repository()->findById( $sku_id );
+			if ( $match ) {
+				$args['include'] = array( $match->is_type( 'variation' ) ? $match->get_parent_id() : $sku_id );
+				unset( $args['s'] );
+			}
+		}
 	}
 	$stock_status = sanitize_key( (string) $request->get_param( 'stock_status' ) );
 	if ( in_array( $stock_status, array( 'instock', 'outofstock', 'onbackorder' ), true ) ) {

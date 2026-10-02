@@ -75,6 +75,10 @@
       coupons: DEFAULT_API_ROOT + "coupons",
       reviews: DEFAULT_API_ROOT + "reviews",
       inventory: DEFAULT_API_ROOT + "inventory",
+      today: DEFAULT_API_ROOT + "operations/today",
+      barcode: DEFAULT_API_ROOT + "operations/barcode",
+      push: DEFAULT_API_ROOT + "operations/push",
+      push_test: DEFAULT_API_ROOT + "operations/push-test",
       media: DEFAULT_API_ROOT + "media"
     }
   };
@@ -363,6 +367,7 @@
       range: { label: "۳۰ روز اخیر", start: "2026-08-04", end: "2026-09-03" },
       currency: { code: "IRT", label: "تومان" },
       sales: { gross: "125600000", average_order: "4186667" },
+      channels: { pos: { orders: 8, gross: "25600000", refunded: "600000", net: "25000000" }, online: { orders: 22, gross: "100000000", refunded: "0", net: "100000000" } },
       orders: {
         total: 30,
         successful: 25,
@@ -628,6 +633,7 @@
       enabled: false,
       status: "disabled",
       range: "30d",
+      channel: "all",
       data: null
     },
     security: {
@@ -696,6 +702,7 @@
     elements.analyticsPanel = document.getElementById("analyticsPanel");
     elements.analyticsStateBadge = document.getElementById("analyticsStateBadge");
     elements.analyticsRange = document.getElementById("analyticsRange");
+    elements.analyticsChannel = document.getElementById("analyticsChannel");
     elements.refreshAnalytics = document.getElementById("refreshAnalytics");
     elements.analyticsSecureState = document.getElementById("analyticsSecureState");
     elements.analyticsLoadingState = document.getElementById("analyticsLoadingState");
@@ -752,7 +759,6 @@
     elements.newProductButton = document.getElementById("newProductButton");
     elements.refreshProducts = document.getElementById("refreshProducts");
     elements.productsLoadMoreState = document.getElementById("productsLoadMoreState");
-    elements.closeBulkPrice = document.getElementById("closeBulkPrice");
     elements.bulkPriceForm = document.getElementById("bulkPriceForm");
     elements.bulkPriceCategories = document.getElementById("bulkPriceCategories");
     elements.bulkPriceAmount = document.getElementById("bulkPriceAmount");
@@ -2069,9 +2075,16 @@
       icons: normalizeIconMap(sourceIcons),
       api: {
         pairUrl: safeApiUrl(sourceApi.pair || sourceApi.pair_url || sourceEndpoints.pair || source.pair_url),
+        todayUrl: safeApiUrl(sourceApi.today),
+        barcodeUrl: safeApiUrl(sourceApi.barcode),
+        pushUrl: safeApiUrl(sourceApi.push),
+        pushTestUrl: safeApiUrl(sourceApi.push_test),
         meUrl: safeApiUrl(sourceApi.me || sourceApi.me_url || sourceEndpoints.me || source.me_url),
         csrfUrl: safeApiUrl(sourceApi.csrf || sourceApi.csrf_url || sourceEndpoints.csrf || source.csrf_url),
         logoutUrl: safeApiUrl(sourceApi.logout || sourceApi.logout_url || sourceEndpoints.logout || source.logout_url),
+        posCatalogUrl: safeApiUrl(sourceApi.pos_catalog || DEFAULT_API_ROOT + "pos/catalog"),
+        posQuoteUrl: safeApiUrl(sourceApi.pos_quote || DEFAULT_API_ROOT + "pos/quote"),
+        posSalesUrl: safeApiUrl(sourceApi.pos_sales || DEFAULT_API_ROOT + "pos/sales"),
         productsUrl: safeApiUrl(sourceApi.products || sourceApi.products_url || sourceEndpoints.products || sourceEndpoints.products_url || source.products_url || source.productsUrl),
         productAttributesUrl: safeApiUrl(sourceApi.product_attributes || sourceApi.productAttributes || sourceApi.product_attributes_url || sourceEndpoints.product_attributes || sourceEndpoints.productAttributes || sourceEndpoints.product_attributes_url || source.product_attributes || source.productAttributes || source.product_attributes_url || source.productAttributesUrl),
         shippingClassesUrl: safeApiUrl(sourceApi.shipping_classes || sourceApi.shippingClasses || sourceApi.shipping_classes_url || sourceEndpoints.shipping_classes || sourceEndpoints.shippingClasses || sourceEndpoints.shipping_classes_url || source.shipping_classes || source.shippingClasses || source.shipping_classes_url || source.shippingClassesUrl),
@@ -2399,7 +2412,7 @@
     return sections.indexOf(sectionName) !== -1;
   }
 
-  var NAV_SECTIONS = ["dashboard", "orders", "products", "bulk-price", "inventory", "categories", "customers", "coupons", "reviews", "analytics", "security"];
+  var NAV_SECTIONS = ["dashboard", "orders", "pos", "products", "bulk-price", "inventory", "categories", "customers", "coupons", "reviews", "analytics", "security", "support"];
 
   function normalizeSection(sectionName) {
     return NAV_SECTIONS.indexOf(sectionName) !== -1 ? sectionName : "dashboard";
@@ -2462,6 +2475,7 @@
       elements.globalSearch.value = "";
     }
     closeGlobalSearchResults();
+    if (window.FandooghPOS) window.FandooghPOS.activate(state.activeSection);
   }
 
   function closeSidebar() {
@@ -2604,7 +2618,8 @@
       { section: "coupons", terms: ["کوپن", "کوپن‌ها", "تخفیف", "coupon", "coupons", "discount"] },
       { section: "reviews", terms: ["دیدگاه", "دیدگاه‌ها", "نظر", "review", "reviews"] },
       { section: "analytics", terms: ["گزارش", "گزارش‌ها", "گزارشات", "تحلیل", "فروش", "analytics"] },
-      { section: "security", terms: ["امنیت", "دستگاه", "نشست", "security"] }
+      { section: "security", terms: ["امنیت", "دستگاه", "نشست", "security"] },
+      { section: "support", terms: ["پشتیبانی", "حمایت مالی", "واتساپ", "support", "donate"] }
     ];
   }
 
@@ -2620,7 +2635,9 @@
       coupons: "کوپن‌ها",
       reviews: "دیدگاه‌ها",
       analytics: "گزارش‌ها",
-      security: "امنیت و دسترسی"
+      pos: "فروش حضوری",
+      security: "امنیت و دسترسی",
+      support: "پشتیبانی و حمایت مالی"
     }[section] || "پنل مدیریت";
   }
 
@@ -3176,6 +3193,8 @@
   function setAuthenticated(authenticated, csrfToken) {
     state.authenticated = Boolean(authenticated);
     state.csrfToken = state.authenticated && typeof csrfToken === "string" ? csrfToken : "";
+    if (window.FandooghOperations) window.FandooghOperations.reset();
+    if (window.FandooghPOS) window.FandooghPOS.reset();
     syncManualOrderAccess();
     syncCustomerAccess();
 
@@ -3491,12 +3510,14 @@
     setAuditState("ready");
     updatePendingOrderBadges();
     showView("dashboard");
+    if (window.FandooghOperations) window.FandooghOperations.loadToday();
   }
 
   // A dashboard failure is not an authentication failure. Wrap each loader so
   // a synchronous render exception also stays outside the pairing transaction.
   function loadDashboardData() {
     var loaders = [loadProducts, loadProductAttributes, loadProductShippingClasses, loadCategories, loadCustomers, loadOrders, loadInventory, loadCoupons, loadReviews, loadAnalytics, loadSecurity];
+    if (window.FandooghOperations) loaders.push(window.FandooghOperations.loadToday);
     return Promise.all(loaders.map(function (loader) {
       return Promise.resolve().then(function () { return loader(); }).then(function () {
         return true;
@@ -4503,6 +4524,9 @@
       return Promise.resolve(false);
     }
     var product = state.products.items.filter(function (item) { return item.id === String(productId); })[0];
+    if (!product && !state.previewMode && /^[1-9]\d{0,19}$/.test(String(productId))) {
+      product = normalizeProduct({ id: String(productId), name: "محصول" });
+    }
     var detailUrl = product ? productResourceUrl(product.id) : "";
     if (!product || (!state.previewMode && !detailUrl)) {
       setProductsState("error", "اطلاعات کامل محصول برای مشاهده در دسترس نیست.");
@@ -5230,7 +5254,6 @@
     state.bulkPrice.busy = Boolean(busy);
     elements.bulkPriceForm.setAttribute("aria-busy", String(state.bulkPrice.busy));
     elements.resetBulkPrice.disabled = state.bulkPrice.busy;
-    elements.closeBulkPrice.disabled = state.bulkPrice.busy;
     elements.executeBulkPrice.disabled = state.bulkPrice.busy || !state.bulkPrice.confirmationToken;
     validateBulkPriceStage();
   }
@@ -5252,14 +5275,6 @@
     invalidateBulkPricePreview();
     refreshBulkPriceManualInputs();
     validateBulkPriceStage();
-  }
-
-  function closeBulkPricePanel() {
-    if (state.bulkPrice.busy) {
-      return;
-    }
-    navigateToSection("products");
-    elements.newProductButton.focus();
   }
 
   function resetBulkPriceForm() {
@@ -6776,6 +6791,10 @@
     var product = state.products.items.filter(function (item) {
       return item.id === String(productId);
     })[0];
+
+    if (!product && !state.previewMode && /^[1-9]\d{0,19}$/.test(String(productId))) {
+      product = normalizeProduct({ id: String(productId), name: "محصول" });
+    }
 
     if (!product) {
       setProductsState("error", "اطلاعات محصول برای ویرایش در دسترس نیست.");
@@ -11630,6 +11649,8 @@
     elements.analyticsStateBadge.textContent = analyticsStateLabel(stateName);
     elements.analyticsStateBadge.setAttribute("data-state", stateName);
     elements.analyticsRange.disabled = stateName === "loading" || !hasAccess;
+    elements.analyticsChannel.disabled = stateName === "loading" || !hasAccess;
+    document.getElementById("analyticsChannels").hidden = stateName !== "ready";
     elements.refreshAnalytics.disabled = stateName === "loading" || !hasAccess;
     elements.analyticsSecureState.hidden = stateName !== "secure";
     elements.analyticsLoadingState.hidden = stateName !== "loading";
@@ -11657,12 +11678,15 @@
         start: safeText(range.start, "", 50),
         end: safeText(range.end, "", 50)
       },
+      channels: source.channels || null,
       currency: {
         code: safeText(currency.code, "IRT", 12).toUpperCase(),
         label: safeText(currency.label, "تومان", 32)
       },
       sales: {
         gross: safeText(String(sales.gross || "0"), "0", 50),
+        net: safeText(String(sales.net || sales.gross || "0"), "0", 50),
+        refunded: safeText(String(sales.refunded || "0"), "0", 50),
         averageOrder: safeText(String(sales.average_order || "0"), "0", 50)
       },
       orders: {
@@ -11815,7 +11839,10 @@
 
   function renderAnalytics(data) {
     var currencyLabel = data.currency.label || "تومان";
+    if (window.FandooghPOS) window.FandooghPOS.renderChannels(data.channels, currencyLabel);
     elements.analyticsGrossSales.textContent = analyticsAmount(data.sales.gross, currencyLabel);
+    document.getElementById("analyticsNetSales").textContent = analyticsAmount(data.sales.net, currencyLabel);
+    document.getElementById("analyticsRefunded").textContent = analyticsAmount(data.sales.refunded, currencyLabel);
     elements.analyticsAverageOrder.textContent = analyticsAmount(data.sales.averageOrder, currencyLabel);
     elements.analyticsOrdersCount.textContent = formatDisplayNumber(data.orders.total);
     elements.analyticsCustomersCount.textContent = formatDisplayNumber(data.customers.unique);
@@ -11984,6 +12011,7 @@
     try {
       var url = new URL(base);
       url.searchParams.set("range", state.analytics.range);
+      url.searchParams.set("channel", state.analytics.channel || "all");
       return url.toString();
     } catch (error) {
       return base;
@@ -11992,7 +12020,18 @@
 
   function loadAnalytics() {
     if (state.previewMode) {
-      renderAnalytics(state.analytics.data);
+      var previewAnalytics = JSON.parse(JSON.stringify(state.analytics.data));
+      if (state.analytics.channel !== "all" && previewAnalytics.channels) {
+        var channel = previewAnalytics.channels[state.analytics.channel];
+        previewAnalytics.sales.gross = channel.gross;
+        previewAnalytics.sales.net = channel.net;
+        previewAnalytics.sales.refunded = channel.refunded;
+        previewAnalytics.orders.total = channel.orders;
+        previewAnalytics.sales.averageOrder = String(Number(channel.gross) / Math.max(1, channel.orders));
+        previewAnalytics.products.top = [];
+        previewAnalytics.channels[state.analytics.channel === "pos" ? "online" : "pos"] = {orders:0,gross:"0",refunded:"0",net:"0"};
+      }
+      renderAnalytics(previewAnalytics);
       setAnalyticsState("ready");
       return Promise.resolve(true);
     }
@@ -13663,7 +13702,23 @@
       closeGlobalSearchResults();
     });
     elements.newProductButton.addEventListener("click", openNewProductEditor);
-    elements.closeBulkPrice.addEventListener("click", closeBulkPricePanel);
+    var supportCopyButton = document.getElementById("copySupportCardNumber");
+    if (supportCopyButton) {
+      supportCopyButton.addEventListener("click", function () {
+        var cardNumber = document.querySelector(".support-bank-number");
+        var message = document.getElementById("supportCopyMessage");
+        if (!cardNumber || !message) return;
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          message.textContent = "کپی خودکار در این مرورگر در دسترس نیست؛ شماره را انتخاب و کپی کنید.";
+          return;
+        }
+        navigator.clipboard.writeText(cardNumber.textContent.replace(/\D/g, "")).then(function () {
+          message.textContent = "شماره کارت کپی شد.";
+        }).catch(function () {
+          message.textContent = "کپی انجام نشد؛ شماره را انتخاب و کپی کنید.";
+        });
+      });
+    }
     elements.bulkPriceForm.addEventListener("submit", function (event) {
       event.preventDefault();
       submitBulkPrice(false);
@@ -14373,6 +14428,10 @@
         window.location.href = state.config.siteUrl;
       }
     });
+    elements.analyticsChannel.addEventListener("change", function () {
+      state.analytics.channel = elements.analyticsChannel.value;
+      loadAnalytics();
+    });
     elements.analyticsRange.addEventListener("change", function () {
       state.analytics.range = elements.analyticsRange.value || "30d";
       if (elements.dashboardRange) {
@@ -14461,6 +14520,17 @@
     state.pwa.installed = isStandaloneMode();
     applyConfig(normalizeConfig(DEFAULT_CONFIG));
     bindEvents();
+    if (window.FandooghPOS) window.FandooghPOS.init({
+      state: state, request: fetchJsonWithTimeout, url: apiUrl, hasScope: userHasScope,
+      refresh: function () { loadOrders(); loadProducts(); loadAnalytics(); },
+      openOrder: loadOrderDetail,
+      unauthorized: function () { setAuthenticated(false, ""); showView("pairing"); }
+    });
+    if (window.FandooghOperations) window.FandooghOperations.init({
+      state: state, request: fetchJsonWithTimeout, url: apiUrl, hasScope: userHasScope,
+      navigate: navigateToSection, openProduct: openProductView, openOrder: loadOrderDetail,
+      unauthorized: function () { setAuthenticated(false, ""); showView("pairing"); }
+    });
     setInstallButtonVisibility();
     setBootState(true);
     setProductsState("secure");

@@ -12,11 +12,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="فندوق">
     <link rel="manifest" href="/manager/manifest.webmanifest">
-    <link rel="icon" type="image/svg+xml" href="/assets/brand/fandoogh-mark.svg">
-    <link rel="apple-touch-icon" sizes="180x180" href="/assets/brand/fandoogh-mark.svg">
+    <link rel="icon" href="/favicon.ico">
     <link rel="stylesheet" href="./styles.css">
     <link rel="stylesheet" href="./fonts.css">
     <link rel="stylesheet" href="./ui.css">
+    <link rel="stylesheet" href="./pos.css">
+    <link id="invoiceStyles" rel="stylesheet" href="./invoice.css">
     <title>فندوق | مدیریت</title>
   </head>
   <body>
@@ -52,6 +53,7 @@
               <p id="notificationsPanelText">سفارش جدیدی برای بررسی نیست.</p>
               <ul class="notifications-pending-list" id="notificationsPendingList" hidden></ul>
               <button class="secondary-button compact-button fm-button fm-button--secondary" id="notificationsOpenOrders" type="button">مشاهدهٔ سفارش‌ها</button>
+              <button class="secondary-button compact-button" type="button" data-open-push-settings>هشدارهای این گوشی</button>
             </div>
           </div>
           <div class="topbar-status">
@@ -100,6 +102,7 @@
         <nav class="sidebar-nav" aria-label="بخش‌های پنل">
           <button class="sidebar-nav-item is-active" type="button" data-nav-target="dashboard" aria-current="page"><svg class="sidebar-nav-icon ui-icon" data-icon-name="dashboard" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 10 8-6 8 6v9H4Z"/><path d="M9 19v-5h6v5"/></svg><span>داشبورد</span></button>
           <button class="sidebar-nav-item" type="button" data-nav-target="orders"><svg class="sidebar-nav-icon ui-icon" data-icon-name="orders" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg><span>سفارش‌ها</span><span class="nav-count-badge" id="sidebarOrdersBadge" aria-hidden="true" hidden>۰</span></button>
+          <button class="sidebar-nav-item" type="button" data-nav-target="pos"><svg class="sidebar-nav-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16v12H4zM7 8V4h10v4M8 12h2M14 12h2M8 16h8"/></svg><span>فروش حضوری</span></button>
           <button class="sidebar-nav-item" type="button" data-nav-target="products"><svg class="sidebar-nav-icon ui-icon" data-icon-name="products" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg><span>محصولات</span></button>
           <button class="sidebar-nav-item" id="openBulkPrice" type="button" data-nav-target="bulk-price" aria-controls="bulkPricePanel"><svg class="sidebar-nav-icon ui-icon" data-icon-name="bulk-price" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.7 14.3c0 1.3 1 2.4 2.2 2.4h2.5c1.1 0 1.9-.9 1.9-2 0-1.2-.5-1.7-1.3-2l-4-1.4c-.8-.3-1.3-.7-1.3-1.9 0-1.1.9-2 1.9-2h2.5c1.2 0 2.2 1 2.2 2.3M12 6v12"/></svg><span>افزایش قیمت گروهی</span></button>
           <button class="sidebar-nav-item" type="button" data-nav-target="inventory"><svg class="sidebar-nav-icon ui-icon" data-icon-name="inventory" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M6 16V9M12 16V5M18 16v-3"/><path d="m6 6 2-2 2 2M12 2l2 2-2 2M18 9l2 2-2 2"/></svg><span>موجودی</span></button>
@@ -109,6 +112,7 @@
           <button class="sidebar-nav-item" type="button" data-nav-target="analytics"><svg class="sidebar-nav-icon ui-icon" data-icon-name="analytics" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V10M12 19V5M19 19v-8"/><path d="M3.5 19.5h17"/></svg><span>گزارش‌ها</span></button>
           <button class="sidebar-nav-item" type="button" data-nav-target="categories"><svg class="sidebar-nav-icon ui-icon" data-icon-name="categories" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="M4 10h16M9 6v12"/></svg><span>دسته‌بندی‌ها</span></button>
           <button class="sidebar-nav-item" type="button" data-nav-target="security"><svg class="sidebar-nav-icon ui-icon" data-icon-name="security" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 19 7v5c0 4.3-2.7 6.8-7 8-4.3-1.2-7-3.7-7-8V7l7-3Z"/><path d="m9 12 2 2 4-4"/></svg><span>امنیت و دستگاه‌ها</span></button>
+          <button class="sidebar-nav-item" type="button" data-nav-target="support"><svg class="sidebar-nav-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2h-2v-6h4M4 13h4v6H6a2 2 0 0 1-2-2v-4Z"/><path d="M16 19a4 4 0 0 1-4 3h-2"/></svg><span>پشتیبانی و حمایت مالی</span></button>
         </nav>
 
         <div class="sidebar-store-card">
@@ -213,6 +217,18 @@
           <div class="dashboard-grid">
             <!-- UI: خلاصهٔ داشبورد، KPIها، عملیات سریع، نمودار و وضعیت سفارش‌ها. -->
             <section class="dashboard-overview-grid" data-nav-section="dashboard analytics" aria-label="محتوای داشبورد">
+              <article class="quick-actions-panel card-surface" data-nav-section="dashboard" id="dashboardQuickActionsPanel">
+                <div class="panel-heading compact-panel-heading">
+                  <div><p class="card-kicker">دسترسی سریع</p><h2>عملیات روزانه</h2></div>
+                </div>
+                <div class="quick-actions-grid">
+                  <button class="quick-action quick-action--orders" type="button" data-nav-target="orders"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="orders" viewBox="0 0 24 24"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg></span><span>سفارش‌ها</span><span class="quick-action-badge" id="quickOrdersBadge" aria-hidden="true" hidden>۰</span></button>
+                  <button class="quick-action quick-action--products" type="button" data-nav-target="products"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="products" viewBox="0 0 24 24"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg></span><span>محصولات</span></button>
+                  <button class="quick-action quick-action--new-product" type="button" data-nav-target="products" data-action="new-product"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="new-product" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span>افزودن محصول</span></button>
+                  <button class="quick-action quick-action--pos" type="button" data-nav-target="pos"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 8h16v12H4zM7 8V4h10v4M8 12h2M14 12h2M8 16h8"/></svg></span><span>فروش حضوری</span></button>
+                </div>
+              </article>
+
               <section class="dashboard-kpi-grid" id="dashboardKpiGrid" data-nav-section="dashboard" aria-label="شاخص‌های کلیدی فروشگاه">
                 <article class="dashboard-kpi-card dashboard-kpi-card--revenue">
                   <div class="dashboard-kpi-heading"><span class="dashboard-kpi-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="analytics" viewBox="0 0 24 24"><path d="M5 19V10M12 19V5M19 19v-8"/><path d="M3.5 19.5h17"/></svg></span><span>درآمد کل</span></div>
@@ -240,16 +256,11 @@
                 </article>
               </section>
 
-              <article class="quick-actions-panel card-surface" data-nav-section="dashboard" id="dashboardQuickActionsPanel">
-                <div class="panel-heading compact-panel-heading">
-                  <div><p class="card-kicker">دسترسی سریع</p><h2>عملیات روزانه</h2></div>
-                </div>
-                <div class="quick-actions-grid">
-                  <button class="quick-action quick-action--orders" type="button" data-nav-target="orders"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="orders" viewBox="0 0 24 24"><path d="M5 6.5h14v11H5z"/><path d="M8 4.5v4M16 4.5v4M5 10h14"/></svg></span><span>سفارش‌ها</span><span class="quick-action-badge" id="quickOrdersBadge" aria-hidden="true" hidden>۰</span></button>
-                  <button class="quick-action quick-action--products" type="button" data-nav-target="products"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="products" viewBox="0 0 24 24"><path d="m4 8 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg></span><span>محصولات</span></button>
-                  <button class="quick-action quick-action--new-product" type="button" data-nav-target="products" data-action="new-product"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="new-product" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span>افزودن محصول</span></button>
-                  <button class="quick-action quick-action--customers" type="button" data-nav-target="customers"><span class="quick-action-icon" aria-hidden="true"><svg class="ui-icon" data-icon-name="customers" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5.5 19c.7-3.1 2.8-4.7 6.5-4.7s5.8 1.6 6.5 4.7"/></svg></span><span>مشتریان</span></button>
-                </div>
+              <article class="today-panel card-surface" id="todayPanel" data-nav-section="dashboard" aria-labelledby="todayTitle">
+                <div class="panel-heading compact-panel-heading"><div><p class="card-kicker">عملیات روزانه</p><h2 id="todayTitle">کارهای امروز</h2></div><button class="secondary-button compact-button" id="todayRefresh" type="button">تازه‌سازی</button></div>
+                <p id="todayStatus" role="status">پس از اتصال، کارهای فروشگاه نمایش داده می‌شوند.</p>
+                <div id="todayGroups" class="today-groups"></div>
+                <button class="secondary-button" type="button" data-open-push-settings>تنظیم هشدارهای این گوشی</button>
               </article>
 
               <article class="dashboard-chart-panel card-surface" id="dashboardSalesPanel" data-nav-section="dashboard">
@@ -297,6 +308,7 @@
 
                 <div class="products-toolbar analytics-toolbar">
                   <label class="sr-only" for="analyticsRange">بازهٔ تحلیل</label>
+                  <label class="sr-only" for="analyticsChannel">منبع فروش</label><select class="product-search" id="analyticsChannel"><option value="all">همهٔ فروش‌ها</option><option value="pos">فروش حضوری</option><option value="online">آنلاین و سایر سفارش‌ها</option></select>
                   <select class="product-search analytics-range" id="analyticsRange">
                     <option value="today">امروز</option>
                     <option value="7d">۷ روز اخیر</option>
@@ -324,6 +336,8 @@
                   <div class="analytics-kpi"><span>سفارش‌ها</span><strong id="analyticsOrdersCount">۰</strong><small>در بازهٔ انتخابی</small></div>
                   <div class="analytics-kpi"><span>میانگین سفارش</span><strong id="analyticsAverageOrder">۰ تومان</strong><small>بر اساس سفارش‌های موفق</small></div>
                   <div class="analytics-kpi"><span>مشتریان یکتا</span><strong id="analyticsCustomersCount">۰</strong><small>بدون نمایش دادهٔ حساس</small></div>
+                  <div class="analytics-kpi"><span>خالص فروش</span><strong id="analyticsNetSales">۰</strong><small>پس از بازپرداخت‌ها</small></div>
+                  <div class="analytics-kpi"><span>بازپرداخت</span><strong id="analyticsRefunded">۰</strong><small>سفارش‌های بازهٔ انتخابی</small></div>
                 </div>
 
                 <div class="analytics-content-grid" id="analyticsContent" hidden>
@@ -341,6 +355,7 @@
                     <div class="analytics-product-list" id="analyticsProductList"></div>
                   </section>
                 </div>
+                <div id="analyticsChannels" class="pos-channel-grid" aria-live="polite"></div>
                 <p class="analytics-note" id="analyticsNote" hidden></p>
               </article>
 
@@ -355,6 +370,44 @@
               </article>
             </section>
 
+              <article class="pos-panel card-surface" id="posPanel" data-nav-section="pos" aria-labelledby="posTitle" hidden>
+                <div class="panel-heading">
+                  <div><p class="card-kicker">صندوق فروشگاه</p><h2 id="posTitle">فروش حضوری</h2><p class="panel-description">کالا را انتخاب کنید، فاکتور را بررسی کنید و پس از دریافت وجه، فروش را ثبت کنید.</p></div>
+                  <button id="posNewSale" class="secondary-button" type="button">فروش جدید</button>
+                </div>
+                <p id="posMessage" class="pos-message" role="status" aria-live="polite"></p>
+                <div class="pos-workspace" id="posWorkspace">
+                  <section class="pos-catalog" aria-labelledby="posCatalogTitle">
+                    <h3 id="posCatalogTitle">انتخاب کالا</h3>
+                    <div class="pos-search-row"><label class="sr-only" for="posProductSearch">جست‌وجوی کالای فروش حضوری</label><input id="posProductSearch" type="search" data-barcode-search placeholder="نام کالا، SKU یا بارکد…" autocomplete="off"><label class="sr-only" for="posCategory">دسته‌بندی کالا</label><select id="posCategory"><option value="">همهٔ دسته‌ها</option></select></div>
+                    <p class="pos-hint">جست‌وجوی صوتی و دوربین کنار کادر جست‌وجو هستند. بارکدخوان USB نیز با کلید Enter کار می‌کند.</p>
+                    <div class="pos-variation-heading" id="posVariationHeading" hidden><strong id="posVariationName"></strong><button class="text-link-button" id="posBackCatalog" type="button">بازگشت به کالاها</button></div>
+                    <div class="pos-product-grid" id="posProducts" aria-live="polite"></div>
+                    <button id="posMoreProducts" class="secondary-button" type="button" hidden>کالاهای بیشتر</button>
+                  </section>
+                  <section class="pos-checkout" aria-labelledby="posCartTitle">
+                    <div class="pos-cart-heading"><h3 id="posCartTitle">فاکتور جاری</h3><span id="posCartCount">۰ کالا</span></div>
+                    <div id="posCart" class="pos-cart"></div>
+                    <p class="pos-hint">قیمت هر ردیف قابل اصلاح است؛ قیمت اصلی محصول تغییر نمی‌کند. مالیات در مرحلهٔ بررسی با تنظیمات فروشگاه محاسبه می‌شود.</p>
+                    <details class="pos-customer"><summary>مشتری این فاکتور · انتخاب یا معرفی</summary>
+                      <label for="posCustomerMode">نوع مشتری</label><select id="posCustomerMode"><option value="guest">مشتری گذری</option><option value="registered">انتخاب مشتری ثبت‌شده</option><option value="new">معرفی مشتری جدید</option></select>
+                      <div id="posCustomerLookup" hidden><label for="posCustomerSearch">جست‌وجوی مشتری</label><input id="posCustomerSearch" type="search" placeholder="نام، تلفن یا ایمیل"><div id="posCustomerResults"></div><p id="posSelectedCustomer" role="status"></p></div>
+                      <div class="pos-fields" id="posCustomerFields">
+                        <label>نام<input id="posCustomerFirst" type="text" maxlength="120" autocomplete="given-name"></label><label>نام خانوادگی<input id="posCustomerLast" type="text" maxlength="120" autocomplete="family-name"></label>
+                        <label>تلفن<input id="posCustomerPhone" type="tel" maxlength="80" autocomplete="tel"></label><label>ایمیل (اختیاری)<input id="posCustomerEmail" type="email" maxlength="120" autocomplete="email"></label>
+                        <label class="pos-wide">نشانی (اختیاری)<input id="posCustomerAddress" type="text" maxlength="255" autocomplete="street-address"></label>
+                      </div>
+                    </details>
+                    <div class="pos-fields pos-discount"><label>نوع تخفیف<select id="posDiscountType"><option value="amount">مبلغ ثابت</option><option value="percent">درصد</option></select></label><label>تخفیف دستی<input id="posDiscountValue" type="text" inputmode="decimal" value="0" autocomplete="off"></label></div>
+                    <label for="posNote">یادداشت فاکتور (اختیاری)</label><textarea id="posNote" rows="2" maxlength="1000"></textarea>
+                    <div class="pos-estimate"><span>جمع کالاها، پیش از تخفیف و محاسبهٔ مالیات</span><strong id="posEstimate">۰</strong></div>
+                    <button id="posReview" class="primary-button" type="button" disabled>بررسی فاکتور و پرداخت</button>
+                    <div id="posRecovery" hidden><p>نتیجهٔ ثبت نامشخص است؛ ابتدا وضعیت همین فروش را بررسی کنید.</p><button class="secondary-button" id="posRecover" type="button">بررسی نتیجهٔ فروش</button><button class="text-link-button" id="posReviewOrder" type="button" hidden>مشاهدهٔ سفارش ایجادشده</button></div>
+                  </section>
+                </div>
+                <details class="pos-guide"><summary>راهنمای راه‌اندازی و کار با صندوق</summary><ol><li>دسترسی مشاهدهٔ کالا، مشاهده و ثبت سفارش و اجازهٔ تغییرات مهم را برای فروشنده فعال کنید؛ برای معرفی مشتری، دسترسی مشتریان هم لازم است.</li><li>برای دوربین و میکروفن، پنل را در HTTPS باز کنید و اجازهٔ دسترسی بدهید؛ در صورت نبود دسترسی، نام یا بارکد را تایپ کنید.</li><li>کالا و تنوع را انتخاب کنید، تعداد، قیمت و تخفیف را تنظیم کنید و مشتری را معرفی کنید.</li><li>مبلغ نهایی را بررسی کنید؛ وجه نقد یا مبلغ کارت‌خوان را دریافت و تأیید کنید. ثبت کارت‌خوان در این صفحه، ثبت رسید پرداخت است.</li><li>پس از ثبت، اندازهٔ A4، A5 یا فیش ۸۰ میلی‌متری را انتخاب کنید؛ در پنجرهٔ چاپ، کاغذ متناظر را انتخاب و سربرگ/پابرگ مرورگر را خاموش کنید.</li></ol><p>فروش حضوری به‌عنوان سفارش پرداخت‌شده و تحویل‌شدهٔ ووکامرس ثبت می‌شود؛ موجودی و گزارش‌ها با فروش آنلاین مشترک‌اند.</p></details>
+              </article>
+
               <!-- UI: کاتالوگ محصولات و کنترل‌های جست‌وجو/فیلتر. -->
               <article class="products-panel card-surface" data-nav-section="products" aria-labelledby="productsTitle">
               <div class="panel-heading products-heading">
@@ -362,12 +415,11 @@
                   <h2 id="productsTitle">محصولات</h2>
                   <p class="panel-description">محصولات فروشگاه را جست‌وجو و در کارت‌های خلاصه بررسی کنید.</p>
                 </div>
-                <span class="state-badge products-state-badge" id="productsStateBadge" data-state="secure">نیازمند اتصال امن</span>
-                <button class="secondary-button icon-refresh-button products-refresh" id="refreshProducts" type="button" aria-label="تلاش دوباره برای محصولات" title="تلاش دوباره"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تلاش دوباره برای محصولات</span></button>
-              </div>
-
-              <div class="products-actions-row">
-                <button class="primary-button compact-button products-action-button" id="newProductButton" type="button">محصول جدید</button>
+                <button class="primary-button compact-button section-create-button" id="newProductButton" type="button">محصول جدید</button>
+                <div class="orders-state-actions" aria-label="وضعیت اتصال محصولات">
+                  <span class="state-badge products-state-badge" id="productsStateBadge" data-state="secure">نیازمند اتصال امن</span>
+                  <button class="secondary-button icon-refresh-button products-refresh orders-refresh" id="refreshProducts" type="button" aria-label="تلاش دوباره برای محصولات" title="تلاش دوباره"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تلاش دوباره برای محصولات</span></button>
+                </div>
               </div>
 
               <div class="products-toolbar products-toolbar-controls">
@@ -591,7 +643,6 @@
             <article class="bulk-price-panel card-surface bulk-price-workflow" data-nav-section="bulk-price" id="bulkPricePanel" aria-labelledby="bulkPriceTitle" hidden>
               <header class="bulk-price-panel-header">
                 <h2 id="bulkPriceTitle">تغییر قیمت محصولات</h2>
-                <button class="secondary-button compact-button bulk-price-button" id="closeBulkPrice" type="button">بازگشت به محصولات</button>
               </header>
 
               <ol class="bulk-price-steps" aria-label="مراحل تغییر قیمت">
@@ -737,13 +788,15 @@
                   <h2 id="categoriesTitle">دسته‌بندی‌ها</h2>
                   <p class="panel-description">دسته‌بندی‌های product_cat را بدون ورود به wp-admin بسازید و ویرایش کنید.</p>
                 </div>
-                <span class="state-badge products-state-badge" id="categoriesStateBadge" data-state="secure">نیازمند اتصال امن</span>
-                <button class="secondary-button icon-refresh-button products-refresh" id="refreshCategories" type="button" aria-label="تلاش دوباره برای دسته‌بندی‌ها" title="تلاش دوباره"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تلاش دوباره برای دسته‌بندی‌ها</span></button>
+                <button class="primary-button compact-button section-create-button" id="newCategoryButton" type="button">دسته‌بندی جدید</button>
+                <div class="orders-state-actions" aria-label="وضعیت اتصال دسته‌بندی‌ها">
+                  <span class="state-badge products-state-badge" id="categoriesStateBadge" data-state="secure">نیازمند اتصال امن</span>
+                  <button class="secondary-button icon-refresh-button products-refresh orders-refresh" id="refreshCategories" type="button" aria-label="تلاش دوباره برای دسته‌بندی‌ها" title="تلاش دوباره"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تلاش دوباره برای دسته‌بندی‌ها</span></button>
+                </div>
               </div>
               <div class="products-toolbar">
                 <label class="sr-only" for="categorySearch">جست‌وجوی دسته‌بندی‌ها</label>
                 <input id="categorySearch" class="product-search" type="search" placeholder="جست‌وجوی دسته‌بندی" autocomplete="off">
-                <button class="primary-button compact-button" id="newCategoryButton" type="button">دسته‌بندی جدید</button>
               </div>
               <form class="product-editor" id="categoryEditor" hidden>
                 <div class="product-editor-heading"><div><p class="card-kicker">عملیات دسته‌بندی</p><h3 id="categoryEditorTitle">ساخت دسته‌بندی</h3></div><button class="secondary-button compact-button" id="cancelCategoryEdit" type="button">انصراف</button></div>
@@ -855,7 +908,8 @@
                   <div class="order-detail-content order-view-content" id="orderDetailContent" role="tabpanel" tabindex="-1" aria-labelledby="orderViewTab-overview"></div>
                   <div class="order-modal-footer order-detail-footer">
                     <button class="primary-button" id="orderDetailEdit" type="button">ویرایش سفارش</button>
-                    <button class="secondary-button" id="orderDetailCloseFooter" type="button">بستن</button>
+                    <button class="secondary-button" id="orderPrintInvoice" type="button">چاپ فاکتور</button>
+                  <button class="secondary-button" id="orderDetailCloseFooter" type="button">بستن</button>
                   </div>
                 </section>
               </div>
@@ -914,8 +968,11 @@
             <article class="customers-panel card-surface" data-nav-section="customers" aria-labelledby="customersTitle">
               <div class="panel-heading products-heading">
                 <div><h2 id="customersTitle">مشتریان</h2><p class="panel-description">مشتریان ثبت‌شده را برای پیگیری سفارش و ارتباط عملیاتی مرور کنید.</p></div>
-                <span class="state-badge products-state-badge" id="customersStateBadge" data-state="secure">نیازمند اتصال امن</span>
-                <button class="secondary-button icon-refresh-button products-refresh" id="refreshCustomers" type="button" aria-label="تلاش دوباره برای مشتریان" title="تلاش دوباره"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تلاش دوباره برای مشتریان</span></button>
+                <button class="primary-button compact-button section-create-button" id="newCustomerButton" type="button">مشتری جدید</button>
+                <div class="orders-state-actions" aria-label="وضعیت اتصال مشتریان">
+                  <span class="state-badge products-state-badge" id="customersStateBadge" data-state="secure">نیازمند اتصال امن</span>
+                  <button class="secondary-button icon-refresh-button products-refresh orders-refresh" id="refreshCustomers" type="button" aria-label="تلاش دوباره برای مشتریان" title="تلاش دوباره"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تلاش دوباره برای مشتریان</span></button>
+                </div>
               </div>
               <div class="products-toolbar customers-toolbar-controls">
                 <label class="sr-only" for="customerSearch">جست‌وجوی مشتریان</label>
@@ -924,7 +981,6 @@
                   <svg class="ui-icon" data-icon-name="filter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z"/></svg>
                   <span class="customers-filter-label">فیلتر</span>
                 </button>
-                <button class="primary-button compact-button" id="newCustomerButton" type="button">مشتری جدید</button>
                 <div class="customer-filter-backdrop" id="customerFilterBackdrop" hidden aria-hidden="true"></div>
                 <div class="management-filter-panel customer-filter-panel" id="customerFilterPanel" role="dialog" aria-labelledby="customerFilterTitle" aria-modal="true" hidden>
                   <div class="management-filter-header">
@@ -1025,10 +1081,13 @@
             <article class="operations-panel card-surface coupons-panel" data-nav-section="coupons" aria-labelledby="couponsTitle">
               <div class="panel-heading products-heading">
                 <div><h2 id="couponsTitle">کوپن‌ها</h2><p class="panel-description">کوپن درصدی، مبلغ ثابت، محدودیت مصرف و تاریخ انقضا را مدیریت کنید.</p></div>
-                <span class="state-badge products-state-badge" id="couponsStateBadge" data-state="secure">نیازمند اتصال امن</span>
-                <button class="secondary-button icon-refresh-button products-refresh" id="refreshCoupons" type="button" aria-label="تازه‌سازی کوپن‌ها" title="تازه‌سازی کوپن‌ها"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تازه‌سازی کوپن‌ها</span></button>
+                <button class="primary-button compact-button section-create-button" id="newCouponButton" type="button">کوپن جدید</button>
+                <div class="orders-state-actions" aria-label="وضعیت اتصال کوپن‌ها">
+                  <span class="state-badge products-state-badge" id="couponsStateBadge" data-state="secure">نیازمند اتصال امن</span>
+                  <button class="secondary-button icon-refresh-button products-refresh orders-refresh" id="refreshCoupons" type="button" aria-label="تازه‌سازی کوپن‌ها" title="تازه‌سازی کوپن‌ها"><svg class="ui-icon" data-icon-name="refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-3L4 10"></path><path d="M4 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.8 3L20 14"></path><path d="M20 19v-5h-5"></path></svg><span class="sr-only">تازه‌سازی کوپن‌ها</span></button>
+                </div>
               </div>
-              <div class="products-toolbar"><label class="sr-only" for="couponSearch">جست‌وجوی کوپن</label><input id="couponSearch" class="product-search" type="search" placeholder="کد کوپن" autocomplete="off"><button class="primary-button compact-button" id="newCouponButton" type="button">کوپن جدید</button></div>
+              <div class="products-toolbar"><label class="sr-only" for="couponSearch">جست‌وجوی کوپن</label><input id="couponSearch" class="product-search" type="search" placeholder="کد کوپن" autocomplete="off"></div>
               <!-- UI: مودال مشترک ساخت و ویرایش کوپن. -->
               <div class="product-editor-overlay coupon-editor-overlay" id="couponEditorOverlay" hidden>
                 <div class="product-editor-backdrop" data-close-coupon-editor aria-hidden="true"></div>
@@ -1172,6 +1231,32 @@
                 <div class="audit-grid" id="auditGrid" role="region" aria-label="فهرست رویدادها" hidden></div>
               </section>
             </article>
+
+            <article class="support-panel" data-nav-section="support" aria-labelledby="supportTitle">
+              <header class="support-panel-heading">
+                <p class="card-kicker">همراه فندوق</p>
+                <h2 id="supportTitle">پشتیبانی و حمایت مالی</h2>
+              </header>
+              <div class="support-grid">
+                <section class="support-contact-card card-surface" aria-labelledby="supportContactTitle">
+                  <span class="support-card-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 0 1-8 8 8.6 8.6 0 0 1-3.7-.9L4 20l1.4-4.2A8.4 8.4 0 0 1 4 11.5a8 8 0 0 1 16 0Z"/><path d="M9 9c.4 2.2 1.8 3.6 4 4.3l1.5-1 1.4 1.3c-.8 1.5-2 2-3.8 1.4-2.2-.7-4.5-3-5-5.1-.3-1.4.2-2.5 1.5-3.2L10 8Z"/></svg></span>
+                  <h3 id="supportContactTitle">نیاز به راهنمایی دارید؟</h3>
+                  <p>فندوق منیجر مدیریت سفارش‌ها، محصولات، مشتریان و قیمت‌گذاری ووکامرس را در یک پنل ساده کنار هم می‌آورد. برای پرسش یا گزارش ایراد، در واتساپ پیام بدهید.</p>
+                  <a class="primary-button support-whatsapp-button" href="https://wa.me/989116765709" target="_blank" rel="noopener noreferrer">درخواست پشتیبانی در واتساپ</a>
+                </section>
+                <section class="support-donation-card card-surface" aria-labelledby="supportDonationTitle">
+                  <h3 id="supportDonationTitle">حمایت مالی</h3>
+                  <p>اگر این افزونه به کارتان آمده، می‌توانید با مبلغ دلخواه از توسعهٔ آن حمایت کنید.</p>
+                  <div class="support-bank-card" role="group" aria-label="شماره کارت حمایت مالی به نام شهرام الطافی">
+                    <div class="support-bank-top"><span>فندوق منیجر</span><span class="support-bank-chip" aria-hidden="true"></span></div>
+                    <strong class="support-bank-number" dir="ltr">6219 8619 3196 6922</strong>
+                    <div class="support-bank-bottom"><span>به نام <strong>شهرام الطافی</strong></span><span class="support-bank-mark" aria-hidden="true">ف</span></div>
+                  </div>
+                  <button class="secondary-button compact-button support-copy-button" id="copySupportCardNumber" type="button">کپی شماره کارت</button>
+                  <span class="support-copy-message" id="supportCopyMessage" role="status" aria-live="polite"></span>
+                </section>
+              </div>
+            </article>
           </div>
         </section>
       </main>
@@ -1196,6 +1281,46 @@
     <noscript>
       <div class="noscript-message">برای استفاده از پنل مدیریت، JavaScript را در مرورگر فعال کنید.</div>
     </noscript>
+    <p class="search-assist-status" id="searchAssistStatus" role="status" aria-live="polite" hidden></p>
+    <dialog class="operations-dialog" id="barcodeDialog" aria-labelledby="barcodeTitle">
+      <div class="operations-dialog-heading"><h2 id="barcodeTitle">اسکن بارکد محصول</h2><button type="button" class="secondary-button" id="barcodeClose">بستن</button></div>
+      <video id="barcodeVideo" autoplay playsinline muted aria-label="نمای دوربین اسکن بارکد"></video>
+      <p id="barcodeStatus" role="status">بارکد را مقابل دوربین بگیرید.</p>
+      <p class="operations-help">بارکد باید در SKU یا شناسهٔ جهانی محصول ثبت شده باشد. تصویر دوربین روی همین دستگاه پردازش می‌شود.</p>
+      <form id="barcodeManualForm"><label for="barcodeManualCode">ورود دستی بارکد یا SKU</label><div class="operations-inline"><input id="barcodeManualCode" type="text" maxlength="100" autocomplete="off" dir="ltr"><button type="submit" class="primary-button" id="barcodeLookup">پیدا کردن</button></div></form>
+      <button type="button" class="secondary-button" id="barcodeRestart">شروع دوبارهٔ دوربین</button>
+    </dialog>
+    <dialog class="operations-dialog" id="pushSettingsDialog" aria-labelledby="pushSettingsTitle">
+      <div class="operations-dialog-heading"><h2 id="pushSettingsTitle">هشدارهای این گوشی</h2><button type="button" class="secondary-button" id="pushSettingsClose">بستن</button></div>
+      <p id="pushSettingsStatus" role="status">در حال بررسی...</p>
+      <p class="operations-help">اعلان‌ها با پنل بسته هم دریافت می‌شوند. روی آیفون، وب‌اپ را به صفحهٔ اصلی اضافه کنید و از همان‌جا باز کنید. متن اعلان شامل اطلاعات مشتری نیست.</p>
+      <form id="pushSettingsForm">
+        <label class="operations-checkbox"><input id="pushNewOrder" type="checkbox" checked>سفارش جدید</label>
+        <label class="operations-checkbox"><input id="pushLowStock" type="checkbox" checked>رسیدن موجودی به حد هشدار محصول</label>
+        <label class="operations-checkbox"><input id="pushDelayedOrder" type="checkbox" checked>سفارش معطل ارسال بیش از ۴۸ ساعت</label>
+        <p class="operations-help" id="pushTimezone">ساعت سکوت بر اساس منطقهٔ زمانی فروشگاه است؛ هشدارها پس از آن تجمیع و ارسال می‌شوند.</p>
+        <div class="operations-quiet-hours"><label>شروع سکوت<input id="pushQuietStart" type="time"></label><label>پایان سکوت<input id="pushQuietEnd" type="time"></label></div>
+        <div class="operations-inline"><button class="primary-button" id="pushEnable" type="submit">فعال‌کردن اعلان‌ها</button><button class="secondary-button" id="pushDisable" type="button" disabled>خاموش‌کردن</button><button class="secondary-button" id="pushTest" type="button" disabled>اعلان آزمایشی</button></div>
+      </form>
+    </dialog>
+    <dialog id="posPaymentDialog" class="pos-dialog" aria-labelledby="posPaymentTitle">
+      <div class="pos-dialog-heading"><h2 id="posPaymentTitle">بررسی فاکتور و دریافت پرداخت</h2><button id="posPaymentClose" type="button" class="secondary-button">بازگشت به فاکتور</button></div>
+      <div id="posQuoteSummary"></div><p id="posPaymentMessage" role="alert"></p>
+      <form id="posPaymentForm">
+        <label for="posPaymentMethod">روش پرداخت</label><select id="posPaymentMethod"><option value="cash">نقدی</option><option value="card">کارت‌خوان</option><option value="mixed">نقدی و کارت‌خوان</option></select>
+        <div class="pos-fields"><label id="posCashLabel">وجه نقد دریافت‌شده<input id="posCashReceived" type="text" inputmode="decimal" autocomplete="off"></label><label id="posCardLabel" hidden>مبلغ کارت‌خوان<input id="posCardAmount" type="text" inputmode="decimal" autocomplete="off"></label><label class="pos-wide" id="posReferenceLabel" hidden>شمارهٔ پیگیری (اختیاری)<input id="posPaymentReference" type="text" maxlength="80" autocomplete="off"></label></div>
+        <p id="posChange" class="pos-payment-total" aria-live="polite"></p>
+        <label class="operations-checkbox"><input id="posPaymentReceived" type="checkbox" required>وجه نقد و/یا رسید موفق کارت‌خوان را دریافت و بررسی کرده‌ام.</label>
+        <button id="posSubmit" class="primary-button" type="submit">ثبت فروش و صدور فاکتور</button>
+      </form>
+    </dialog>
+    <dialog id="invoiceDialog" class="pos-dialog invoice-dialog" aria-labelledby="invoiceDialogTitle">
+      <div class="pos-dialog-heading"><h2 id="invoiceDialogTitle">پیش‌نمایش و چاپ فاکتور</h2><button id="invoiceClose" class="secondary-button" type="button">بستن</button></div>
+      <div class="pos-print-toolbar"><label for="invoicePaper">اندازهٔ کاغذ</label><select id="invoicePaper"><option value="a4">A4</option><option value="a5">A5</option><option value="receipt">فیش ۸۰ میلی‌متری</option></select><button id="invoicePrint" class="primary-button" type="button" disabled>چاپ فاکتور</button></div>
+      <p id="invoiceMessage" role="status"></p><p class="pos-hint">اندازهٔ کاغذ و چاپگر را در پنجرهٔ چاپ هم انتخاب کنید؛ سربرگ و پابرگ مرورگر را خاموش کنید.</p><div id="invoicePreview" class="invoice-preview"></div>
+    </dialog>
+    <script src="./pos.js" defer></script>
+    <script src="./operations.js" defer></script>
     <script src="./app.js" defer></script>
   </body>
 </html>

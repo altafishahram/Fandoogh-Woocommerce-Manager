@@ -8,9 +8,9 @@ const test = require("node:test");
 const vm = require("node:vm");
 
 const source = fs.readFileSync(path.join(__dirname, "../app/sw.js"), "utf8");
-const CACHE_NAME = "fandoogh-manager-shell-v39";
+const CACHE_NAME = "fandoogh-manager-shell-v43";
 const ASSET_QUERY = "fandoogh_manager_asset";
-const FILENAMES = ["styles.css", "app.js", "fonts.css", "ui.css", "manifest.webmanifest"];
+const FILENAMES = ["styles.css", "app.js", "operations.js", "pos.js", "pos.css", "invoice.css", "barcode-reader.js", "fonts.css", "ui.css", "manifest.webmanifest"];
 const CASES = [
   { name: "local static root", origin: "http://127.0.0.1:4173", base: "/", query: false },
   { name: "query root", origin: "https://example.test", base: "/", query: true },
@@ -36,7 +36,7 @@ function response(body, { status = 200, type = "basic" } = {}) {
 function loadWorker(url, { failedAdds = [], failPut = false } = {}) {
   const handlers = new Map();
   const buckets = new Map();
-  const calls = { add: [], open: [], put: [], match: [], fetch: [], delete: [], lifecycle: [], skipWaiting: 0, errors: 0 };
+  const calls = { add: [], open: [], put: [], match: [], fetch: [], delete: [], lifecycle: [], skipWaiting: 0, errors: 0, notifications: [], opened: [] };
   const errorResponse = response("", { status: 0, type: "error" });
   let network = () => response("network");
 
@@ -60,7 +60,8 @@ function loadWorker(url, { failedAdds = [], failPut = false } = {}) {
         handlers.set(type, handler);
       },
       async skipWaiting() { calls.skipWaiting += 1; },
-      clients: { async claim() { calls.lifecycle.push("claim"); } },
+      registration: { async showNotification(title, options) { calls.notifications.push({ title, options }); } },
+      clients: { async claim() { calls.lifecycle.push("claim"); }, async matchAll() { return []; }, async openWindow(url) { calls.opened.push(url); } },
     },
     caches: {
       async open(name) {
@@ -138,6 +139,18 @@ function loadWorker(url, { failedAdds = [], failPut = false } = {}) {
 }
 
 for (const scenario of CASES) {
+  test(`${scenario.name}: push renders safely and clicks stay in the app scope`, async () => {
+    const worker = loadWorker(workerUrl(scenario));
+    await worker.dispatch('push', { data: { json: () => ({ kind: 'low_stock', body: 'کمبود موجودی', url: 'https://evil.test/' }) } });
+    assert.equal(worker.calls.notifications[0].options.tag, 'fandoogh-low_stock');
+    let closed = false;
+    await worker.dispatch('notificationclick', { notification: { close() { closed = true; }, data: { url: 'https://evil.test/' } } });
+    assert.equal(closed, true);
+    assert.deepEqual(worker.calls.opened, [scenario.origin + scenario.base + '#dashboard']);
+    await worker.dispatch('push', { data: { json() { throw new Error('bad JSON'); } } });
+    assert.equal(worker.calls.notifications[1].options.body, 'کارهای فروشگاه را در پنل بررسی کنید.');
+    assert.equal(worker.calls.fetch.length, 0);
+  });
   test(`${scenario.name}: precache URLs retain the base, route style, and fingerprint`, async () => {
     const worker = loadWorker(workerUrl(scenario));
     const result = await worker.dispatch("install");
@@ -147,6 +160,11 @@ for (const scenario of CASES) {
       scenario.base,
       `${prefix}styles.css${suffix}`,
       `${prefix}app.js${suffix}`,
+      `${prefix}operations.js${suffix}`,
+      `${prefix}pos.js${suffix}`,
+      `${prefix}pos.css${suffix}`,
+      `${prefix}invoice.css${suffix}`,
+      `${prefix}barcode-reader.js${suffix}`,
       `${prefix}fonts.css${suffix}`,
       `${prefix}ui.css${suffix}`,
       `${prefix}manifest.webmanifest${suffix}`,
@@ -154,7 +172,7 @@ for (const scenario of CASES) {
     assert.deepEqual(worker.calls.open, [CACHE_NAME]);
     assert.equal(result.waitUntilCount, 1);
     assert.equal(worker.calls.skipWaiting, 0, "installation must preserve the update prompt");
-    assert.equal(worker.buckets.get(CACHE_NAME).size, 6);
+    assert.equal(worker.buckets.get(CACHE_NAME).size, FILENAMES.length + 1);
   });
 
   test(`${scenario.name}: allow only the public shell and exact query/legacy assets`, async () => {
@@ -187,6 +205,7 @@ for (const scenario of CASES) {
     const base = scenario.base;
     const denied = [
       "/wp-json", "/wp-json/", "/wp-json/fandoogh-manager/v1/config",
+      "/wp-json/fandoogh-manager/v1/pos/sales", "/wp-json/fandoogh-manager/v1/orders/91/invoice",
       "/shop/wp-json", "/shop/wp-json/fandoogh-manager/v1/auth/login",
       "/shop/?rest_route=/fandoogh-manager/v1/config",
       `${base}wp-json`, `${base}wp-json/fandoogh-manager/v1/config`,
@@ -277,7 +296,7 @@ test("installation tolerates individual and total precache failures", async () =
       const worker = loadWorker(workerUrl(scenario), { failedAdds });
       assert.equal((await worker.dispatch("install")).waitUntilCount, 1);
       assert.deepEqual(worker.calls.add, available.calls.add, "attempt every public entry");
-      assert.equal(worker.buckets.get(CACHE_NAME).size, 6 - failedAdds.length);
+      assert.equal(worker.buckets.get(CACHE_NAME).size, FILENAMES.length + 1 - failedAdds.length);
     }
   }
 });

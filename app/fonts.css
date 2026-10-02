@@ -1,11 +1,11 @@
-/*
- * Fandoogh Manager font entry point.
- *
- * WordPress replaces this sheet with the same-origin, generated font CSS when
- * an administrator has uploaded a managed local font. Keeping a local
- * fallback file makes the static preview and offline shell deterministic when
- * no managed font has been configured yet.
+/* Vazir v30.1.0, bundled under SIL Open Font License 1.1 (assets/fonts/vazir/OFL.txt).
+ * PHP expands the relative asset path when this sheet is served through WordPress.
+ * Direct stylesheet URLs also work for wp-admin and the local preview.
  */
-:root {
-  --fandoogh-font-source: local("FandooghLocal");
+@font-face {
+  font-family: "Vazir";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/vazir/Vazir-Variable.woff2") format("woff2");
 }

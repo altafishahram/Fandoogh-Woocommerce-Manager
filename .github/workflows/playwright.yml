@@ -67,6 +67,12 @@ jobs:
           npm run test:admin
           npm run test:analytics
 
+      - name: Run operational access and Web Push encryption checks
+        run: npm run test:operations
+
+      - name: Run POS checkout and invoice backend contracts
+        run: npm run test:pos
+
       - name: Run browser regression checks
         run: npm run test:e2e:preview
         env:

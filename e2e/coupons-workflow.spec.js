@@ -154,7 +154,8 @@ test('coupon cards stay compact and view modal supports edit and delete actions'
   await page.locator('.coupon-card-view-button').first().click();
   const detail = page.locator('#couponDetailDialog');
   await expect(detail).toBeVisible();
-  await expect(detail).toContainText('LEGACY01');
+  // Display digits are Persian; the editable identifier remains exact ASCII.
+  await expect(detail).toContainText('LEGACY۰۱');
   await expect(detail).toContainText('میزان مصرف');
   await expect(detail).toContainText('تاریخ انقضا');
   await page.locator('#editCouponFromDetail').click();
@@ -171,7 +172,7 @@ test('coupon cards stay compact and view modal supports edit and delete actions'
   ]);
   await expect(page.locator('#couponDetailOverlay')).toBeHidden();
   await expect(page.locator('#couponsGrid .coupon-card')).toHaveCount(20);
-  await expect(page.locator('#couponsGrid')).not.toContainText('LEGACY01');
+  await expect(page.locator('#couponsGrid')).not.toContainText('LEGACY۰۱');
 });
 
 test('shows a list-refresh failure after saving instead of claiming there are no coupons', async ({ page }) => {

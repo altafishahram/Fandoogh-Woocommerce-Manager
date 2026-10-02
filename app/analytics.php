@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require_once __DIR__ . '/composition/orders.php';
 require_once __DIR__ . '/composition/products.php';
+require_once __DIR__ . '/pos.php';
 
 const ANALYTICS_PAGE_SIZE = 100;
 const ANALYTICS_MAX_PAGES = 25;
@@ -159,7 +160,7 @@ function analytics_resolve_range( $request ) {
  * @param array<string, string> $range Resolved range.
  * @return array{orders: array<int, object>, truncated: bool}|\WP_Error
  */
-function analytics_fetch_orders( $range ) {
+function analytics_fetch_orders( $range, $channel = 'all' ) {
 	if ( ! function_exists( 'wc_get_orders' ) ) {
 		return new \WP_Error( 'fandoogh_woocommerce_inactive', __( 'WooCommerce برای تحلیل فروش فعال نیست.', 'fandoogh-manager' ), array( 'status' => 503 ) );
 	}
@@ -171,7 +172,7 @@ function analytics_fetch_orders( $range ) {
 	try {
 		for ( $page = 1; $page <= ANALYTICS_MAX_PAGES; $page++ ) {
 			$result = $repository->query(
-				array(
+				pos_channel_query_args( array(
 					'limit'       => ANALYTICS_PAGE_SIZE,
 					'paged'       => $page,
 					'paginate'     => true,
@@ -179,7 +180,7 @@ function analytics_fetch_orders( $range ) {
 					'order'        => 'DESC',
 					'date_created' => $range['start'] . '...' . $range['end'],
 					'return'       => 'objects',
-				)
+				), $channel )
 			);
 
 			if ( is_wp_error( $result ) || ! is_object( $result ) || ! isset( $result->orders ) || ! is_array( $result->orders ) ) {
@@ -259,7 +260,9 @@ function get_analytics_summary( $request ) {
 		return $range;
 	}
 
-	$collection = analytics_fetch_orders( $range );
+	$channel = sanitize_key( (string) $request->get_param('channel') ) ?: 'all';
+	if ( ! in_array($channel,array('all','pos','online'),true) ) { return new \WP_Error('fandoogh_analytics_channel',__('منبع فروش معتبر نیست.','fandoogh-manager'),array('status'=>422)); }
+	$collection = analytics_fetch_orders( $range, $channel );
 	if ( is_wp_error( $collection ) ) {
 		return $collection;
 	}
@@ -272,6 +275,7 @@ function get_analytics_summary( $request ) {
 	$unique_customers   = array();
 	$guest_orders       = 0;
 	$product_totals     = array();
+	$channels = array('pos'=>array('orders'=>0,'gross'=>0.0,'refunded'=>0.0,'net'=>0.0),'online'=>array('orders'=>0,'gross'=>0.0,'refunded'=>0.0,'net'=>0.0));
 
 	foreach ( $collection['orders'] as $order ) {
 		if ( ! is_object( $order ) ) {
@@ -284,6 +288,16 @@ function get_analytics_summary( $request ) {
 		}
 
 		$status_counts[ $status ] = isset( $status_counts[ $status ] ) ? $status_counts[ $status ] + 1 : 1;
+		$source = order_sales_channel($order);
+		$channels[$source]['orders']++;
+		// Fully refunded orders retain original gross and their refund, for zero net.
+		if ( in_array($status,array('processing','completed','on-hold','refunded'),true) ) {
+			$amount = (float) analytics_money(method_exists($order,'get_total') ? $order->get_total() : 0);
+			$refund = (float) analytics_money(method_exists($order,'get_total_refunded') ? $order->get_total_refunded() : 0);
+			$channels[$source]['gross'] += $amount;
+			$channels[$source]['refunded'] += $refund;
+			$channels[$source]['net'] += $amount - $refund;
+		}
 
 		$customer_id = absint( method_exists( $order, 'get_customer_id' ) ? $order->get_customer_id() : 0 );
 		if ( $customer_id > 0 ) {
@@ -351,7 +365,12 @@ function get_analytics_summary( $request ) {
 	}
 
 	$currency = get_public_currency();
+	$successful_gross = $gross_sales;
+	$gross_sales = $channels['pos']['gross'] + $channels['online']['gross'];
+	foreach($channels as &$channel_values) { foreach(array('gross','refunded','net') as $key) { $channel_values[$key] = analytics_money($channel_values[$key]); } } unset($channel_values);
 	$data     = array(
+		'channel' => $channel,
+		'channels' => $channels,
 		'range'     => array(
 			'key'       => $range['key'],
 			'label'     => $range['label'],
@@ -361,7 +380,9 @@ function get_analytics_summary( $request ) {
 		'currency'  => $currency,
 		'sales'     => array(
 			'gross'         => analytics_money( $gross_sales ),
-			'average_order' => $successful_orders > 0 ? analytics_money( $gross_sales / $successful_orders ) : '0',
+			'average_order' => $successful_orders > 0 ? analytics_money( $successful_gross / $successful_orders ) : '0',
+			'net' => analytics_money((float)$channels['pos']['net'] + (float)$channels['online']['net']),
+			'refunded' => analytics_money((float)$channels['pos']['refunded'] + (float)$channels['online']['refunded']),
 		),
 		'orders'    => array(
 			'total'      => count( $collection['orders'] ),

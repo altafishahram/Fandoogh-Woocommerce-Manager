@@ -113,7 +113,12 @@ function get_public_fonts() {
  */
 function serve_fonts_css() {
 	$fonts = get_public_fonts();
-	$css   = '/* Fandoogh Manager local font sheet */' . "\n";
+	$css   = file_get_contents( __DIR__ . '/fonts.css' );
+	$css   = false === $css ? '' : $css;
+	$font_base_url = public_asset_url( plugins_url( 'assets/fonts/vazir/', dirname( __DIR__ ) . '/fandoogh-manager.php' ) );
+	if ( $font_base_url ) {
+		$css = str_replace( '../assets/fonts/vazir/', $font_base_url, $css );
+	}
 
 	if ( ! empty( $fonts ) ) {
 		$src = array();

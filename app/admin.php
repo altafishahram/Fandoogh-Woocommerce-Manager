@@ -8,12 +8,12 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 function admin_tabs() {
 	return array(
 		'overview' => array( 'label' => __( 'پیشخوان', 'fandoogh-manager' ), 'icon' => 'dashboard' ),
-		'appearance' => array( 'label' => __( 'ظاهر', 'fandoogh-manager' ), 'icon' => 'art', 'keys' => array( 'colors' ), 'sections' => array( 'theme' ) ),
+		'connection' => array( 'label' => __( 'اتصال گوشی', 'fandoogh-manager' ), 'icon' => 'smartphone', 'keys' => array( 'slug' ), 'sections' => array( 'connection' ) ),
+		'access' => array( 'label' => __( 'دسترسی کاربران', 'fandoogh-manager' ), 'icon' => 'groups' ),
+		'appearance' => array( 'label' => __( 'ظاهر وب‌اپ', 'fandoogh-manager' ), 'icon' => 'art', 'keys' => array( 'colors' ), 'sections' => array( 'theme' ) ),
 		'media' => array( 'label' => __( 'رسانه و فونت', 'fandoogh-manager' ), 'icon' => 'format-image', 'keys' => array( 'image_max_width', 'image_max_height', 'image_quality', 'image_max_bytes', 'keep_original', 'local_fonts' ), 'sections' => array( 'image', 'fonts' ) ),
 		'analytics' => array( 'label' => __( 'گزارش مالی', 'fandoogh-manager' ), 'icon' => 'chart-bar', 'keys' => array( 'analytics_enabled' ), 'sections' => array( 'analytics' ) ),
-		'access' => array( 'label' => __( 'دسترسی کاربران', 'fandoogh-manager' ), 'icon' => 'groups' ),
-		'sessions' => array( 'label' => __( 'نشست‌ها و امنیت', 'fandoogh-manager' ), 'icon' => 'shield', 'keys' => array( 'session_alerts_enabled', 'session_alert_email' ), 'sections' => array( 'session_alerts' ) ),
-		'connection' => array( 'label' => __( 'اتصال و وب‌اپ', 'fandoogh-manager' ), 'icon' => 'smartphone', 'keys' => array( 'slug' ), 'sections' => array( 'connection' ) ),
+		'sessions' => array( 'label' => __( 'دستگاه‌ها و امنیت', 'fandoogh-manager' ), 'icon' => 'shield', 'keys' => array( 'session_alerts_enabled', 'session_alert_email' ), 'sections' => array( 'session_alerts' ) ),
 		'tracking' => array( 'label' => __( 'رهگیری سفارش', 'fandoogh-manager' ), 'icon' => 'location', 'keys' => array( 'order_tracking' ), 'sections' => array( 'order_tracking' ) ),
 	);
 }
@@ -66,30 +66,39 @@ function render_admin_page( $fallback = 'overview' ) {
 	$font = 'media' === $tab ? maybe_handle_font_admin_post() : '';
 	$access = in_array( $tab, array( 'access', 'sessions' ), true ) ? maybe_handle_access_admin_post() : '';
 	echo '<div class="wrap fandoogh-manager-admin-page fandoogh-manager-settings-page" dir="rtl">';
-	echo '<header class="fandoogh-admin-hero"><div><p class="fandoogh-eyebrow">' . esc_html__( 'مرکز مدیریت فروشگاه', 'fandoogh-manager' ) . '</p><h1>Fandoogh Manager</h1><p class="fandoogh-admin-lead">' . esc_html__( 'تنظیمات، دسترسی‌ها و قابلیت‌های وب‌اپ؛ همه در یک پیشخوان.', 'fandoogh-manager' ) . '</p><span class="fandoogh-admin-version">' . esc_html( 'v' . VERSION ) . '</span></div><a class="button button-primary fandoogh-admin-button" href="' . esc_url( app_base_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'باز کردن وب‌اپ ↗', 'fandoogh-manager' ) . '</a></header>';
+	echo '<header class="fandoogh-admin-hero"><div class="fandoogh-admin-brand"><img src="' . esc_url( plugins_url( 'assets/brand/fandoogh-mark.svg', FANDOOGH_MANAGER_FILE ) ) . '" alt="" width="56" height="56"><div><p class="fandoogh-eyebrow">FANDOOGH MANAGER <span class="fandoogh-admin-version">' . esc_html( 'v' . VERSION ) . '</span></p><h1>' . esc_html__( 'مدیریت فندق', 'fandoogh-manager' ) . '</h1><p class="fandoogh-admin-lead">' . esc_html__( 'راه‌اندازی ساده، مدیریت آسان‌تر فروشگاه.', 'fandoogh-manager' ) . '</p></div></div><a class="button button-primary fandoogh-admin-button" href="' . esc_url( app_base_url() ) . '" target="_blank" rel="noopener noreferrer">' . admin_icon( 'smartphone' ) . esc_html__( 'باز کردن وب‌اپ', 'fandoogh-manager' ) . admin_icon( 'arrow' ) . '</a></header>';
 	echo '<nav class="fandoogh-admin-tabs" aria-label="' . esc_attr__( 'بخش‌های مدیریت افزونه', 'fandoogh-manager' ) . '">';
 	foreach ( $tabs as $key => $definition ) {
-		echo '<a class="fandoogh-admin-tab" href="' . esc_url( admin_tab_url( $key ) ) . '"' . ( $key === $tab ? ' aria-current="page"' : '' ) . '><span class="dashicons dashicons-' . esc_attr( $definition['icon'] ) . '" aria-hidden="true"></span>' . esc_html( $definition['label'] ) . '</a>';
+		echo '<a class="fandoogh-admin-tab" href="' . esc_url( admin_tab_url( $key ) ) . '"' . ( $key === $tab ? ' aria-current="page"' : '' ) . '>' . admin_icon( $definition['icon'] ) . esc_html( $definition['label'] ) . '</a>';
 	}
-	echo '</nav><div class="fandoogh-admin-content" data-admin-tab="' . esc_attr( $tab ) . '"><h2 class="fandoogh-admin-page-title">' . esc_html( $tabs[ $tab ]['label'] ) . '</h2>';
+	echo '</nav><div class="fandoogh-admin-content" data-admin-tab="' . esc_attr( $tab ) . '">';
+	render_admin_tab_intro( $tab );
 	settings_errors( OPTION_KEY );
 	if ( 'overview' === $tab ) {
-		render_admin_feature_overview();
-		render_admin_overview();
+		$connections = admin_device_summary();
+		render_admin_feature_overview( $connections );
+		render_admin_guide();
+		render_admin_quick_links();
+		render_admin_overview( $connections );
 	}
 	if ( 'analytics' === $tab ) {
 		render_admin_analytics_help();
+	}
+	if ( 'connection' === $tab ) {
+		echo '<div class="fandoogh-admin-two-column">';
+		render_pairing_admin_section( $pairing );
+		render_admin_connection_help();
+		echo '</div>';
 	}
 	if ( ! empty( $tabs[ $tab ]['sections'] ) ) {
 		render_admin_settings_form( $tab );
 	}
 	if ( 'media' === $tab ) { render_font_admin_section( $font ); }
 	if ( 'connection' === $tab ) {
-		render_pairing_admin_section( $pairing );
-		echo '<section class="fandoogh-admin-card"><h2>' . esc_html__( 'نصب و قابلیت‌های وب‌اپ', 'fandoogh-manager' ) . '</h2><p>' . esc_html__( 'دکمهٔ نصب در مرورگرهای سازگار نمایش داده می‌شود؛ در iOS راهنمای افزودن به صفحهٔ اصلی در دسترس است.', 'fandoogh-manager' ) . '</p><p class="fandoogh-admin-alert fandoogh-admin-alert--info">' . esc_html__( 'چاپ و اشتراک‌گذاری تصویر / PDF: به‌زودی. این قابلیت‌ها هنوز فعال نیستند.', 'fandoogh-manager' ) . '</p></section>';
+		render_admin_app_address();
 	}
 	if ( in_array( $tab, array( 'access', 'sessions' ), true ) ) { render_access_admin_section( $access, $tab ); }
-	echo '</div></div>';
+	echo '</div><footer class="fandoogh-admin-footer"><span>' . esc_html__( 'فندق · مدیریت فروشگاه در دست شما', 'fandoogh-manager' ) . '</span><a class="fandoogh-admin-text-link" href="' . esc_url( admin_tab_url( 'overview' ) . '#fandoogh-admin-guide' ) . '">' . esc_html__( 'راهنمای راه‌اندازی و استفاده', 'fandoogh-manager' ) . admin_icon( 'book' ) . '</a></footer></div>';
 }
 
 /** Keep Settings API callbacks/escaping; render only this tab's registered fields. */
@@ -114,19 +123,143 @@ function render_admin_settings_form( $tab ) {
 	echo '</div></form>';
 }
 
-function render_admin_feature_overview() {
-	$settings = get_settings();
+function render_admin_feature_overview( $connections = null ) {
+	$connections = null === $connections ? admin_device_summary() : $connections;
+	$woocommerce = is_woocommerce_active();
+	$secure = is_ssl();
 	$cards = array(
-		array( 'analytics', ! empty( $settings['analytics_enabled'] ) ? __( 'فعال', 'fandoogh-manager' ) : __( 'غیرفعال', 'fandoogh-manager' ), __( 'نمایش مالی علاوه بر این تنظیم، به مجوز کاربر هم نیاز دارد.', 'fandoogh-manager' ) ),
-		array( 'sessions', ! empty( $settings['session_alerts_enabled'] ) ? __( 'هشدار روشن', 'fandoogh-manager' ) : __( 'هشدار خاموش', 'fandoogh-manager' ), __( 'کنترل دستگاه‌ها، قطع نشست و تنظیم ایمیل امنیتی.', 'fandoogh-manager' ) ),
-		array( 'connection', is_ssl() ? __( 'HTTPS', 'fandoogh-manager' ) : __( 'HTTPS لازم است', 'fandoogh-manager' ), __( 'ساخت کد اتصال یک‌بارمصرف برای حساب واجد شرایط.', 'fandoogh-manager' ) ),
+		array( 'overview', 'box', __( 'ووکامرس', 'fandoogh-manager' ), $woocommerce ? __( 'فعال و آماده', 'fandoogh-manager' ) : __( 'غیرفعال؛ حالت محدود', 'fandoogh-manager' ), $woocommerce ),
+		array( 'connection', 'shield', __( 'اتصال امن', 'fandoogh-manager' ), $secure ? __( 'HTTPS فعال', 'fandoogh-manager' ) : __( 'HTTPS لازم است', 'fandoogh-manager' ), $secure ),
+		array( 'sessions', 'smartphone', __( 'دستگاه‌های متصل', 'fandoogh-manager' ), number_format_i18n( $connections['active'] ) . ' ' . __( 'دستگاه · مشاهده', 'fandoogh-manager' ), true ),
 	);
-	$tabs = admin_tabs();
 	echo '<div class="fandoogh-admin-summary-grid">';
 	foreach ( $cards as $card ) {
-		echo '<a class="fandoogh-admin-summary" href="' . esc_url( admin_tab_url( $card[0] ) ) . '"><span>' . esc_html( $tabs[ $card[0] ]['label'] ) . '</span><strong>' . esc_html( $card[1] ) . '</strong><p>' . esc_html( $card[2] ) . '</p></a>';
+		$url = admin_tab_url( $card[0] ) . ( 'overview' === $card[0] ? '#fandoogh-admin-health' : '' );
+		echo '<a class="fandoogh-admin-summary' . ( $card[4] ? '' : ' fandoogh-admin-summary--warning' ) . '" href="' . esc_url( $url ) . '"><span class="fandoogh-admin-icon-tile">' . admin_icon( $card[1] ) . '</span><div><span>' . esc_html( $card[2] ) . '</span><strong>' . esc_html( $card[3] ) . '</strong></div>' . admin_icon( 'arrow' ) . '</a>';
 	}
 	echo '</div>';
+}
+
+/** Local SVG geometry only; never accepts caller-provided markup. */
+function admin_icon( $name ) {
+	$paths = array(
+		'dashboard' => '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
+		'smartphone' => '<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 5h4M11 18h2"/>',
+		'groups' => '<circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M17 4a3 3 0 0 1 0 6M19 14a5 5 0 0 1 2 4v3"/>',
+		'shield' => '<path d="m12 2 8 4v6c0 5-5 8-8 10-3-2-8-5-8-10V6l8-4Z"/><path d="m8 12 3 3 5-6"/>',
+		'art' => '<path d="M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 1-4 2 2 0 0 1 0-4h3a3 3 0 0 0 3-3c0-4-4-7-9-7Z"/><path d="M7 9h.01M10 6h.01M15 7h.01M6 14h.01"/>',
+		'format-image' => '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m21 16-6-6L3 21"/>',
+		'chart-bar' => '<path d="M3 3v18h18M8 16v-5M13 16V6M18 16V9"/>',
+		'location' => '<path d="m12 2 9 5v10l-9 5-9-5V7l9-5ZM3 7l9 5 9-5M12 12v10M7.5 4.5l9 5"/>',
+		'box' => '<path d="m12 2 9 5v10l-9 5-9-5V7l9-5ZM3 7l9 5 9-5M12 12v10M7.5 4.5l9 5"/>',
+		'arrow' => '<path d="M19 12H5m6-6-6 6 6 6"/>',
+		'book' => '<path d="M12 5v16M12 5C8 2 4 3 2 4v15c4-1 7-1 10 2 3-3 6-3 10-2V4c-2-1-6-2-10 1Z"/>',
+		'bell' => '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',
+		'scan' => '<path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5M7 8v8M10 8v8M14 8v8M17 8v8"/>',
+		'mic' => '<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/>',
+		'list' => '<path d="m3 6 2 2 3-4M11 6h10M3 14l2 2 3-4M11 14h10M11 21h10"/>',
+		'chevron' => '<path d="m6 9 6 6 6-6"/>',
+	);
+	return '<svg class="fandoogh-admin-icon" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' . ( $paths[ $name ] ?? $paths['dashboard'] ) . '</svg>';
+}
+
+/** One read supplies both overview counters; values are from up to 500 recent sessions. */
+function admin_device_summary() {
+	$rows = admin_security_session_rows();
+	$active = 0;
+	$users = array();
+	foreach ( $rows as $row ) {
+		if ( empty( $row['connected'] ) ) { continue; }
+		$active++;
+		$users[ absint( $row['user_id'] ) ] = true;
+	}
+	return array( 'active' => $active, 'users' => count( $users ), 'total' => count( $rows ) );
+}
+
+function render_admin_tab_intro( $tab ) {
+	$copy = array(
+		'overview' => array( __( 'همه‌چیز از اینجا شروع می‌شود', 'fandoogh-manager' ), __( 'وضعیت اتصال را ببینید و قدم بعدی را انتخاب کنید.', 'fandoogh-manager' ) ),
+		'connection' => array( __( 'اتصال گوشی یا رایانه', 'fandoogh-manager' ), __( 'برای هر کاربر، اتصال مخصوص حساب خودش بسازید.', 'fandoogh-manager' ) ),
+		'access' => array( __( 'دسترسی کاربران', 'fandoogh-manager' ), __( 'مشخص کنید هر عضو فروشگاه چه کارهایی انجام دهد.', 'fandoogh-manager' ) ),
+		'appearance' => array( __( 'ظاهر وب‌اپ', 'fandoogh-manager' ), __( 'رنگ‌های وب‌اپ را با هویت فروشگاه هماهنگ کنید.', 'fandoogh-manager' ) ),
+		'media' => array( __( 'رسانه و فونت', 'fandoogh-manager' ), __( 'کیفیت تصویرها و فونت وب‌اپ را تنظیم کنید.', 'fandoogh-manager' ) ),
+		'analytics' => array( __( 'گزارش مالی', 'fandoogh-manager' ), __( 'نمایش گزارش‌ها را فعال کنید و مجوز کاربر را بررسی کنید.', 'fandoogh-manager' ) ),
+		'sessions' => array( __( 'دستگاه‌ها و امنیت', 'fandoogh-manager' ), __( 'دستگاه‌های متصل را بشناسید و اتصال‌های غیرضروری را قطع کنید.', 'fandoogh-manager' ) ),
+		'tracking' => array( __( 'رهگیری سفارش', 'fandoogh-manager' ), __( 'اطلاعات و لینک‌های رهگیری مرسوله‌ها را تنظیم کنید.', 'fandoogh-manager' ) ),
+	);
+	$text = $copy[ $tab ] ?? $copy['overview'];
+	echo '<div class="fandoogh-admin-intro"><div><h2 class="fandoogh-admin-page-title">' . esc_html( $text[0] ) . '</h2><p>' . esc_html( $text[1] ) . '</p></div>';
+	if ( 'overview' !== $tab ) {
+		echo '<a class="fandoogh-admin-text-link" href="' . esc_url( admin_tab_url( 'overview' ) . '#fandoogh-admin-guide' ) . '">' . esc_html__( 'راهنمای راه‌اندازی', 'fandoogh-manager' ) . admin_icon( 'book' ) . '</a>';
+	}
+	echo '</div>';
+}
+
+/** All guide panels are readable without JS; the local script enhances them into tabs. */
+function render_admin_guide() {
+	$tabs = array( 'setup' => __( 'راه‌اندازی اولیه', 'fandoogh-manager' ), 'daily' => __( 'استفاده روزانه', 'fandoogh-manager' ), 'help' => __( 'رفع مشکل', 'fandoogh-manager' ) );
+	echo '<section class="fandoogh-admin-card fandoogh-admin-guide" id="fandoogh-admin-guide" aria-labelledby="fandoogh-admin-guide-title"><div class="fandoogh-guide-heading"><div class="fandoogh-guide-heading-main"><span class="fandoogh-admin-icon-tile">' . admin_icon( 'book' ) . '</span><div><p class="fandoogh-eyebrow">' . esc_html__( 'راهنمای همراه شما', 'fandoogh-manager' ) . '</p><h2 id="fandoogh-admin-guide-title">' . esc_html__( 'راه‌اندازی و عملکرد افزونه', 'fandoogh-manager' ) . '</h2></div></div><span class="fandoogh-guide-pill">' . esc_html__( 'از اینجا شروع کنید', 'fandoogh-manager' ) . '</span></div>';
+	echo '<nav class="fandoogh-guide-tabs" aria-label="' . esc_attr__( 'راهنمای افزونه', 'fandoogh-manager' ) . '">';
+	foreach ( $tabs as $key => $label ) {
+		echo '<a id="fandoogh-guide-tab-' . esc_attr( $key ) . '" href="#fandoogh-guide-' . esc_attr( $key ) . '" data-guide-tab="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</a>';
+	}
+	echo '</nav><div class="fandoogh-guide-panel" id="fandoogh-guide-setup" aria-labelledby="fandoogh-guide-tab-setup"><h3 class="fandoogh-guide-fallback-title">' . esc_html( $tabs['setup'] ) . '</h3><p class="fandoogh-guide-lead">' . esc_html__( 'برای شروع، این سه قدم را به‌ترتیب انجام دهید.', 'fandoogh-manager' ) . '</p><ol class="fandoogh-setup-grid">';
+	$steps = array(
+		array( __( 'کاربر را آماده کنید', 'fandoogh-manager' ), __( 'کاربر فروشگاه را انتخاب کنید و مشخص کنید به سفارش‌ها، محصولات یا گزارش‌ها دسترسی داشته باشد.', 'fandoogh-manager' ), __( 'تنظیم دسترسی کاربران', 'fandoogh-manager' ), admin_tab_url( 'access' ) ),
+		array( __( 'گوشی را وصل کنید', 'fandoogh-manager' ), __( 'برای همان کاربر کد اتصال بسازید. وب‌اپ را روی گوشی باز کنید و با حساب خودش و کد وارد شوید.', 'fandoogh-manager' ), __( 'ساخت کد اتصال', 'fandoogh-manager' ), admin_tab_url( 'connection' ) ),
+		array( __( 'امکانات گوشی را فعال کنید', 'fandoogh-manager' ), __( 'در وب‌اپ، «هشدارهای این گوشی» را فعال کنید. هنگام اسکن و جستجوی صوتی، اجازهٔ دوربین و میکروفون بدهید.', 'fandoogh-manager' ), __( 'راهنمای استفاده از امکانات', 'fandoogh-manager' ), '#fandoogh-guide-daily' ),
+	);
+	foreach ( $steps as $index => $step ) {
+		echo '<li><span class="fandoogh-step-number" aria-hidden="true">' . esc_html( array( '۱', '۲', '۳' )[ $index ] ) . '</span><h3>' . esc_html( $step[0] ) . '</h3><p>' . esc_html( $step[1] ) . '</p><a class="fandoogh-admin-text-link" href="' . esc_url( $step[3] ) . '">' . esc_html( $step[2] ) . admin_icon( 'arrow' ) . '</a></li>';
+	}
+	echo '</ol><p class="fandoogh-guide-tip">' . admin_icon( 'smartphone' ) . '<span>' . esc_html__( 'روی آیفون، وب‌اپ را از Safari به صفحهٔ اصلی اضافه کنید و برای فعال‌کردن اعلان از همان‌جا باز کنید.', 'fandoogh-manager' ) . '</span></p></div>';
+	echo '<div class="fandoogh-guide-panel" id="fandoogh-guide-daily" aria-labelledby="fandoogh-guide-tab-daily"><h3 class="fandoogh-guide-fallback-title">' . esc_html( $tabs['daily'] ) . '</h3><p class="fandoogh-guide-lead">' . esc_html__( 'کارهای فروشگاه را در وب‌اپ، روی گوشی یا رایانه انجام دهید.', 'fandoogh-manager' ) . '</p><div class="fandoogh-daily-grid">';
+	$features = array(
+		array( 'list', __( 'کارهای امروز', 'fandoogh-manager' ), __( 'از پیشخوان وب‌اپ، پرداخت‌های معطل، سفارش‌های آمادهٔ ارسال و کالاهای کم‌موجودی را پیگیری کنید.', 'fandoogh-manager' ) ),
+		array( 'bell', __( 'هشدارهای گوشی', 'fandoogh-manager' ), __( 'نوع هشدار و ساعت سکوت را انتخاب کنید و «ارسال آزمایشی» را بزنید تا دریافت اعلان را بررسی کنید.', 'fandoogh-manager' ) ),
+		array( 'scan', __( 'اسکن بارکد', 'fandoogh-manager' ), __( 'دکمهٔ اسکن کنار جستجوی کالا را بزنید. بارکد باید در SKU یا شناسهٔ جهانی همان کالا ثبت شده باشد.', 'fandoogh-manager' ) ),
+		array( 'mic', __( 'جستجوی صوتی', 'fandoogh-manager' ), __( 'میکروفون کنار کادر جستجو را بزنید و عبارت فارسی را بگویید. این امکان به پشتیبانی مرورگر نیاز دارد.', 'fandoogh-manager' ) ),
+		array( 'list', __( 'فروش حضوری و چاپ فاکتور', 'fandoogh-manager' ), __( 'در صندوق، کالا و تنوع را انتخاب، قیمت همین فروش و تخفیف را اصلاح و مشتری را معرفی کنید؛ پس از دریافت نقد یا رسید کارت‌خوان، فروش را ثبت کنید. چاپ A4، A5 و فیش ۸۰ میلی‌متری برای فروش حضوری و سفارش‌ها در دسترس است. گزارش مالی منبع فروش را جدا می‌کند.', 'fandoogh-manager' ) ),
+	);
+	foreach ( $features as $feature ) {
+		echo '<article>' . admin_icon( $feature[0] ) . '<div><h3>' . esc_html( $feature[1] ) . '</h3><p>' . esc_html( $feature[2] ) . '</p></div></article>';
+	}
+	echo '</div><p class="fandoogh-guide-tip">' . admin_icon( 'shield' ) . '<span>' . esc_html__( 'هر کاربر فقط امکاناتی را می‌بیند که برای حساب او مجاز شده است.', 'fandoogh-manager' ) . '</span></p></div>';
+	echo '<div class="fandoogh-guide-panel" id="fandoogh-guide-help" aria-labelledby="fandoogh-guide-tab-help"><h3 class="fandoogh-guide-fallback-title">' . esc_html( $tabs['help'] ) . '</h3><p class="fandoogh-guide-lead">' . esc_html__( 'مشکل خود را انتخاب کنید تا قدم بعدی مشخص شود.', 'fandoogh-manager' ) . '</p><div class="fandoogh-guide-faq">';
+	$questions = array(
+		array( __( 'کد اتصال کار نمی‌کند', 'fandoogh-manager' ), __( 'کد یک‌بارمصرف است و زمان اعتبار محدودی دارد. برای همان کاربر کد جدید بسازید و با نام کاربری و رمز خودش وارد شوید.', 'fandoogh-manager' ), 'connection', __( 'ساخت کد جدید', 'fandoogh-manager' ) ),
+		array( __( 'اعلان روی گوشی نمی‌آید', 'fandoogh-manager' ), __( 'در وب‌اپ، فعال‌بودن «هشدارهای این گوشی»، اجازهٔ اعلان مرورگر و ساعت سکوت را بررسی کنید. سپس اعلان آزمایشی بفرستید. روی آیفون، وب‌اپ را از صفحهٔ اصلی باز کنید. ارسال اعلان به اجرای زمان‌بندی سایت نیز وابسته است.', 'fandoogh-manager' ), '', '' ),
+		array( __( 'دوربین یا میکروفون باز نمی‌شود', 'fandoogh-manager' ), __( 'سایت را با HTTPS باز کنید و اجازهٔ دوربین یا میکروفون را در تنظیمات مرورگر بدهید. اگر مرورگر پشتیبانی نمی‌کند، از ورود دستی بارکد یا تایپ عبارت استفاده کنید.', 'fandoogh-manager' ), '', '' ),
+		array( __( 'گزارش مالی را نمی‌بینم', 'fandoogh-manager' ), __( 'گزارش مالی را در تنظیمات فعال کنید و مجوز کاربر را بررسی کنید. اگر مجوز یا تنظیم گزارش تغییر کرده، کد اتصال جدید بسازید و دوباره وارد وب‌اپ شوید.', 'fandoogh-manager' ), 'analytics', __( 'بررسی گزارش مالی', 'fandoogh-manager' ) ),
+	);
+	foreach ( $questions as $question ) {
+		echo '<details><summary>' . esc_html( $question[0] ) . admin_icon( 'chevron' ) . '</summary><p>' . esc_html( $question[1] ) . '</p>';
+		if ( $question[2] ) { echo '<a class="fandoogh-admin-text-link" href="' . esc_url( admin_tab_url( $question[2] ) ) . '">' . esc_html( $question[3] ) . admin_icon( 'arrow' ) . '</a>'; }
+		echo '</details>';
+	}
+	echo '</div></div></section>';
+}
+
+function render_admin_quick_links() {
+	$links = array(
+		array( 'connection', 'smartphone', __( 'اتصال دستگاه جدید', 'fandoogh-manager' ), __( 'ساخت کد برای گوشی یا رایانه', 'fandoogh-manager' ) ),
+		array( 'access', 'groups', __( 'مدیریت کاربران', 'fandoogh-manager' ), __( 'انتخاب مجوز هر عضو فروشگاه', 'fandoogh-manager' ) ),
+		array( 'appearance', 'art', __( 'شخصی‌سازی ظاهر', 'fandoogh-manager' ), __( 'رنگ‌بندی هماهنگ با فروشگاه', 'fandoogh-manager' ) ),
+		array( 'sessions', 'shield', __( 'بررسی دستگاه‌ها', 'fandoogh-manager' ), __( 'مشاهده و قطع اتصال دستگاه‌ها', 'fandoogh-manager' ) ),
+	);
+	echo '<section aria-labelledby="fandoogh-quick-title"><div class="fandoogh-admin-intro"><div><h2 id="fandoogh-quick-title">' . esc_html__( 'تنظیمات پرکاربرد', 'fandoogh-manager' ) . '</h2><p>' . esc_html__( 'مستقیم به کاری بروید که می‌خواهید انجام دهید.', 'fandoogh-manager' ) . '</p></div></div><div class="fandoogh-admin-quick-grid">';
+	foreach ( $links as $link ) {
+		echo '<a href="' . esc_url( admin_tab_url( $link[0] ) ) . '"><span class="fandoogh-admin-icon-tile">' . admin_icon( $link[1] ) . '</span><h3>' . esc_html( $link[2] ) . '</h3><p>' . esc_html( $link[3] ) . '</p>' . admin_icon( 'arrow' ) . '</a>';
+	}
+	echo '</div></section>';
+}
+
+function render_admin_connection_help() {
+	echo '<aside class="fandoogh-admin-card fandoogh-context-help"><h3>' . esc_html__( 'بعد از ساخت کد چه کنم؟', 'fandoogh-manager' ) . '</h3><ol class="fandoogh-admin-checklist"><li>' . esc_html__( 'وب‌اپ فروشگاه را روی گوشی باز کنید.', 'fandoogh-manager' ) . '</li><li>' . esc_html__( 'نام کاربری، رمز و کد همان کاربر را وارد کنید.', 'fandoogh-manager' ) . '</li><li>' . esc_html__( 'وب‌اپ را به صفحهٔ اصلی گوشی اضافه کنید.', 'fandoogh-manager' ) . '</li></ol><p class="fandoogh-guide-tip">' . esc_html__( 'کد را فقط به همان کاربر بدهید؛ هر کد یک‌بار مصرف می‌شود.', 'fandoogh-manager' ) . '</p></aside>';
+}
+
+function render_admin_app_address() {
+	echo '<section class="fandoogh-admin-card fandoogh-app-address"><h3>' . esc_html__( 'نشانی وب‌اپ', 'fandoogh-manager' ) . '</h3><p>' . esc_html__( 'این مسیر را روی گوشی باز کنید.', 'fandoogh-manager' ) . '</p><label class="screen-reader-text" for="fandoogh-app-address">' . esc_html__( 'نشانی وب‌اپ', 'fandoogh-manager' ) . '</label><input id="fandoogh-app-address" type="text" readonly dir="ltr" value="' . esc_attr( app_base_url() ) . '"><div class="fandoogh-app-address-actions"><button type="button" class="button" data-copy-app-address hidden data-copy-success="' . esc_attr__( 'نشانی وب‌اپ کپی شد.', 'fandoogh-manager' ) . '" data-copy-error="' . esc_attr__( 'کپی خودکار ممکن نشد؛ نشانی انتخاب‌شده را دستی کپی کنید.', 'fandoogh-manager' ) . '">' . esc_html__( 'کپی نشانی', 'fandoogh-manager' ) . '</button><a class="button" href="' . esc_url( app_base_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'باز کردن وب‌اپ', 'fandoogh-manager' ) . '</a></div><p role="status" aria-live="polite" data-copy-status></p><p class="fandoogh-guide-tip">' . esc_html__( 'دکمهٔ نصب در مرورگرهای سازگار نمایش داده می‌شود؛ در آیفون از Safari گزینهٔ افزودن به صفحهٔ اصلی را انتخاب کنید.', 'fandoogh-manager' ) . '</p></section>';
 }
 
 function render_admin_analytics_help() {

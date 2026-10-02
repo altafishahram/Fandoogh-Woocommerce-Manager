@@ -18,7 +18,10 @@ function get_current_user_id() { return 1; }
 function get_users( $args = array() ) { return array(); }
 function get_user_by( ...$args ) { return false; }
 function is_wp_error( $value ) { return false; }
-function is_ssl() { return true; }
+function is_ssl() { return $GLOBALS['fixture_ssl'] ?? true; }
+function wp_enqueue_style( ...$args ) { $GLOBALS['fixture_styles'][] = $args; }
+function wp_enqueue_script( ...$args ) { $GLOBALS['fixture_scripts'][] = $args; }
+function wp_add_inline_style( ...$args ) {}
 function admin_url( $path ) { return home_url( 'wp-admin/' . $path ); }
 function wp_die( $message ) { throw new RuntimeException( $message ); }
 function __return_false() { return false; }
@@ -46,6 +49,8 @@ $wpdb = new class {
     public $prefix = 'wp_';
     public $users = 'wp_users';
     public function get_results( $sql ) {
+        $GLOBALS['fixture_session_reads'] = ( $GLOBALS['fixture_session_reads'] ?? 0 ) + 1;
+        if ( isset( $GLOBALS['fixture_session_rows'] ) ) { return $GLOBALS['fixture_session_rows']; }
         return array( (object) array(
             'id' => 7, 'user_id' => 3, 'user_login' => 'manager-test', 'display_name' => 'مدیر آزمایشی',
             'device_label' => 'مرورگر آزمایشی با نام بلند برای بررسی جدول دستگاه‌ها', 'status' => 'active',
@@ -104,10 +109,41 @@ foreach ( array( 'invalid', array( 'appearance' ), 'overview' ) as $invalid ) {
 admin_assert( strpos( admin_test_render( '<script>' ), 'data-admin-tab="overview"' ) !== false, 'Unknown URL falls back safely' );
 admin_assert( strpos( admin_test_render( 'appearance' ), '[analytics_enabled]' ) === false, 'Appearance excludes report setting' );
 admin_assert( strpos( admin_test_render( 'tracking' ), '[order_tracking]' ) !== false, 'Tracking fields included' );
+$GLOBALS['fixture_session_reads'] = 0;
+$overview = admin_test_render( 'overview' );
+admin_assert( 1 === $GLOBALS['fixture_session_reads'], 'Overview counters share one session read' );
+admin_assert( strpos( $overview, '1 دستگاه · مشاهده' ) !== false, 'Device counter comes from active sessions' );
+admin_assert( substr_count( $overview, 'class="fandoogh-guide-panel"' ) === 3 && ! preg_match( '/<div class="fandoogh-guide-panel"[^>]*\shidden/', $overview ), 'All guide panels are readable before JS enhancement' );
+admin_assert( strpos( $overview, 'غیرفعال؛ حالت محدود' ) !== false, 'No WooCommerce means a limited status rather than a success' );
+admin_assert( strpos( $overview, '<details class="fandoogh-admin-card fandoogh-admin-technical"' ) !== false, 'Technical details use native disclosure' );
+admin_assert( strpos( $overview, '۵۰۰ نشست اخیر' ) !== false, 'Bounded session count is disclosed' );
+$GLOBALS['fixture_ssl'] = false;
+$GLOBALS['fixture_session_rows'] = array();
+$empty_overview = admin_test_render( 'overview' );
+admin_assert( strpos( $empty_overview, 'HTTPS لازم است' ) !== false && strpos( $empty_overview, 'HTTPS فعال' ) === false, 'Insecure site shows an actionable HTTPS warning' );
+admin_assert( strpos( $empty_overview, '0 دستگاه · مشاهده' ) !== false, 'No device shows zero rather than sample data' );
+unset( $GLOBALS['fixture_session_rows'], $GLOBALS['fixture_ssl'] );
+define( 'WC_VERSION', 'fixture' );
+admin_assert( strpos( admin_test_render( 'overview' ), 'فعال و آماده' ) !== false, 'WooCommerce status follows current availability' );
+$connection = admin_test_render( 'connection' );
+admin_assert( strpos( $connection, 'value="https://example.test/manager/"' ) !== false, 'App address keeps canonical route after alias changes' );
+admin_assert( strpos( $connection, 'fandoogh_manager_pairing_nonce' ) !== false, 'Pairing retains its independent nonce' );
+admin_assert( strpos( $connection, 'id="fandoogh-admin-guide"' ) === false, 'Other tabs link back to one overview guide' );
+foreach ( array( 'toplevel_page_fandoogh-manager', 'fandoogh-manager_page_fandoogh-manager-settings' ) as $hook ) {
+    $GLOBALS['fixture_styles'] = $GLOBALS['fixture_scripts'] = array();
+    $_GET['tab'] = 'overview';
+    \Fandoogh_Manager\enqueue_admin_assets( $hook );
+    admin_assert( 3 === count( $GLOBALS['fixture_styles'] ) && 1 === count( $GLOBALS['fixture_scripts'] ), 'Both plugin admin pages receive font and guide assets' );
+    admin_assert( $GLOBALS['fixture_styles'][2][2] === array( 'fandoogh-manager-admin' ), 'Friendly stylesheet follows existing styles' );
+    admin_assert( $GLOBALS['fixture_scripts'][0][3] === \Fandoogh_Manager\VERSION, 'Guide cache version follows plugin version' );
+}
+$GLOBALS['fixture_styles'] = $GLOBALS['fixture_scripts'] = array();
+\Fandoogh_Manager\enqueue_admin_assets( 'dashboard' );
+admin_assert( empty( $GLOBALS['fixture_styles'] ) && empty( $GLOBALS['fixture_scripts'] ), 'Other WordPress screens remain unaffected' );
 $GLOBALS['fixture_authorized'] = false;
 $denied = false;
 try { \Fandoogh_Manager\render_admin_page(); } catch ( RuntimeException $error ) { $denied = true; }
 admin_assert( $denied, 'Non-admin cannot render panel or perform its actions' );
 \Fandoogh_Manager\deactivate();
-admin_assert( $GLOBALS['fixture_unscheduled_hooks'] === array( \Fandoogh_Manager\SESSION_ALERT_CRON_HOOK ), 'Deactivation clears all session-alert argument variants' );
+admin_assert( $GLOBALS['fixture_unscheduled_hooks'] === array( \Fandoogh_Manager\OPERATIONS_PUSH_HOOK, \Fandoogh_Manager\OPERATIONS_BATCH_HOOK, \Fandoogh_Manager\OPERATIONS_FLUSH_HOOK, \Fandoogh_Manager\SESSION_ALERT_CRON_HOOK ), 'Deactivation clears all alert argument variants' );
 echo "Admin panel: $checks contract checks passed.\n";

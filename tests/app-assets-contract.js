@@ -17,7 +17,7 @@ if (require.main === module) {
     assert.match(shell.headers['content-type'], /^text\/html/);
     assert.equal(shell.headers['x-content-type-options'], 'nosniff');
     assert.match(shell.headers['content-security-policy'], /script-src 'self'/);
-    const files = { app: 'app.js', styles: 'styles.css', ui: 'ui.css', fonts: 'fonts.css', sw: 'sw.js', manifest: 'manifest.webmanifest' };
+    const files = { app: 'app.js', operations: 'operations.js', pos: 'pos.js', pos_styles: 'pos.css', invoice_styles: 'invoice.css', barcode: 'barcode-reader.js', styles: 'styles.css', ui: 'ui.css', fonts: 'fonts.css', sw: 'sw.js', manifest: 'manifest.webmanifest' };
     for (const [key, file] of Object.entries(files)) {
       const url = new URL(urls[key]);
       assert.equal(url.origin + url.pathname, base + '/manager/');

@@ -50,6 +50,9 @@ function resolveFile(urlPath) {
   if (rel === '/manager/manifest.webmanifest' || rel === '/manifest.webmanifest') {
     return path.join(ROOT, 'manifest.webmanifest');
   }
+  if (rel === '/manager/barcode-reader.js' || rel === '/barcode-reader.js') {
+    return path.join(APP, 'vendor', 'zxing-0.21.3.min.js');
+  }
   if (rel.startsWith('/assets/')) {
     const assetsRoot = path.join(ROOT, 'assets');
     const file = path.join(ROOT, rel.replace(/^\/+/, ''));

@@ -22,7 +22,15 @@ body.fandoogh-manager_page_fandoogh-manager-settings #wpcontent {
   max-width: 1280px;
   padding: 24px 0 48px;
   color: var(--fandoogh-text);
-  font-family: Tahoma, "Segoe UI", Arial, sans-serif;
+  font-family: "Vazir", Tahoma, "Segoe UI", Arial, sans-serif;
+}
+
+.fandoogh-manager-admin-page button,
+.fandoogh-manager-admin-page input,
+.fandoogh-manager-admin-page select,
+.fandoogh-manager-admin-page textarea,
+.fandoogh-manager-admin-page .button {
+  font-family: inherit;
 }
 
 .fandoogh-manager-admin-page *,
