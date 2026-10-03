@@ -1875,6 +1875,7 @@
 
   function setCurrentUser(value, scopes) {
     var source = value && typeof value === "object" ? value : {};
+    state.user.id = Number(source.id) || 0;
     var name = safeText(source.display_name || source.login, "مدیر فروشگاه", 80);
     state.user.displayName = name;
     state.user.role = safeText(source.role_label, "مدیریت فروشگاه", 60);
@@ -3209,6 +3210,7 @@
     }
 
     if (!state.authenticated) {
+      state.user.id = 0;
       state.user.scopes = {};
       closeGlobalSearchResults();
       [state.products, state.customers, state.inventory, state.coupons, state.reviews].forEach(function (collection) {
@@ -8751,6 +8753,7 @@
 
   function openManualOrder() {
     if (!state.authenticated || !userHasScope("orders.create")) return;
+    state.manualOrder.requestKey = "manual-" + makeEphemeralDeviceId();
     state.manualOrder.step = 0;
     state.manualOrder.busy = false;
     state.manualOrder.trigger = elements.newOrderButton;
@@ -8793,7 +8796,7 @@
       payment_method: state.manualOrder.paymentMethod,
       status: state.manualOrder.status,
       payment_complete: Boolean(state.manualOrder.paymentComplete),
-      idempotency_key: "manual-" + makeEphemeralDeviceId()
+      idempotency_key: state.manualOrder.requestKey || (state.manualOrder.requestKey = "manual-" + makeEphemeralDeviceId())
     };
     if (state.manualOrder.customerType === "existing") {
       body.customer_id = Number(state.manualOrder.customerId);

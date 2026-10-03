@@ -1,4 +1,4 @@
-name: Playwright browser checks
+name: Plugin checks
 
 on:
   push:
@@ -53,6 +53,7 @@ jobs:
         run: |
           npm run test:customer-repository
           npm run test:order-repository
+          npm run test:order-safety
           npm run test:security-database
           npm run test:refactor-compatibility
 
@@ -70,6 +71,9 @@ jobs:
       - name: Run operational access and Web Push encryption checks
         run: npm run test:operations
 
+      - name: Run bulk pricing contracts
+        run: npm run test:bulk-pricing
+
       - name: Run POS checkout and invoice backend contracts
         run: npm run test:pos
 
@@ -83,6 +87,14 @@ jobs:
 
       - name: Verify plugin package contents
         run: npm run package:check
+
+      - name: Upload verified installable plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: fandoogh-manager-installable
+          path: dist/fandoogh-manager.zip
+          if-no-files-found: error
+          retention-days: 30
 
       - uses: actions/upload-artifact@v4
         if: failure()

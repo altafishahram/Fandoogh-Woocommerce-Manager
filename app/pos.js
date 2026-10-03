@@ -5,6 +5,7 @@
   var page = 1, pages = 1, parent = 0, catalogLoading = false, catalogEpoch = 0, customerEpoch = 0, generation = 0;
   var products = [], customerId = 0, pendingKey = "", pendingBody = null, invoice = null, printFrame = null;
   var searchTimer, customerTimer, returnFocus, recoveryOrder = 0;
+  var pendingOwner = 0, pendingLegacy = false, pendingClaims = {};
   function el(id) { return document.getElementById(id); }
   function node(tag, text, cls, doc) { var n = (doc || document).createElement(tag); if (text !== undefined) n.textContent = String(text); if (cls) n.className = cls; return n; }
   function clear(n) { if (n) n.replaceChildren(); }
@@ -148,7 +149,15 @@
   }
   function showChange() { if (!quote) return; var rest = Number(digits(el("posCashReceived").value)) + Number(digits(el("posCardAmount").value)) - Number(quote.total); el("posChange").textContent = rest >= 0 ? "باقی‌ماندهٔ وجه نقد: " + money(rest, quote.currency.label) : "ماندهٔ پرداخت: " + money(-rest, quote.currency.label); }
   function uuid() { return window.crypto && crypto.randomUUID ? crypto.randomUUID() : "sale-" + Date.now() + "-" + Math.random().toString(36).slice(2); }
-  function rememberKey() { if (app.state.previewMode) return; try { if (pendingKey) sessionStorage.setItem("fandoogh-pos-pending", pendingKey); else sessionStorage.removeItem("fandoogh-pos-pending"); } catch (ignore) { /* The in-memory claim still protects retries. */ } }
+  function rememberKey() {
+    if (app.state.previewMode || !pendingOwner) return;
+    if (pendingKey) pendingClaims[pendingOwner] = pendingKey; else delete pendingClaims[pendingOwner];
+    try {
+      if (pendingLegacy) { if (!pendingKey) { sessionStorage.removeItem("fandoogh-pos-pending"); pendingLegacy = false; } return; }
+      var key = "fandoogh-pos-pending:" + pendingOwner;
+      if (pendingKey) sessionStorage.setItem(key, pendingKey); else sessionStorage.removeItem(key);
+    } catch (ignore) { /* Keep per-user recovery in memory when storage is unavailable. */ }
+  }
   function finish(snapshot) {
     pendingKey = ""; pendingBody = null; rememberKey(); uncertain = false; recoveryOrder = 0; busy = false;
     if (el("posPaymentDialog").open) el("posPaymentDialog").close(); cart = []; newSale(); openInvoice(snapshot);
@@ -163,6 +172,8 @@
     if (!payment.received || !/^\d{1,12}(?:\.\d{1,6})?$/.test(payment.cash_received) || !/^\d{1,12}(?:\.\d{1,6})?$/.test(payment.card_amount) || c+k < total || k > total || payment.method === "cash" && k !== 0 || payment.method === "card" && (c !== 0 || k !== total) || payment.method === "mixed" && (k <= 0 || k >= total)) { el("posPaymentMessage").textContent = "مبلغ و دریافت وجه را بررسی کنید؛ در پرداخت ترکیبی، بخشی نقدی و بخشی کارت است."; return; }
     busy = true; lock(); var session = generation;
     if (app.state.previewMode) { finish(sampleInvoice(quote, payment)); return; }
+    pendingOwner = Number(app.state.user.id) || 0;
+    if (!pendingOwner) { busy = false; lock(); el("posPaymentMessage").textContent = "هویت فروشنده مشخص نیست؛ دوباره وارد شوید."; return; }
     pendingKey = uuid(); pendingBody = Object.assign({}, quoteBody, { payment: payment, quote_token: quote.quote_token, idempotency_key: pendingKey }); rememberKey();
     el("posPaymentMessage").textContent = "در حال ثبت؛ تا دریافت نتیجه صبر کنید…";
     post("posSalesUrl", pendingBody).then(function (data) { if (session === generation) finish(data.data); }).catch(function (error) {
@@ -259,13 +270,21 @@
     var category=el("posCategory"), selected=category.value; clear(category); var all=node("option","همهٔ دسته‌ها"); all.value=""; category.appendChild(all);
     (app.state.categories.items || []).forEach(function (c) { var option=node("option",c.name); option.value=c.id; category.appendChild(option); }); category.value=selected;
     var options=el("posCustomerMode").options; options[1].disabled=!app.hasScope("customers.read"); options[2].disabled=!app.hasScope("customers.write");
-    try { pendingKey = pendingKey || sessionStorage.getItem("fandoogh-pos-pending") || ""; } catch(ignore) { /* No local claim available. */ }
+    if (!app.state.previewMode && !pendingKey && !busy) {
+      pendingOwner = Number(app.state.user.id) || 0;
+      pendingKey = pendingClaims[pendingOwner] || "";
+      try {
+        pendingKey = pendingKey || sessionStorage.getItem("fandoogh-pos-pending:" + pendingOwner) || "";
+        if (!pendingKey) { pendingKey = sessionStorage.getItem("fandoogh-pos-pending") || ""; pendingLegacy = Boolean(pendingKey); }
+      } catch(ignore) { /* In-memory keys survive logout on this page. */ }
+    }
     if (pendingKey && !app.state.previewMode) { uncertain=true; recover(); }
     renderCart(); loadCatalog(false);
   }
   function reset() {
     if (!app || app.state.authenticated) return;
-    generation++; catalogEpoch++; customerEpoch++; clearTimeout(searchTimer); clearTimeout(customerTimer); cart=[]; products=[]; quote=null; quoteBody=null; invoice=null; busy=false; uncertain=false; pendingKey=""; pendingBody=null; rememberKey(); recoveryOrder=0; customerId=0; parent=0; page=1; pages=1; catalogLoading=false; destroyFrame();
+    rememberKey();
+    generation++; catalogEpoch++; customerEpoch++; clearTimeout(searchTimer); clearTimeout(customerTimer); cart=[]; products=[]; quote=null; quoteBody=null; invoice=null; busy=false; uncertain=false; pendingKey=""; pendingBody=null; pendingOwner=0; pendingLegacy=false; recoveryOrder=0; customerId=0; parent=0; page=1; pages=1; catalogLoading=false; destroyFrame();
     ["invoiceDialog","posPaymentDialog"].forEach(function(id) { if(el(id).open) el(id).close(); }); clear(el("invoicePreview")); clear(el("posProducts")); clear(el("posCustomerResults")); clear(el("analyticsChannels")); clear(el("posQuoteSummary"));
     ["posProductSearch","posPaymentReference","posCashReceived","posCardAmount"].forEach(function(id){el(id).value="";}); el("posVariationHeading").hidden=true; el("posVariationName").textContent=""; el("posPaymentReceived").checked=false; newSale(); renderCart();
   }

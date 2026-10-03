@@ -10,6 +10,7 @@ require_once __DIR__ . '/composition/orders.php';
 require_once __DIR__ . '/composition/customers.php';
 require_once __DIR__ . '/composition/products.php';
 require_once __DIR__ . '/composition/coupons.php';
+require_once __DIR__ . '/order-safety.php';
 
 /**
  * Register authenticated order read and status-update endpoints.
@@ -766,12 +767,9 @@ function orders_create_idempotency_claim( $session, $values ) {
 					'idempotent_replay' => true,
 				);
 			}
-			delete_option( $key );
-		} elseif ( 'processing' === ( isset( $existing['state'] ) ? $existing['state'] : '' ) && $now - absint( isset( $existing['created_at'] ) ? $existing['created_at'] : $now ) < 900 ) {
-			return orders_error( 'fandoogh_order_creation_in_progress', __( 'ثبت همین سفارش هنوز در حال انجام است؛ چند لحظه بعد دوباره بررسی کنید.', 'fandoogh-manager' ), 409 );
-		} else {
-			delete_option( $key );
+			return orders_error( 'fandoogh_order_idempotency_unavailable', __( 'نتیجهٔ سفارش قبلی قابل بازیابی نیست؛ سفارش را بررسی کنید.', 'fandoogh-manager' ), 409 );
 		}
+		return orders_error( 'fandoogh_order_creation_in_progress', __( 'نتیجهٔ همین سفارش هنوز قطعی نیست؛ سفارش را بررسی کنید و دوباره ثبت نکنید.', 'fandoogh-manager' ), 409, array( 'order_id' => $existing['order_id'] ?? 0 ) );
 	}
 
 	$claim = array(
@@ -933,6 +931,7 @@ function orders_refund_idempotency_lookup( $session, $order_id, $idempotency_key
 		}
 		$parent_id = $previous_refund && method_exists( $previous_refund, 'get_parent_id' ) ? absint( $previous_refund->get_parent_id() ) : 0;
 		if ( $previous_refund && method_exists( $previous_refund, 'get_id' ) && $refund_id > 0 && $parent_id === absint( $order_id ) ) {
+			orders_refund_unlock( $order_id, $key );
 			$base['replay_refund']     = $previous_refund;
 			$base['idempotent_replay'] = true;
 			return $base;
@@ -941,12 +940,13 @@ function orders_refund_idempotency_lookup( $session, $order_id, $idempotency_key
 		return orders_error( 'fandoogh_refund_idempotency_unavailable', __( 'نتیجهٔ بازپرداخت قبلی قابل بازیابی نیست؛ از ایجاد بازپرداخت دوم خودداری شد.', 'fandoogh-manager' ), 409 );
 	}
 
-	if ( 'processing' === $state && time() - absint( isset( $existing['created_at'] ) ? $existing['created_at'] : time() ) < 900 ) {
-		return orders_error( 'fandoogh_refund_in_progress', __( 'همین بازپرداخت هم‌زمان در حال انجام است؛ چند لحظه بعد دوباره بررسی کنید.', 'fandoogh-manager' ), 409 );
+	$recovered = orders_refund_recover( $order_id, $key, $existing );
+	if ( $recovered ) {
+		$base['replay_refund'] = $recovered;
+		$base['idempotent_replay'] = true;
+		return $base;
 	}
-
-	delete_option( $key );
-	return $base;
+	return orders_error( 'fandoogh_refund_in_progress', __( 'نتیجهٔ همین بازپرداخت هنوز قطعی نیست؛ سفارش و درگاه را بررسی کنید و بازپرداخت تازه ثبت نکنید.', 'fandoogh-manager' ), 409, array( 'order_id' => $order_id, 'refund_id' => $existing['refund_id'] ?? 0, 'state' => $state ) );
 }
 
 /**
@@ -968,6 +968,7 @@ function orders_refund_idempotency_claim( $session, $order_id, $idempotency_key,
 		'state'       => 'processing',
 		'fingerprint' => $fingerprint,
 		'created_at'  => time(),
+		'order_id'    => $order_id,
 	);
 	if ( ! add_option( $existing['key'], $claim, '', 'no' ) ) {
 		$race = orders_refund_idempotency_lookup( $session, $order_id, $idempotency_key, $fingerprint );
@@ -979,6 +980,7 @@ function orders_refund_idempotency_claim( $session, $order_id, $idempotency_key,
 
 	return array(
 		'key'               => $existing['key'],
+		'order_id'          => $order_id,
 		'fingerprint'       => $fingerprint,
 		'replay_refund'     => false,
 		'idempotent_replay' => false,
@@ -1001,6 +1003,7 @@ function orders_refund_idempotency_complete( $claim, $refund_id ) {
 			'state'        => 'completed',
 			'fingerprint'  => (string) $claim['fingerprint'],
 			'refund_id'    => absint( $refund_id ),
+			'order_id'     => $claim['order_id'] ?? 0,
 			'completed_at' => time(),
 		),
 		false
@@ -1252,8 +1255,10 @@ function create_order( $request ) {
 
 	$order            = false;
 	$order_persisted  = false;
+	$creation_attempted = false;
 	$payment_attempted = false;
 	try {
+		$creation_attempted = true;
 		$order = compose_order_repository()->create(
 			array(
 				'customer_id' => absint( $customer['id'] ),
@@ -1263,6 +1268,10 @@ function create_order( $request ) {
 		if ( is_wp_error( $order ) || ! is_object( $order ) || ! method_exists( $order, 'get_id' ) ) {
 			throw new \RuntimeException( 'order_create_failed' );
 		}
+		$order_id = absint( $order->get_id() );
+		$order_persisted = $order_id > 0;
+		if ( ! $order_persisted ) { throw new \RuntimeException( 'order_create_failed' ); }
+		orders_create_review( $claim, $order_id );
 		if ( method_exists( $order, 'set_customer_id' ) ) {
 			$order->set_customer_id( absint( $customer['id'] ) );
 		}
@@ -1352,18 +1361,35 @@ function create_order( $request ) {
 			orders_create_idempotency_complete( $claim, isset( $order_id ) ? $order_id : 0 );
 			return orders_error( 'fandoogh_order_payment_failed', __( 'سفارش ساخته شد اما تکمیل پرداخت انجام نشد؛ سفارش را از فهرست بررسی کنید.', 'fandoogh-manager' ), 422, array( 'order_id' => isset( $order_id ) ? $order_id : 0 ) );
 		}
+		$rolled_back = ! $creation_attempted;
 		if ( $order_persisted && is_object( $order ) && method_exists( $order, 'delete' ) ) {
 			try {
-				$order->delete( true );
+				$stored_order = compose_order_repository()->findById( $order_id );
+				if ( $stored_order ) {
+					// A hook can complete payment or reduce stock before throwing.
+					if ( method_exists( $stored_order, 'is_paid' ) && $stored_order->is_paid() ) { throw new \RuntimeException( 'order-payment-needs-review' ); }
+					if ( method_exists( $stored_order, 'get_data_store' ) ) {
+						$store = $stored_order->get_data_store();
+						if ( ! method_exists( $store, 'get_stock_reduced' ) || $store->get_stock_reduced( $order_id ) ) { throw new \RuntimeException( 'order-stock-needs-review' ); }
+					}
+					$stored_order->delete( true );
+				}
+				$rolled_back = ! compose_order_repository()->findById( $order_id );
 			} catch ( \Throwable $delete_exception ) {
-				// Keep the idempotency claim released only after best-effort rollback.
+				$rolled_back = false;
 			}
+		}
+		if ( ! $rolled_back ) {
+			orders_create_review( $claim, $order_id ?? 0 );
+			return orders_error( 'fandoogh_order_rollback_failed', __( 'حذف سفارش یا نتیجهٔ ساخت آن تأیید نشد؛ پیش از ثبت دوباره سفارش‌ها را بررسی کنید.', 'fandoogh-manager' ), 409, array( 'order_id' => $order_id ?? 0 ) );
 		}
 		if ( ! empty( $customer['created'] ) && absint( $customer['id'] ) > 0 && function_exists( 'wp_delete_user' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/user.php';
 			wp_delete_user( absint( $customer['id'] ) );
 		}
-		orders_create_idempotency_release( $claim );
+		// Release a persisted review claim only after deletion was confirmed.
+		$current_claim = get_option( $claim['key'], false );
+		if ( is_array( $current_claim ) && hash_equals( $claim['fingerprint'], (string) ( $current_claim['fingerprint'] ?? '' ) ) ) { delete_option( $claim['key'] ); }
 		return orders_error( 'fandoogh_order_creation_failed', __( 'ثبت سفارش انجام نشد؛ اطلاعات کالا، کوپن و روش پرداخت را بررسی کنید.', 'fandoogh-manager' ), 422 );
 	}
 
@@ -1538,47 +1564,37 @@ function order_refund_values( $request, $order ) {
 	}
 	$amount = '';
 	if ( array_key_exists( 'amount', $body ) && '' !== (string) $body['amount'] ) {
-		if ( ! is_scalar( $body['amount'] ) || ! preg_match( '/^(?:0|[1-9][0-9]{0,11})(?:\\.[0-9]{1,6})?$/D', (string) $body['amount'] ) ) {
+		if ( ! is_scalar( $body['amount'] ) || is_bool( $body['amount'] ) || ! preg_match( '/^(?:0|[1-9][0-9]{0,11})(?:\\.[0-9]{1,6})?$/D', (string) $body['amount'] ) ) {
 			return orders_error( 'fandoogh_invalid_refund_amount', __( 'مبلغ بازپرداخت معتبر نیست.', 'fandoogh-manager' ), 422 );
 		}
 		$amount = orders_money( $body['amount'] );
 	}
 	$line_items = array();
-	$computed_amount = 0.0;
+	$computed_amount = 0;
 	if ( isset( $body['line_items'] ) ) {
 		if ( ! is_array( $body['line_items'] ) || count( $body['line_items'] ) > 100 ) {
 			return orders_error( 'fandoogh_invalid_refund_items', __( 'اقلام بازپرداخت معتبر نیستند.', 'fandoogh-manager' ), 422 );
 		}
-		$order_items = method_exists( $order, 'get_items' ) ? (array) $order->get_items( 'line_item' ) : array();
-		foreach ( $body['line_items'] as $key => $raw_item ) {
-			$item_id = is_array( $raw_item ) && isset( $raw_item['item_id'] ) ? absint( $raw_item['item_id'] ) : absint( $key );
-			$quantity = is_array( $raw_item ) && isset( $raw_item['quantity'] ) ? absint( $raw_item['quantity'] ) : 0;
-			if ( $item_id < 1 || $quantity < 1 || ! isset( $order_items[ $item_id ] ) || ! is_object( $order_items[ $item_id ] ) ) {
-				return orders_error( 'fandoogh_invalid_refund_items', __( 'یکی از اقلام بازپرداخت سفارش معتبر نیست.', 'fandoogh-manager' ), 422 );
-			}
-			$current_quantity = absint( orders_getter_value( $order_items[ $item_id ], 'get_quantity' ) );
-			if ( $quantity > $current_quantity ) {
-				return orders_error( 'fandoogh_invalid_refund_quantity', __( 'تعداد بازپرداخت از تعداد سفارش بیشتر است.', 'fandoogh-manager' ), 422 );
-			}
-			$line_total = (float) orders_money( orders_getter_value( $order_items[ $item_id ], 'get_total' ) );
-			$line_tax   = (float) orders_money( orders_getter_value( $order_items[ $item_id ], 'get_total_tax' ) );
-			$computed_amount += $current_quantity > 0 ? ( ( $line_total + $line_tax ) / $current_quantity ) * $quantity : 0;
-			$line_items[ $item_id ] = array( 'qty' => $quantity );
-		}
+		try { $calculated = orders_refund_lines( $order, $body['line_items'] ); }
+		catch ( \Throwable $error ) { return orders_error( 'fandoogh_invalid_refund_items', __( 'محاسبهٔ مبلغ و مالیات مرجوعی انجام نشد.', 'fandoogh-manager' ), 422 ); }
+		if ( is_wp_error( $calculated ) ) { return $calculated; }
+		$line_items = $calculated['lines']; $computed_amount = $calculated['amount'];
 	}
 	if ( '' === $amount ) {
 		if ( ! empty( $line_items ) ) {
-			$decimals = function_exists( 'wc_get_price_decimals' ) ? wc_get_price_decimals() : 2;
-			$amount = number_format( $computed_amount, $decimals, '.', '' );
+			$amount = orders_refund_money( $computed_amount );
 		}
 	}
-	$total = (float) orders_money( orders_getter_value( $order, 'get_total' ) );
-	$already_refunded = method_exists( $order, 'get_total_refunded' ) ? (float) orders_money( $order->get_total_refunded() ) : 0.0;
-	if ( '' === $amount && empty( $line_items ) ) {
-		$decimals = function_exists( 'wc_get_price_decimals' ) ? wc_get_price_decimals() : 2;
-		$amount = number_format( max( 0, $total - $already_refunded ), $decimals, '.', '' );
+	try {
+		$total = orders_refund_minor( $order->get_total() );
+		$already_refunded = orders_refund_minor( $order->get_total_refunded() );
+		if ( '' === $amount && empty( $line_items ) ) { $amount = orders_refund_money( max( 0, $total - $already_refunded ) ); }
+		$amount_minor = orders_refund_minor( $amount );
+	} catch ( \Throwable $error ) { return orders_error( 'fandoogh_refund_amount_invalid', __( 'مبلغ بازپرداخت قابل محاسبه نیست.', 'fandoogh-manager' ), 422 ); }
+	if ( ! empty( $line_items ) && $amount_minor !== $computed_amount ) {
+		return orders_error( 'fandoogh_refund_line_amount', __( 'مبلغ مرجوعی باید با مبلغ و مالیات اقلام انتخاب‌شده یکسان باشد؛ برای بازپرداخت مبلغ دلخواه، اقلام را انتخاب نکنید.', 'fandoogh-manager' ), 422 );
 	}
-	if ( (float) $amount <= 0 || (float) $amount > max( 0, $total - $already_refunded ) + 0.000001 ) {
+	if ( $amount_minor <= 0 || $amount_minor > max( 0, $total - $already_refunded ) ) {
 		return orders_error( 'fandoogh_refund_amount_invalid', __( 'مبلغ بازپرداخت از مبلغ قابل بازپرداخت سفارش بیشتر است.', 'fandoogh-manager' ), 422 );
 	}
 	$reason = isset( $body['reason'] ) && is_scalar( $body['reason'] ) ? sanitize_text_field( (string) $body['reason'] ) : '';
@@ -1666,57 +1682,7 @@ function refund_order( $request ) {
 		}
 	}
 
-	$values = order_refund_values( $request, $order );
-	if ( is_wp_error( $values ) ) {
-		if ( '' !== $raw_fingerprint && '' !== $idempotency_key ) {
-			$late_claim = orders_refund_idempotency_lookup( $session, $order_id, $idempotency_key, $raw_fingerprint );
-			if ( is_wp_error( $late_claim ) ) {
-				return $late_claim;
-			}
-			if ( ! empty( $late_claim['idempotent_replay'] ) && ! empty( $late_claim['replay_refund'] ) ) {
-				return orders_refund_replay_response( $order, $order_id, $late_claim['replay_refund'] );
-			}
-		}
-		return $values;
-	}
-	if ( '' === $raw_fingerprint ) {
-		$raw_fingerprint = orders_refund_request_fingerprint( $request, $values['idempotency_key'] );
-	}
-	$claim = orders_refund_idempotency_claim( $session, $order_id, $values['idempotency_key'], $raw_fingerprint );
-	if ( is_wp_error( $claim ) ) {
-		return $claim;
-	}
-	if ( ! empty( $claim['idempotent_replay'] ) && ! empty( $claim['replay_refund'] ) ) {
-		return orders_refund_replay_response( $order, $order_id, $claim['replay_refund'] );
-	}
-	$args = array(
-		'amount'         => $values['amount'],
-		'reason'         => $values['reason'],
-		'order_id'       => $order_id,
-		'refund_payment' => $values['refund_payment'],
-		'restock_items'  => $values['restock_items'],
-	);
-	if ( ! empty( $values['line_items'] ) ) {
-		$args['line_items'] = $values['line_items'];
-	}
-	try {
-		$refund = compose_order_repository()->createRefund( $args );
-	} catch ( \Throwable $exception ) {
-		// A gateway/storage adapter may persist before throwing; retain the
-		// short in-flight claim rather than risking a duplicate refund.
-		return orders_error( 'fandoogh_refund_failed', __( 'بازپرداخت سفارش انجام نشد؛ پاسخ درگاه یا تنظیمات سفارش را بررسی کنید.', 'fandoogh-manager' ), 422 );
-	}
-	if ( is_wp_error( $refund ) || ! is_object( $refund ) || ! method_exists( $refund, 'get_id' ) || absint( $refund->get_id() ) < 1 ) {
-		orders_refund_idempotency_release( $claim );
-		return is_wp_error( $refund ) ? orders_private_error( $refund ) : orders_error( 'fandoogh_refund_failed', __( 'بازپرداخت سفارش انجام نشد.', 'fandoogh-manager' ), 422 );
-	}
-	orders_refund_idempotency_complete( $claim, absint( $refund->get_id() ) );
-	$fresh_order = compose_order_repository()->findById( $order_id );
-	if ( orders_is_readable_order( $fresh_order ) ) {
-		$order = $fresh_order;
-	}
-	record_audit_event( 'order_refunded', $session['user']->ID, $session['id'], $session['device_label'], 'order', $order_id, array( 'order_id' => $order_id, 'refund_id' => $refund->get_id(), 'status' => $values['refund_payment'] ? 'automatic' : 'manual' ) );
-	return orders_no_store_response( array( 'data' => serialize_order( $order, true ), 'refund' => serialize_order_refund( $refund ), 'idempotent_replay' => false ) );
+	return orders_execute_refund( $request, $session, $order_id, $idempotency_key, $raw_fingerprint );
 }
 
 /**

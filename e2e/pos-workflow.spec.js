@@ -4,13 +4,14 @@ const { test, expect } = require('@playwright/test');
 const product = { id: 101, name: 'کالای صندوق', sku: '00123', type: 'simple', price: '200', available: true, quantity: 5 };
 const snapshot = { id: 91, number: '91', channel: 'pos', date: '2026-10-02T10:00:00Z', status: 'تکمیل‌شده', paid: true, store: { name: 'فروشگاه آزمایشی', address: 'تهران، خیابان نمونه', website: 'https://example.test' }, customer: { display: 'مشتری تست', phone: '09120000000' }, billing: {}, currency: { code: 'IRT', label: 'تومان' }, lines: [{ name: '<img src=x onerror=alert(1)> کالای صندوق', sku: '00123', quantity: 2, unit_price: '180', discount: '10', total: '350' }], fees: [], totals: { subtotal: '360', discount: '10', tax: '0', shipping: '0', total: '350', refunded: '0', net: '350' }, payment: { title: 'نقدی و کارت‌خوان', tenders: { cash_received: '200', card_amount: '200', cash_applied: '150', change: '50', reference: '12345' } } };
 async function boot(page, options = {}) {
-  const requests = [], sales = [];
+  const requests = [], sales = [], orderWrites = [];
   await page.route('**/wp-json/fandoogh-manager/v1/**', async route => {
     const req = route.request(), u = new URL(req.url()), p = u.pathname;
     requests.push({ path:p, query:u.search, method:req.method() });
     if(p.endsWith('/config')&&options.analytics) {const root='/wp-json/fandoogh-manager/v1/';return route.fulfill({json:{analytics:{enabled:true},currency:{code:'IRT',label:'تومان'},api:{me:root+'auth/me',csrf:root+'auth/csrf',products:root+'products',orders:root+'orders',customers:root+'customers',analytics:root+'analytics/summary',barcode:root+'operations/barcode'}}});}
     if(p.endsWith('/analytics/summary')) {const source=u.searchParams.get('channel')||'all',pos=source!=='online',online=source!=='pos';return route.fulfill({json:{data:{range:{label:'۳۰ روز اخیر'},currency:{label:'تومان'},sales:{gross:String((pos?350:0)+(online?100:0)),net:String((pos?300:0)+(online?100:0)),refunded:pos?'50':'0'},orders:{total:source==='all'?2:1,successful:1,statuses:[]},products:{total:2,top:[]},customers:{unique:1},channels:{pos:{orders:pos?1:0,gross:pos?'350':'0',refunded:pos?'50':'0',net:pos?'300':'0'},online:{orders:online?1:0,gross:online?'100':'0',refunded:'0',net:online?'100':'0'}}}}});}
-    if(p.endsWith('/auth/me')) return route.fulfill({json:{data:{user:{id:7,display_name:'فروشنده تست'},scopes: options.denied ? { products:{read:true},orders:{read:true} } : {products:{read:true},orders:{read:true,create:true},customers:{read:true,write:true},analytics:{read:true}}}}});
+    if(p.endsWith('/auth/me')) return route.fulfill({json:{data:{user:{id:options.userId || 7,display_name:'فروشنده تست'},scopes: options.denied ? { products:{read:true},orders:{read:true} } : {products:{read:true},orders:{read:true,create:true},customers:{read:true,write:true},analytics:{read:true}}}}});
+    if(p.endsWith('/auth/logout')) return route.fulfill({status:401,json:{message:'نشست منقضی شده'}});
     if(p.endsWith('/auth/csrf')) return route.fulfill({json:{data:{csrf_token:'pos-test-csrf'}}});
     if(p.endsWith('/pos/catalog')) {
       const data = u.searchParams.has('parent_id') ? [{...product,id:103,parent_id:102,type:'variation',name:'کالای آبی'}] : u.searchParams.get('id') === '103' ? [{...product,id:103,parent_id:102,type:'variation',name:'کالای آبی'}] : [product,{...product,id:102,type:'variable',name:'کالای متغیر'}];
@@ -18,17 +19,19 @@ async function boot(page, options = {}) {
     }
     if(p.endsWith('/operations/barcode')) return route.fulfill({json:{data:{id:103,parent_id:102,name:'کالای آبی',search:'VAR-103'}}});
     if(p.endsWith('/pos/quote')) { const b=req.postDataJSON(); return route.fulfill({json:{data:{lines:b.items.map(i=>({name:'کالای صندوق',quantity:i.quantity,unit_price:i.unit_price || '200'})),customer:b.customer,currency:{label:'تومان'},subtotal:'360',discount_total:'10',tax:'0',total:'350',quote_token:'signed-test',expires:Math.floor(Date.now()/1000)+300}}}); }
-    if(p.endsWith('/pos/sales') && req.method()==='POST') { sales.push({body:req.postDataJSON(),csrf:req.headers()['x-fandoogh-csrf']}); if(options.uncertain) return route.fulfill({status:504,json:{message:'پاسخ ثبت قطع شد'}}); if(options.changed) return route.fulfill({status:409,json:{code:'fandoogh_pos_quote_changed',message:'محاسبات تغییر کرد'}}); return route.fulfill({json:{data:snapshot}}); }
+    if(p.endsWith('/pos/sales') && req.method()==='POST') { sales.push({body:req.postDataJSON(),csrf:req.headers()['x-fandoogh-csrf']}); if(options.holdSale) await options.holdSale; if(options.uncertain) return route.fulfill({status:504,json:{message:'پاسخ ثبت قطع شد'}}); if(options.changed) return route.fulfill({status:409,json:{code:'fandoogh_pos_quote_changed',message:'محاسبات تغییر کرد'}}); return route.fulfill({json:{data:snapshot}}); }
     if(/\/pos\/sales\//.test(p)) return route.fulfill({json:{data:snapshot,idempotent_replay:true}});
     if(p.endsWith('/orders/91/invoice')) return route.fulfill({json:{data:{...snapshot,channel:'online',totals:{...snapshot.totals,refunded:'50',net:'300'}}}});
     if(p.endsWith('/customers')) return route.fulfill({json:{data:[{id:77,display:'مشتری قبلی',phone:'09123456789'}],meta:{total_pages:1}}});
+    if(p.endsWith('/products')&&options.manualOrder) return route.fulfill({json:{data:[{...product,status:'publish',stock_status:'instock'}],meta:{page:1,total_pages:1,total:1}}});
+    if(p.endsWith('/orders')&&req.method()==='POST') {orderWrites.push(req.postDataJSON());return route.fulfill({status:409,json:{code:'fandoogh_order_rollback_failed',message:'حذف سفارش تأیید نشد؛ سفارش را بررسی کنید'}});}
     if(/\/orders\/91\/?$/.test(p)) return route.fulfill({json:{data:{id:91,number:'91',status:'completed',customer:{display:'مشتری تست'},total:'350',line_items:[],billing:{},shipping:{}}}});
     if(p.endsWith('/orders')) return route.fulfill({json:{data:[{id:91,number:'91',status:'completed',total:'350',customer:{display:'مشتری تست'},items:[]}],meta:{page:1,total_pages:1,total:1}}});
     return route.fulfill({status:404,json:{}});
   });
   await page.goto('/#pos'); await expect(page.locator('#dashboardView')).toBeVisible();
   await expect(page.locator('#posPanel')).toBeVisible();
-  return {requests,sales};
+  return {requests,sales,orderWrites};
 }
 async function addProduct(page) { await page.locator('#posProducts').getByRole('button',{name:/کالای صندوق/}).click(); }
 async function paid(page, method = 'mixed') {
@@ -66,7 +69,29 @@ test('uncertain response locks checkout and recovers the same claim',async({page
 });
 
 test('pending claim survives reload and recovers without another POST',async({page})=>{
-  const {sales}=await boot(page,{uncertain:true});await addProduct(page);await paid(page,'cash');await expect(page.locator('#posRecovery')).toBeVisible();await page.reload();await expect(page.locator('#invoiceDialog')).toBeVisible();expect(sales).toHaveLength(1);expect(await page.evaluate(()=>sessionStorage.getItem('fandoogh-pos-pending'))).toBeNull();
+  const {sales}=await boot(page,{uncertain:true});await addProduct(page);await paid(page,'cash');await expect(page.locator('#posRecovery')).toBeVisible();expect(await page.evaluate(()=>sessionStorage.getItem('fandoogh-pos-pending:7'))).toBe(sales[0].body.idempotency_key);await page.reload();await expect(page.locator('#invoiceDialog')).toBeVisible();expect(sales).toHaveLength(1);expect(await page.evaluate(()=>sessionStorage.getItem('fandoogh-pos-pending:7'))).toBeNull();
+});
+
+test('expired session preserves unknown sale only for its cashier',async({page})=>{
+  const options={uncertain:true,userId:7};const {sales,requests}=await boot(page,options);await addProduct(page);await paid(page,'cash');await expect(page.locator('#posRecovery')).toBeVisible();
+  const key=sales[0].body.idempotency_key;await page.evaluate(()=>document.getElementById('logoutButton').click());await expect(page.locator('#pairingView')).toBeVisible();
+  expect(await page.evaluate(()=>sessionStorage.getItem('fandoogh-pos-pending:7'))).toBe(key);
+  options.userId=8;await page.reload();await expect(page.locator('#posPanel')).toBeVisible();await expect(page.locator('#posProducts .pos-product')).toHaveCount(2);
+  await expect(page.locator('#posRecovery')).not.toBeVisible();await expect(page.locator('#posCartCount')).toHaveText('۰ کالا');expect(requests.filter(r=>r.path.endsWith('/pos/sales/'+key))).toHaveLength(0);
+  options.userId=7;await page.reload();await expect(page.locator('#invoiceDialog')).toBeVisible();expect(sales).toHaveLength(1);expect(requests.filter(r=>r.path.endsWith('/pos/sales/'+key)&&r.method==='GET')).toHaveLength(1);expect(await page.evaluate(()=>sessionStorage.getItem('fandoogh-pos-pending:7'))).toBeNull();
+});
+
+test('late sale success after session expiry keeps recovery until same-user lookup',async({page})=>{
+  let release;const holdSale=new Promise(resolve=>{release=resolve;});const {sales}=await boot(page,{holdSale});await addProduct(page);await paid(page,'cash');await expect.poll(()=>sales.length).toBe(1);
+  const key=sales[0].body.idempotency_key;await page.evaluate(()=>document.getElementById('logoutButton').click());await expect(page.locator('#pairingView')).toBeVisible();
+  const response=page.waitForResponse(r=>r.url().endsWith('/pos/sales')&&r.request().method()==='POST');release();await response;
+  await expect(page.locator('#invoiceDialog')).not.toBeVisible();expect(await page.evaluate(()=>sessionStorage.getItem('fandoogh-pos-pending:7'))).toBe(key);
+  await page.reload();await expect(page.locator('#invoiceDialog')).toBeVisible();expect(sales).toHaveLength(1);expect(await page.evaluate(()=>sessionStorage.getItem('fandoogh-pos-pending:7'))).toBeNull();
+});
+
+test('ordinary order retry after rollback failure reuses the original claim',async({page})=>{
+  const {orderWrites}=await boot(page,{manualOrder:true});await page.evaluate(()=>location.hash='#orders');await page.locator('#newOrderButton').click();await page.locator('#manualOrderNext').click();await page.locator('.manual-order-add-item').click();await page.locator('#manualOrderNext').click();await page.locator('#manualOrderNext').click();
+  await page.locator('#submitManualOrder').click();await expect(page.locator('#manualOrderMessage')).toContainText('حذف سفارش تأیید نشد');await page.locator('#submitManualOrder').click();await expect.poll(()=>orderWrites.length).toBe(2);expect(orderWrites[1]).toEqual(orderWrites[0]);
 });
 
 test('voice and camera search in POS add the scanned variation',async({page})=>{
