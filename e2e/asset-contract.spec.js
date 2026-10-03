@@ -30,12 +30,7 @@ test('serves the PWA asset contract and semantic UI hooks', async ({ page, reque
   expect(manifest.display).toBe('standalone');
   expect(manifest.display_override).toContain('standalone');
   expect(manifest.launch_handler.client_mode).toBe('navigate-existing');
-  expect(manifest.icons).toEqual(expect.arrayContaining([
-    expect.objectContaining({
-      src: '/assets/brand/fandoogh-mark.svg',
-      type: 'image/svg+xml',
-    }),
-  ]));
+  expect(manifest.icons).toEqual([{ src: '/favicon.ico', sizes: 'any', purpose: 'any' }]);
 });
 
 test('supports browser install prompts and the manual iOS guide', async ({ browser }, testInfo) => {

@@ -49,8 +49,8 @@ for (const sitePath of ['', '/shop']) {
     await expect(page.locator('#pairingView')).toBeVisible();
     await expect(page.locator('#appBootView')).toBeHidden();
     const sheets = await page.locator('link[rel="stylesheet"]').evaluateAll((links) => links.map((link) => Boolean(link.sheet)));
-    expect(sheets).toEqual([true, true, true]);
-    expect([...assetsRequested]).toEqual(expect.arrayContaining(['app.js', 'styles.css', 'ui.css', 'fonts.css']));
+    expect(sheets).toEqual([true, true, true, true, true]);
+    expect([...assetsRequested]).toEqual(expect.arrayContaining(['app.js', 'styles.css', 'ui.css', 'fonts.css', 'pos.css', 'invoice.css']));
     expect(legacyRequests).toEqual([]);
     expect(scriptErrors).toEqual([]);
     await expect(page.locator('#pairingUsername')).toBeVisible();

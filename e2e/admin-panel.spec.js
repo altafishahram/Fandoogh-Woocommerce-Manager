@@ -71,7 +71,8 @@ test('guide supports task links, RTL keyboard tabs, FAQ and deep links', async (
   await page.getByRole('tab', { name: 'راه‌اندازی اولیه' }).focus();
   await page.keyboard.press('ArrowLeft');
   await expect(page.getByRole('tab', { name: 'استفاده روزانه' })).toBeFocused();
-  await expect(page.locator('.fandoogh-daily-grid article')).toHaveCount(4);
+  await expect(page.locator('.fandoogh-daily-grid article')).toHaveCount(5);
+  await expect(page.locator('.fandoogh-daily-grid')).toContainText('فروش حضوری و چاپ فاکتور');
   await page.locator('.fandoogh-admin-guide').screenshot({ path: testInfo.outputPath('admin-daily-guide.png') });
   await page.keyboard.press('End');
   await expect(page.getByRole('tab', { name: 'رفع مشکل' })).toBeFocused();
