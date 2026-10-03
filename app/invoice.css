@@ -1,0 +1,27 @@
+/* Shared screen/print document. Text is built with DOM APIs, never raw HTML. */
+.fm-invoice { box-sizing: border-box; background: #fff; color: #172129; direction: rtl; font-family: "Vazir", "FandooghLocal", Tahoma, Arial, sans-serif; font-size: 12px; line-height: 1.8; padding: 12mm; margin: auto; overflow-wrap: anywhere; }
+.fm-invoice.paper-a4 { width: 210mm; min-height: 297mm; page: a4; }
+.fm-invoice.paper-a5 { width: 148mm; min-height: 210mm; padding: 8mm; font-size: 11px; page: a5; }
+.fm-invoice.paper-receipt { width: 74mm; min-height: 50mm; padding: 2mm; font-size: 11px; page: receipt; }
+.fm-invoice h1 { font-size: 23px; margin: 0; }.fm-invoice h2 { font-size: 17px; margin: 12px 0; }
+.fm-invoice p { margin: 4px 0 8px; }
+.invoice-store { text-align: center; border-bottom: 2px solid #172129; padding-bottom: 10px; }
+.invoice-logo { max-width: 45mm; max-height: 18mm; object-fit: contain; }
+.invoice-meta { color: #41515c; }.invoice-table { border-collapse: collapse; width: 100%; margin: 14px 0; table-layout: fixed; }
+.invoice-table th, .invoice-table td { text-align: start; padding: 8px 4px; border-bottom: 1px solid #bcc7cc; vertical-align: top; }
+.invoice-table th { background: #eef2f4; font-weight: 700; border-top: 1px solid #172129; }
+.invoice-table th:first-child { width: 40%; }.invoice-table th:nth-child(2) { width: 9%; }.invoice-table th:nth-child(3) { width: 24%; }
+.invoice-sku { display: block; font-size: 10px; direction: ltr; text-align: start; }.invoice-total-row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; }
+.invoice-totals { margin-inline-start: auto; width: 64%; }.invoice-grand-total { border-top: 2px solid #172129; margin-top: 6px; padding-top: 8px; font-size: 14px; }
+.fm-invoice footer { border-top: 1px solid #bcc7cc; padding-top: 10px; margin-top: 18px; text-align: center; font-size: 10px; }
+.paper-receipt h1 { font-size: 17px; }.paper-receipt h2 { font-size: 14px; }.paper-receipt .invoice-table { font-size: 10px; }.paper-receipt .invoice-table th, .paper-receipt .invoice-table td { padding: 5px 2px; }.paper-receipt .invoice-table th:first-child { width: 31%; }.paper-receipt .invoice-table th:nth-child(2) { width: 10%; }.paper-receipt .invoice-table th:nth-child(3) { width: 27%; }.paper-receipt .invoice-totals { width: 100%; }.paper-receipt .invoice-grand-total { font-size: 12px; }
+@page a4 { size: A4 portrait; margin: 12mm; }
+@page a5 { size: A5 portrait; margin: 8mm; }
+@page receipt { size: 80mm 250mm; margin: 3mm; }
+@media print {
+  html, body { margin: 0; padding: 0; background: #fff; }
+  .fm-invoice.paper-a4, .fm-invoice.paper-a5, .fm-invoice.paper-receipt { width: 100%; min-height: 0; padding: 0; }
+  .invoice-table thead { display: table-header-group; }
+  .invoice-table tr, .invoice-store, .invoice-totals, .invoice-total-row { break-inside: avoid; }
+  .fm-invoice { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}

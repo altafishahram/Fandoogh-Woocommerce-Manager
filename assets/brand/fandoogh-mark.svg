@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">نشان فندوق</title>
+  <desc id="desc">نشان سبز و طلایی فندوق برای وب‌اپ مدیریت</desc>
+  <defs>
+    <linearGradient id="fandoogh-green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f766e"/>
+      <stop offset="1" stop-color="#115e59"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#fandoogh-green)"/>
+  <circle cx="390" cy="122" r="38" fill="#f6b83f"/>
+  <path d="M153 146c27-38 67-57 119-57 42 0 78 12 106 36-18-5-38-8-59-8-53 0-98 15-134 45-11 9-21 10-32 2Z" fill="#f9d887" opacity=".92"/>
+  <text x="256" y="356" fill="#fff" font-family="Tahoma, 'Segoe UI', Arial, sans-serif" font-size="232" font-weight="800" text-anchor="middle">ف</text>
+</svg>

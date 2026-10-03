@@ -1,0 +1,41 @@
+{
+  "name": "fandoogh-manager-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Preview-mode browser checks and release tooling for the Fandoogh Manager PWA shell.",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:preview": "playwright test",
+    "test:e2e:chromium": "playwright test --project=mobile-320 --project=tablet-768 --project=desktop-1280",
+    "test:e2e:webkit": "playwright test --project=webkit-desktop",
+    "test:e2e:ci": "playwright test --reporter=list",
+    "test:e2e:all": "playwright test",
+    "lint": "node tools/lint.js",
+    "test:coupons": "php tests/coupons-contract.php",
+    "test:product-categories": "php tests/product-categories-contract.php",
+    "test:product-attributes": "node tests/product-attributes-contract.js",
+    "test:product-repository": "php tests/product-repository-contract.php",
+    "test:customer-repository": "php tests/customer-repository-contract.php",
+    "test:order-repository": "php tests/order-repository-contract.php",
+    "test:order-safety": "php tests/order-safety-contract.php",
+    "test:infrastructure": "php tests/infrastructure-contract.php",
+    "test:security-database": "php tests/security-database-contract.php",
+    "test:refactor-compatibility": "php tests/refactor-compatibility-contract.php",
+    "test:app-assets": "node tests/app-assets-contract.js",
+    "test:service-worker": "node tests/service-worker-contract.js",
+    "test:admin": "php tests/admin-panel-contract.php",
+    "test:bulk-pricing": "php tests/bulk-pricing-contract.php",
+    "test:analytics": "php tests/analytics-contract.php",
+    "test:pos": "php tests/pos-contract.php",
+    "test:operations": "php tests/operations-contract.php && node tests/push-crypto-contract.js",
+    "package": "node tools/package-plugin.js",
+    "package:check": "node tools/verify-package.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "adm-zip": "^0.6.0"
+  }
+}

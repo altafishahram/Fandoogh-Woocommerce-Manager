@@ -1,0 +1,104 @@
+name: Plugin checks
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  test:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - run: npm ci
+        working-directory: .
+
+      - name: Install Playwright browsers and Linux dependencies
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Lint source and test tooling
+        run: npm run lint
+
+      - name: Run coupon backend contract checks
+        run: npm run test:coupons
+
+      - name: Run product category contract checks
+        run: npm run test:product-categories
+
+      - name: Run product attribute refactor parity checks
+        run: npm run test:product-attributes
+
+      - name: Run product repository contract checks
+        run: npm run test:product-repository
+
+      - name: Run infrastructure adapter contract checks
+        run: npm run test:infrastructure
+
+      - name: Run customer, order, and security repository checks
+        run: |
+          npm run test:customer-repository
+          npm run test:order-repository
+          npm run test:order-safety
+          npm run test:security-database
+          npm run test:refactor-compatibility
+
+      - name: Run PHP shell and asset handler contract checks
+        run: npm run test:app-assets
+
+      - name: Run service worker cache boundary checks
+        run: npm run test:service-worker
+
+      - name: Run administrator and analytics contract checks
+        run: |
+          npm run test:admin
+          npm run test:analytics
+
+      - name: Run operational access and Web Push encryption checks
+        run: npm run test:operations
+
+      - name: Run bulk pricing contracts
+        run: npm run test:bulk-pricing
+
+      - name: Run POS checkout and invoice backend contracts
+        run: npm run test:pos
+
+      - name: Run browser regression checks
+        run: npm run test:e2e:preview
+        env:
+          CI: true
+
+      - name: Build deterministic plugin package
+        run: npm run package
+
+      - name: Verify plugin package contents
+        run: npm run package:check
+
+      - name: Upload verified installable plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: fandoogh-manager-installable
+          path: dist/fandoogh-manager.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.project || 'all' }}
+          path: playwright-report/
+          retention-days: 7

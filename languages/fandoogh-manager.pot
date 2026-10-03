@@ -1,0 +1,2704 @@
+# Copyright (C) 2026 Fandoogh
+# This file is distributed under the same license as the Fandoogh Manager package.
+#
+# Translators: the source strings of this plugin are Persian. A fa_IR
+# translation is expected to map each msgid to the identical Persian text
+# (or a reviewed variant), keeping the shipped strings intact for other
+# locales such as en_US.
+msgid ""
+msgstr ""
+"Project-Id-Version: Fandoogh Manager 1.3.2\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/fandoogh-manager\n"
+"POT-Creation-Date: 2026-09-10 14:04+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Fandoogh Manager pot generator\n"
+
+#: app/admin.php:10
+msgid "پیشخوان"
+msgstr ""
+
+#: app/admin.php:11
+msgid "ظاهر"
+msgstr ""
+
+#: app/admin.php:12
+msgid "رسانه و فونت"
+msgstr ""
+
+#: app/admin.php:13
+msgid "گزارش مالی"
+msgstr ""
+
+#: app/admin.php:14
+msgid "دسترسی کاربران"
+msgstr ""
+
+#: app/admin.php:15
+msgid "نشست‌ها و امنیت"
+msgstr ""
+
+#: app/admin.php:16
+msgid "اتصال و وب‌اپ"
+msgstr ""
+
+#: app/admin.php:17
+msgid "رهگیری سفارش"
+msgstr ""
+
+#: app/admin.php:33
+msgid "بخش تنظیمات معتبر نیست؛ هیچ تغییری ذخیره نشد."
+msgstr ""
+
+#: app/admin.php:60
+#: fandoogh-manager.php:1619
+msgid "شما اجازهٔ مشاهدهٔ این صفحه را ندارید."
+msgstr ""
+
+#: app/admin.php:69
+msgid "مرکز مدیریت فروشگاه"
+msgstr ""
+
+#: app/admin.php:69
+msgid "تنظیمات، دسترسی‌ها و قابلیت‌های وب‌اپ؛ همه در یک پیشخوان."
+msgstr ""
+
+#: app/admin.php:69
+msgid "باز کردن وب‌اپ ↗"
+msgstr ""
+
+#: app/admin.php:70
+msgid "بخش‌های مدیریت افزونه"
+msgstr ""
+
+#: app/admin.php:89
+msgid "نصب و قابلیت‌های وب‌اپ"
+msgstr ""
+
+#: app/admin.php:89
+msgid "دکمهٔ نصب در مرورگرهای سازگار نمایش داده می‌شود؛ در iOS راهنمای افزودن به صفحهٔ اصلی در دسترس است."
+msgstr ""
+
+#: app/admin.php:89
+msgid "چاپ و اشتراک‌گذاری تصویر / PDF: به‌زودی. این قابلیت‌ها هنوز فعال نیستند."
+msgstr ""
+
+#: app/admin.php:112
+msgid "فقط تنظیمات همین تب ذخیره می‌شود."
+msgstr ""
+
+#: app/admin.php:113
+msgid "ذخیرهٔ تغییرات"
+msgstr ""
+
+#: app/admin.php:120
+msgid "فعال"
+msgstr ""
+
+#: app/admin.php:120
+msgid "غیرفعال"
+msgstr ""
+
+#: app/admin.php:120
+msgid "نمایش مالی علاوه بر این تنظیم، به مجوز کاربر هم نیاز دارد."
+msgstr ""
+
+#: app/admin.php:121
+msgid "هشدار روشن"
+msgstr ""
+
+#: app/admin.php:121
+msgid "هشدار خاموش"
+msgstr ""
+
+#: app/admin.php:121
+msgid "کنترل دستگاه‌ها، قطع نشست و تنظیم ایمیل امنیتی."
+msgstr ""
+
+#: app/admin.php:122
+msgid "HTTPS"
+msgstr ""
+
+#: app/admin.php:122
+msgid "HTTPS لازم است"
+msgstr ""
+
+#: app/admin.php:122
+msgid "ساخت کد اتصال یک‌بارمصرف برای حساب واجد شرایط."
+msgstr ""
+
+#: app/admin.php:133
+msgid "شرایط نمایش گزارش مالی"
+msgstr ""
+
+#: app/admin.php:133
+msgid "WooCommerce باید فعال باشد و گزینهٔ تحلیل فروش در همین تب ذخیره شود."
+msgstr ""
+
+#: app/admin.php:133
+msgid "در تب دسترسی کاربران، «نمایش گردش مالی و تحلیل‌ها» برای کاربر هدف مجاز باشد؛ حساب باید مجوز مدیریت ووکامرس یا مدیریت تنظیمات وردپرس را نیز داشته باشد."
+msgstr ""
+
+#: app/admin.php:133
+msgid "اگر اتصال قبلی هنگام خاموش‌بودن گزارش مالی ساخته شده، در تب اتصال و وب‌اپ کد جدید بسازید؛ سپس از وب‌اپ خارج شوید و با کد جدید دوباره وارد شوید. تازه‌سازی صفحه به‌تنهایی مجوز نشست قدیمی را افزایش نمی‌دهد."
+msgstr ""
+
+#: app/admin.php:133
+msgid "تغییر مجوزهای کاربر نشست‌های قبلی او را باطل می‌کند. پس از ذخیرهٔ تنظیمات، صفحهٔ وب‌اپ را تازه‌سازی کنید."
+msgstr ""
+
+#: app/admin.php:133
+msgid "بررسی دسترسی کاربران"
+msgstr ""
+
+#: app/admin.php:133
+msgid "ساخت کد اتصال جدید"
+msgstr ""
+
+#: app/analytics.php:48
+msgid "تحلیل فروش در تنظیمات افزونه خاموش است."
+msgstr ""
+
+#: app/analytics.php:52
+msgid "نشست فعلی مجوز مشاهدهٔ تحلیل فروش را ندارد. پس از تغییر دسترسی، یک اتصال امن جدید ایجاد کنید."
+msgstr ""
+
+#: app/analytics.php:58
+msgid "کاربر WordPress مجوز مشاهدهٔ تحلیل فروش را ندارد."
+msgstr ""
+
+#: app/analytics.php:106
+msgid "بازهٔ تحلیل معتبر نیست."
+msgstr ""
+
+#: app/analytics.php:142
+msgid "تاریخ شروع و پایان بازهٔ تحلیل معتبر نیست."
+msgstr ""
+
+#: app/analytics.php:164
+#: app/analytics.php:254
+msgid "WooCommerce برای تحلیل فروش فعال نیست."
+msgstr ""
+
+#: app/analytics.php:186
+#: app/analytics.php:202
+msgid "خواندن داده‌های تحلیل فروش انجام نشد."
+msgstr ""
+
+#: app/attributes.php:46
+msgid "WooCommerce فعال نیست یا API ویژگی‌ها در دسترس نیست."
+msgstr ""
+
+#: app/bulk-pricing.php:41
+msgid "بدنهٔ درخواست افزایش گروهی باید JSON باشد."
+msgstr ""
+
+#: app/bulk-pricing.php:46
+msgid "بدنهٔ درخواست افزایش گروهی معتبر نیست."
+msgstr ""
+
+#: app/bulk-pricing.php:51
+msgid "یکی از فیلدهای افزایش گروهی در قرارداد مجاز نیست."
+msgstr ""
+
+#: app/bulk-pricing.php:56
+msgid "روش انتخاب محصولات معتبر نیست."
+msgstr ""
+
+#: app/bulk-pricing.php:68
+msgid "حداقل یک دسته‌بندی معتبر انتخاب کنید."
+msgstr ""
+
+#: app/bulk-pricing.php:71
+msgid "حداقل یک محصول معتبر انتخاب کنید."
+msgstr ""
+
+#: app/bulk-pricing.php:79
+msgid "یکی از دسته‌بندی‌های انتخاب‌شده پیدا نشد."
+msgstr ""
+
+#: app/bulk-pricing.php:94
+msgid "نوع تغییر باید درصدی یا مبلغ ثابت باشد."
+msgstr ""
+
+#: app/bulk-pricing.php:99
+msgid "مقدار تغییر باید عددی غیرصفر با حداکثر چهار رقم اعشار باشد."
+msgstr ""
+
+#: app/bulk-pricing.php:103
+msgid "درصد تغییر نمی‌تواند بیشتر از ۱۰۰۰ درصد باشد."
+msgstr ""
+
+#: app/bulk-pricing.php:109
+msgid "فهرست قیمت‌های دستی معتبر نیست."
+msgstr ""
+
+#: app/bulk-pricing.php:115
+msgid "یکی از قیمت‌های دستی معتبر نیست."
+msgstr ""
+
+#: app/bulk-pricing.php:123
+msgid "روش زمان‌بندی معتبر نیست."
+msgstr ""
+
+#: app/bulk-pricing.php:133
+msgid "تاریخ و ساعت اجرای تغییر معتبر نیست."
+msgstr ""
+
+#: app/bulk-pricing.php:137
+msgid "زمان اجرا باید در آینده و حداکثر تا یک سال بعد باشد."
+msgstr ""
+
+#: app/bulk-pricing.php:256
+msgid "خواندن زیردسته‌ها انجام نشد."
+msgstr ""
+
+#: app/bulk-pricing.php:263
+msgid "تعداد دسته‌ها و زیردسته‌های انتخاب‌شده بیشتر از حد یک عملیات است."
+msgstr ""
+
+#: app/bulk-pricing.php:298
+msgid "بیش از %d محصول منطبق است؛ دسته‌های محدودتری انتخاب کنید."
+msgstr ""
+
+#: app/bulk-pricing.php:316
+msgid "یکی از محصولات انتخاب‌شده پیدا نشد."
+msgstr ""
+
+#: app/bulk-pricing.php:319
+msgid "کاربر اجازهٔ ویرایش یکی از محصولات انتخاب‌شده را ندارد."
+msgstr ""
+
+#: app/bulk-pricing.php:578
+msgid "یکی از قیمت‌های فعلی معتبر نیست."
+msgstr ""
+
+#: app/bulk-pricing.php:581
+#: app/bulk-pricing.php:592
+msgid "نتیجهٔ یکی از قیمت‌ها خارج از محدودهٔ مجاز است."
+msgstr ""
+
+#: app/bulk-pricing.php:612
+msgid "کاربر اجازهٔ ویرایش یکی از محصولات منطبق را ندارد."
+msgstr ""
+
+#: app/bulk-pricing.php:625
+msgid "بیش از %d قیمت منطبق است؛ دسته‌های محدودتری انتخاب کنید."
+msgstr ""
+
+#: app/bulk-pricing.php:632
+msgid "کاربر اجازهٔ ویرایش یکی از قیمت‌های منطبق را ندارد."
+msgstr ""
+
+#: app/bulk-pricing.php:776
+#: app/bulk-pricing.php:780
+msgid "ثبت زمان‌بندی تغییر قیمت انجام نشد."
+msgstr ""
+
+#: app/bulk-pricing.php:833
+#: app/products.php:1429
+#: app/products.php:1480
+msgid "WooCommerce فعال نیست یا CRUD محصول در دسترس نیست."
+msgstr ""
+
+#: app/bulk-pricing.php:861
+msgid "پیش‌نمایش منقضی یا با تنظیمات فعلی ناسازگار است؛ دوباره پیش‌نمایش بگیرید."
+msgstr ""
+
+#: app/coupons.php:88
+msgid "نشست فعلی مجوز مشاهدهٔ کوپن‌ها را ندارد."
+msgstr ""
+
+#: app/coupons.php:92
+msgid "کاربر WordPress مجوز مدیریت کوپن‌ها را ندارد."
+msgstr ""
+
+#: app/coupons.php:107
+msgid "نشست فعلی مجوز تغییر کوپن‌ها را ندارد."
+msgstr ""
+
+#: app/coupons.php:110
+msgid "این کاربر مجوز تغییرات اساسی و مدیریت کوپن‌ها را ندارد."
+msgstr ""
+
+#: app/coupons.php:114
+msgid "کاربر WordPress مجوز تغییر کوپن‌ها را ندارد."
+msgstr ""
+
+#: app/coupons.php:129
+#: app/coupons.php:136
+msgid "مقدار عددی کوپن معتبر نیست."
+msgstr ""
+
+#: app/coupons.php:151
+msgid "مقدار بولی کوپن معتبر نیست."
+msgstr ""
+
+#: app/coupons.php:156
+msgid "فهرست محدودیت کوپن معتبر نیست."
+msgstr ""
+
+#: app/coupons.php:161
+msgid "یکی از شناسه‌های کوپن معتبر نیست."
+msgstr ""
+
+#: app/coupons.php:173
+#: app/coupons.php:178
+msgid "تاریخ انقضای کوپن معتبر نیست."
+msgstr ""
+
+#: app/coupons.php:192
+msgid "کد کوپن الزامی است."
+msgstr ""
+
+#: app/coupons.php:203
+msgid "نوع تخفیف کوپن معتبر نیست."
+msgstr ""
+
+#: app/coupons.php:243
+msgid "محدودیت استفادهٔ کوپن معتبر نیست."
+msgstr ""
+
+#: app/coupons.php:258
+msgid "وضعیت کوپن معتبر نیست."
+msgstr ""
+
+#: app/coupons.php:315
+msgid "ذخیرهٔ کوپن انجام نشد."
+msgstr ""
+
+#: app/coupons.php:333
+#: app/coupons.php:397
+msgid "WooCommerce یا CRUD کوپن در دسترس نیست."
+msgstr ""
+
+#: app/coupons.php:378
+msgid "خواندن فهرست کوپن‌ها انجام نشد."
+msgstr ""
+
+#: app/coupons.php:386
+#: app/coupons.php:423
+#: app/coupons.php:451
+msgid "کوپن پیدا نشد."
+msgstr ""
+
+#: app/coupons.php:408
+#: app/coupons.php:436
+msgid "این کد کوپن قبلاً وجود دارد."
+msgstr ""
+
+#: app/coupons.php:427
+msgid "حداقل یک فیلد برای ویرایش کوپن ارسال کنید."
+msgstr ""
+
+#: app/coupons.php:456
+msgid "حذف کوپن انجام نشد."
+msgstr ""
+
+#: app/customers.php:143
+msgid "نشست فعلی مجوز خواندن مشتریان را ندارد."
+msgstr ""
+
+#: app/customers.php:149
+msgid "کاربر WordPress مجوز خواندن مشتریان را ندارد."
+msgstr ""
+
+#: app/customers.php:172
+msgid "نشست فعلی مجوز تغییر مشتریان را ندارد."
+msgstr ""
+
+#: app/customers.php:175
+msgid "این کاربر مجوز تغییرات اساسی و مدیریت مشتریان را ندارد."
+msgstr ""
+
+#: app/customers.php:179
+msgid "کاربر WordPress مجوز تغییر مشتریان را ندارد."
+msgstr ""
+
+#: app/customers.php:370
+msgid "مشتری بدون نام"
+msgstr ""
+
+#: app/customers.php:414
+msgid "اطلاعات مشتری معتبر نیست."
+msgstr ""
+
+#: app/customers.php:426
+#: app/orders.php:434
+msgid "ایمیل مشتری معتبر نیست."
+msgstr ""
+
+#: app/customers.php:436
+msgid "نشانی مشتری معتبر نیست."
+msgstr ""
+
+#: app/customers.php:448
+msgid "نام مشتری را وارد کنید."
+msgstr ""
+
+#: app/customers.php:451
+msgid "حداقل یک فیلد برای ویرایش مشتری ارسال کنید."
+msgstr ""
+
+#: app/customers.php:492
+msgid "ذخیرهٔ مشتری انجام نشد."
+msgstr ""
+
+#: app/customers.php:527
+#: app/customers.php:597
+#: app/customers.php:622
+#: app/customers.php:655
+msgid "WooCommerce فعال نیست یا API مشتریان در دسترس نیست."
+msgstr ""
+
+#: app/customers.php:560
+msgid "خواندن فهرست مشتریان انجام نشد."
+msgstr ""
+
+#: app/customers.php:602
+#: app/customers.php:608
+#: app/customers.php:659
+#: app/customers.php:663
+#: app/customers.php:698
+#: app/customers.php:704
+msgid "مشتری پیدا نشد."
+msgstr ""
+
+#: app/customers.php:629
+#: app/customers.php:672
+msgid "این ایمیل قبلاً برای یک کاربر ثبت شده است."
+msgstr ""
+
+#: app/customers.php:635
+msgid "ساخت مشتری انجام نشد."
+msgstr ""
+
+#: app/customers.php:693
+msgid "WooCommerce فعال نیست یا API تاریخچهٔ سفارش مشتری در دسترس نیست."
+msgstr ""
+
+#: app/customers.php:725
+msgid "خواندن سفارش‌های مشتری انجام نشد."
+msgstr ""
+
+#: app/customers.php:729
+msgid "پاسخ تاریخچهٔ سفارش مشتری معتبر نیست."
+msgstr ""
+
+#: app/fonts.php:141
+msgid "فایل فونت انتخاب نشده است."
+msgstr ""
+
+#: app/fonts.php:145
+msgid "حجم فونت باید حداکثر ۱۰ مگابایت باشد."
+msgstr ""
+
+#: app/fonts.php:152
+msgid "فرمت فونت مجاز نیست."
+msgstr ""
+
+#: app/fonts.php:168
+msgid "محتوای فایل با فرمت فونت همخوانی ندارد."
+msgstr ""
+
+#: app/fonts.php:173
+msgid "مسیر ذخیره‌سازی فونت در دسترس نیست."
+msgstr ""
+
+#: app/fonts.php:178
+msgid "ساخت مسیر فونت انجام نشد."
+msgstr ""
+
+#: app/fonts.php:184
+msgid "ذخیرهٔ فونت انجام نشد."
+msgstr ""
+
+#: app/fonts.php:220
+msgid "شما اجازهٔ مدیریت فونت را ندارید."
+msgstr ""
+
+#: app/fonts.php:236
+msgid "فونت محلی با موفقیت اضافه شد."
+msgstr ""
+
+#: app/fonts.php:245
+msgid "فونت حذف شد."
+msgstr ""
+
+#: app/fonts.php:247
+msgid "مسیر فونت معتبر نیست."
+msgstr ""
+
+#: app/fonts.php:250
+msgid "عملیات فونت معتبر نیست."
+msgstr ""
+
+#: app/fonts.php:258
+msgid "فونت محلی"
+msgstr ""
+
+#: app/fonts.php:258
+msgid "بارگذاری و مدیریت فونت"
+msgstr ""
+
+#: app/fonts.php:269
+msgid "فایل فونت"
+msgstr ""
+
+#: app/fonts.php:270
+msgid "حداکثر ۱۰ مگابایت؛ فایل باید امضای واقعی فونت داشته باشد."
+msgstr ""
+
+#: app/fonts.php:271
+msgid "بارگذاری فونت"
+msgstr ""
+
+#: app/fonts.php:276
+#: fandoogh-manager.php:1532
+msgid "هنوز فونت محلی اضافه نشده است."
+msgstr ""
+
+#: app/fonts.php:287
+msgid "Delete"
+msgstr ""
+
+#: app/inventory.php:64
+msgid "نشست فعلی مجوز مشاهدهٔ موجودی را ندارد."
+msgstr ""
+
+#: app/inventory.php:68
+msgid "کاربر WordPress مجوز مدیریت موجودی را ندارد."
+msgstr ""
+
+#: app/inventory.php:83
+msgid "نشست فعلی مجوز تغییر موجودی را ندارد."
+msgstr ""
+
+#: app/inventory.php:86
+msgid "این کاربر مجوز تغییرات اساسی و موجودی را ندارد."
+msgstr ""
+
+#: app/inventory.php:90
+msgid "کاربر WordPress مجوز تغییر موجودی را ندارد."
+msgstr ""
+
+#: app/inventory.php:118
+msgid "موجود"
+msgstr ""
+
+#: app/inventory.php:119
+msgid "ناموجود"
+msgstr ""
+
+#: app/inventory.php:120
+msgid "پیش‌فروش"
+msgstr ""
+
+#: app/inventory.php:161
+msgid "WooCommerce برای مدیریت موجودی فعال نیست."
+msgstr ""
+
+#: app/inventory.php:178
+msgid "خواندن موجودی انجام نشد."
+msgstr ""
+
+#: app/inventory.php:202
+msgid "بدنهٔ درخواست موجودی باید JSON باشد."
+msgstr ""
+
+#: app/inventory.php:206
+msgid "بدنهٔ درخواست موجودی معتبر نیست."
+msgstr ""
+
+#: app/inventory.php:232
+msgid "مقدار فیلد manage_stock باید true یا false باشد."
+msgstr ""
+
+#: app/inventory.php:239
+msgid "مقدار موجودی معتبر نیست."
+msgstr ""
+
+#: app/inventory.php:246
+msgid "وضعیت موجودی معتبر نیست."
+msgstr ""
+
+#: app/inventory.php:253
+msgid "تنظیم پیش‌فروش معتبر نیست."
+msgstr ""
+
+#: app/inventory.php:260
+msgid "آستانهٔ موجودی معتبر نیست."
+msgstr ""
+
+#: app/inventory.php:266
+msgid "نسخهٔ اطلاعات موجودی معتبر نیست."
+msgstr ""
+
+#: app/inventory.php:271
+#: app/products.php:1124
+#: app/variations.php:395
+msgid "برای تعیین موجودی، manage_stock باید true باشد."
+msgstr ""
+
+#: app/inventory.php:334
+msgid "محصول موجودی پیدا نشد."
+msgstr ""
+
+#: app/inventory.php:338
+msgid "حداقل یک فیلد موجودی ارسال کنید."
+msgstr ""
+
+#: app/inventory.php:342
+msgid "حداقل یک فیلد موجودی برای تغییر ارسال کنید."
+msgstr ""
+
+#: app/inventory.php:348
+msgid "موجودی این محصول در جای دیگری تغییر کرده است؛ اطلاعات جدید را دریافت و دوباره بررسی کنید."
+msgstr ""
+
+#: app/inventory.php:373
+msgid "ذخیرهٔ موجودی انجام نشد."
+msgstr ""
+
+#: app/media.php:46
+msgid "نشست فعلی مجوز آپلود رسانه را ندارد."
+msgstr ""
+
+#: app/media.php:50
+msgid "کاربر WordPress مجوز آپلود فایل ندارد."
+msgstr ""
+
+#: app/media.php:91
+msgid "فایل تصویر ارسال نشده است."
+msgstr ""
+
+#: app/media.php:95
+msgid "آپلود تصویر ناموفق بود."
+msgstr ""
+
+#: app/media.php:100
+msgid "حجم تصویر از حد مجاز بیشتر است."
+msgstr ""
+
+#: app/media.php:107
+msgid "فرمت تصویر مجاز نیست."
+msgstr ""
+
+#: app/media.php:117
+msgid "محتوای فایل تصویر معتبر نیست."
+msgstr ""
+
+#: app/media.php:121
+msgid "ابعاد تصویر بیش از حد مجاز است."
+msgstr ""
+
+#: app/media.php:128
+msgid "نوع واقعی تصویر مجاز نیست."
+msgstr ""
+
+#: app/media.php:150
+msgid "ویرایشگر تصویر روی سرور در دسترس نیست."
+msgstr ""
+
+#: app/media.php:162
+msgid "تغییر ابعاد تصویر انجام نشد."
+msgstr ""
+
+#: app/media.php:168
+msgid "مسیر ذخیره‌سازی رسانه در دسترس نیست."
+msgstr ""
+
+#: app/media.php:197
+msgid "تبدیل تصویر به WebP روی سرور انجام نشد؛ پشتیبانی WebP در GD یا Imagick و دسترسی نوشتن uploads را بررسی کنید."
+msgstr ""
+
+#: app/media.php:200
+msgid "تصویر WebP حتی با کیفیت پایین‌تر از سقف حجم تنظیم‌شده بزرگ‌تر است."
+msgstr ""
+
+#: app/media.php:215
+msgid "تعداد آپلودها زیاد است؛ بعداً دوباره امتحان کنید."
+msgstr ""
+
+#: app/media.php:242
+msgid "ذخیرهٔ فایل تصویر انجام نشد؛ دسترسی نوشتن پوشهٔ uploads و تنظیمات فرمت فایل را بررسی کنید."
+msgstr ""
+
+#: app/media.php:268
+msgid "ساخت رکورد رسانه انجام نشد."
+msgstr ""
+
+#: app/media.php:283
+msgid "رسانهٔ خروجی روی مبدأ مجاز سایت قرار نگرفت."
+msgstr ""
+
+#: app/order-tracking.php:35
+msgid "پست ایران"
+msgstr ""
+
+#: app/order-tracking.php:40
+msgid "چاپار"
+msgstr ""
+
+#: app/order-tracking.php:45
+msgid "تیپاکس"
+msgstr ""
+
+#: app/order-tracking.php:56
+msgid "پیگیری مرسوله شما"
+msgstr ""
+
+#: app/order-tracking.php:57
+msgid "کد رهگیری را کپی کنید یا صفحهٔ شرکت حمل را باز کنید."
+msgstr ""
+
+#: app/order-tracking.php:58
+msgid "پیگیری مرسوله"
+msgstr ""
+
+#: app/order-tracking.php:287
+#: app/order-tracking.php:398
+msgid "رهگیری مرسوله"
+msgstr ""
+
+#: app/order-tracking.php:293
+msgid "عنوان کارت مشتری"
+msgstr ""
+
+#: app/order-tracking.php:294
+msgid "زیرعنوان کارت مشتری"
+msgstr ""
+
+#: app/order-tracking.php:295
+msgid "متن دکمهٔ پیگیری"
+msgstr ""
+
+#: app/order-tracking.php:311
+msgid "نام شرکت حمل: %s"
+msgstr ""
+
+#: app/order-tracking.php:319
+msgid "نشانی پیگیری: %s"
+msgstr ""
+
+#: app/order-tracking.php:332
+msgid "کد رهگیری در همان رکورد ارسال افزونه ذخیره می‌شود و در ویرایش سفارش WooCommerce، وب‌اپ و حساب مشتری یکسان است. آدرس‌ها فقط HTTPS هستند؛ برای ارسال خودکار کد در URL از {tracking_code} استفاده کنید."
+msgstr ""
+
+#: app/order-tracking.php:359
+msgid "اختیاری: اگر سایت شرکت حمل امکانش را دارد، {tracking_code} با کد واقعی و URL-encoded جایگزین می‌شود؛ در غیر این صورت فقط صفحهٔ پیگیری باز می‌شود."
+msgstr ""
+
+#: app/order-tracking.php:442
+#: app/order-tracking.php:593
+msgid "شرکت حمل"
+msgstr ""
+
+#: app/order-tracking.php:443
+msgid "شرکت دیگر یا انتخاب‌نشده"
+msgstr ""
+
+#: app/order-tracking.php:448
+msgid "نام شرکت حمل (برای حالت دیگر)"
+msgstr ""
+
+#: app/order-tracking.php:449
+#: app/order-tracking.php:602
+msgid "کد رهگیری"
+msgstr ""
+
+#: app/order-tracking.php:450
+msgid "این داده در وب‌اپ و صفحهٔ مشاهدهٔ سفارش مشتری هم نمایش داده می‌شود. وضعیت سفارش یا روش پرداخت را تغییر نمی‌دهد."
+msgstr ""
+
+#: app/order-tracking.php:602
+msgid "کپی کد رهگیری"
+msgstr ""
+
+#: app/order-tracking.php:602
+msgid "کپی"
+msgstr ""
+
+#: app/orders.php:159
+msgid "نشست فعلی مجوز خواندن سفارش‌ها را ندارد."
+msgstr ""
+
+#: app/orders.php:165
+msgid "کاربر WordPress مجوز خواندن سفارش‌ها را ندارد."
+msgstr ""
+
+#: app/orders.php:191
+msgid "نشست فعلی مجوز ثبت سفارش را ندارد."
+msgstr ""
+
+#: app/orders.php:194
+#: app/orders.php:225
+#: app/orders.php:284
+msgid "این کاربر مجوز تغییرات اساسی سفارش را ندارد."
+msgstr ""
+
+#: app/orders.php:200
+msgid "کاربر WordPress مجوز ثبت سفارش را ندارد."
+msgstr ""
+
+#: app/orders.php:222
+msgid "نشست فعلی مجوز تغییر وضعیت سفارش را ندارد."
+msgstr ""
+
+#: app/orders.php:231
+msgid "کاربر WordPress مجوز تغییر وضعیت سفارش را ندارد."
+msgstr ""
+
+#: app/orders.php:253
+msgid "نشست فعلی مجوز افزودن یادداشت سفارش را ندارد."
+msgstr ""
+
+#: app/orders.php:258
+msgid "کاربر WordPress مجوز افزودن یادداشت سفارش را ندارد."
+msgstr ""
+
+#: app/orders.php:281
+msgid "نشست فعلی مجوز بازپرداخت سفارش را ندارد."
+msgstr ""
+
+#: app/orders.php:289
+msgid "کاربر WordPress مجوز بازپرداخت سفارش را ندارد."
+msgstr ""
+
+#: app/orders.php:301
+msgid "بدنهٔ درخواست وضعیت سفارش باید JSON باشد."
+msgstr ""
+
+#: app/orders.php:306
+msgid "وضعیت فعلی و وضعیت جدید سفارش معتبر نیستند."
+msgstr ""
+
+#: app/orders.php:309
+msgid "وضعیت فعلی و وضعیت جدید سفارش باید مقدار متنی معتبر باشند."
+msgstr ""
+
+#: app/orders.php:324
+#: app/orders.php:329
+#: app/orders.php:338
+#: app/orders.php:362
+msgid "مقدار %s معتبر نیست."
+msgstr ""
+
+#: app/orders.php:367
+msgid "مقدار %s خارج از محدودهٔ مجاز است."
+msgstr ""
+
+#: app/orders.php:388
+msgid "مقدار %s باید درست یا نادرست باشد."
+msgstr ""
+
+#: app/orders.php:405
+msgid "آدرس %s معتبر نیست."
+msgstr ""
+
+#: app/orders.php:422
+msgid "یکی از فیلدهای آدرس %s مجاز نیست."
+msgstr ""
+
+#: app/orders.php:428
+msgid "یکی از فیلدهای آدرس %s معتبر نیست."
+msgstr ""
+
+#: app/orders.php:443
+msgid "کد کشور آدرس باید دو حرفی باشد."
+msgstr ""
+
+#: app/orders.php:466
+msgid "بدنهٔ ثبت سفارش باید JSON باشد."
+msgstr ""
+
+#: app/orders.php:471
+msgid "بدنهٔ ثبت سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:488
+msgid "یکی از فیلدهای ثبت سفارش در قرارداد مجاز نیست."
+msgstr ""
+
+#: app/orders.php:492
+msgid "شناسهٔ یکتای ثبت سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:497
+msgid "شناسهٔ یکتای بدنه و header یکسان نیستند."
+msgstr ""
+
+#: app/orders.php:501
+msgid "شناسهٔ یکتای ثبت سفارش الزامی است."
+msgstr ""
+
+#: app/orders.php:505
+msgid "سفارش باید حداقل یک قلم و حداکثر صد قلم داشته باشد."
+msgstr ""
+
+#: app/orders.php:511
+msgid "یکی از اقلام سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:515
+msgid "یکی از فیلدهای قلم سفارش مجاز نیست."
+msgstr ""
+
+#: app/orders.php:521
+msgid "محصول"
+msgstr ""
+
+#: app/orders.php:527
+msgid "تنوع محصول"
+msgstr ""
+
+#: app/orders.php:533
+msgid "شناسهٔ محصول یا تنوع محصول الزامی است."
+msgstr ""
+
+#: app/orders.php:536
+msgid "تعداد"
+msgstr ""
+
+#: app/orders.php:548
+msgid "قیمت واحد"
+msgstr ""
+
+#: app/orders.php:558
+msgid "مشتری"
+msgstr ""
+
+#: app/orders.php:565
+#: app/orders.php:572
+msgid "نوع مشتری معتبر نیست."
+msgstr ""
+
+#: app/orders.php:575
+msgid "شناسهٔ مشتری با نوع مشتری سازگار نیست."
+msgstr ""
+
+#: app/orders.php:578
+msgid "صورتحساب"
+msgstr ""
+
+#: app/orders.php:582
+msgid "ارسال"
+msgstr ""
+
+#: app/orders.php:587
+msgid "برای ساخت مشتری جدید، ایمیل معتبر الزامی است."
+msgstr ""
+
+#: app/orders.php:593
+msgid "فهرست کوپن‌های سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:597
+#: app/orders.php:601
+msgid "کد کوپن سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:611
+msgid "فهرست روش‌های ارسال سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:615
+msgid "یکی از روش‌های ارسال سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:619
+msgid "فیلدهای روش ارسال سفارش معتبر نیستند."
+msgstr ""
+
+#: app/orders.php:623
+msgid "شناسهٔ روش ارسال معتبر نیست."
+msgstr ""
+
+#: app/orders.php:626
+msgid "عنوان روش ارسال سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:629
+msgid "هزینهٔ ارسال"
+msgstr ""
+
+#: app/orders.php:633
+msgid "مالیات ارسال"
+msgstr ""
+
+#: app/orders.php:640
+msgid "شناسهٔ نمونهٔ ارسال"
+msgstr ""
+
+#: app/orders.php:653
+msgid "روش پرداخت سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:659
+msgid "وضعیت اولیهٔ سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:664
+msgid "وضعیت اولیهٔ سفارش در allowlist WooCommerce نیست."
+msgstr ""
+
+#: app/orders.php:669
+msgid "پرداخت کامل"
+msgstr ""
+
+#: app/orders.php:675
+msgid "پرداخت کامل فقط برای سفارش در وضعیت در انتظار پرداخت مجاز است."
+msgstr ""
+
+#: app/orders.php:753
+msgid "این شناسهٔ ثبت سفارش قبلاً با اطلاعات متفاوت استفاده شده است."
+msgstr ""
+
+#: app/orders.php:771
+msgid "ثبت همین سفارش هنوز در حال انجام است؛ چند لحظه بعد دوباره بررسی کنید."
+msgstr ""
+
+#: app/orders.php:783
+msgid "ثبت همین سفارش هم‌زمان در حال انجام است؛ دوباره تلاش کنید."
+msgstr ""
+
+#: app/orders.php:849
+msgid "شناسهٔ idempotency بازپرداخت معتبر نیست."
+msgstr ""
+
+#: app/orders.php:856
+msgid "شناسهٔ idempotency در بدنه و سربرگ یکسان نیست."
+msgstr ""
+
+#: app/orders.php:861
+msgid "برای بازپرداخت، ارسال یک شناسهٔ idempotency الزامی است."
+msgstr ""
+
+#: app/orders.php:864
+msgid "شناسهٔ idempotency بازپرداخت باید بین ۸ تا ۸۰ نویسه و فقط شامل حروف، عدد، نقطه، خط تیره یا زیرخط باشد."
+msgstr ""
+
+#: app/orders.php:923
+msgid "این شناسهٔ بازپرداخت قبلاً با اطلاعات متفاوت استفاده شده است."
+msgstr ""
+
+#: app/orders.php:941
+msgid "نتیجهٔ بازپرداخت قبلی قابل بازیابی نیست؛ از ایجاد بازپرداخت دوم خودداری شد."
+msgstr ""
+
+#: app/orders.php:945
+msgid "همین بازپرداخت هم‌زمان در حال انجام است؛ چند لحظه بعد دوباره بررسی کنید."
+msgstr ""
+
+#: app/orders.php:977
+msgid "همین بازپرداخت هم‌زمان در حال انجام است؛ دوباره تلاش کنید."
+msgstr ""
+
+#: app/orders.php:1043
+msgid "API مشتری WooCommerce در دسترس نیست."
+msgstr ""
+
+#: app/orders.php:1047
+msgid "مشتری انتخاب‌شده پیدا نشد."
+msgstr ""
+
+#: app/orders.php:1053
+msgid "ساخت مشتری جدید در WooCommerce در دسترس نیست."
+msgstr ""
+
+#: app/orders.php:1065
+msgid "ساخت مشتری جدید انجام نشد."
+msgstr ""
+
+#: app/orders.php:1072
+msgid "شناسهٔ مشتری جدید معتبر نیست."
+msgstr ""
+
+#: app/orders.php:1085
+msgid "API محصول WooCommerce در دسترس نیست."
+msgstr ""
+
+#: app/orders.php:1097
+msgid "یکی از محصولات سفارش پیدا نشد."
+msgstr ""
+
+#: app/orders.php:1102
+msgid "یکی از محصولات سفارش قابل فروش نیست."
+msgstr ""
+
+#: app/orders.php:1108
+msgid "تنوع محصول با محصول اصلی سازگار نیست."
+msgstr ""
+
+#: app/orders.php:1111
+msgid "برای تنوع محصول، شناسهٔ variation را ارسال کنید."
+msgstr ""
+
+#: app/orders.php:1115
+msgid "برای محصول متغیر باید یک تنوع انتخاب شود."
+msgstr ""
+
+#: app/orders.php:1131
+msgid "محاسبهٔ دقیق مبلغ سفارش در دسترس نیست."
+msgstr ""
+
+#: app/orders.php:1142
+msgid "مبلغ یکی از اقلام سفارش بیش از حد مجاز است."
+msgstr ""
+
+#: app/orders.php:1154
+msgid "ثبت روش ارسال در WooCommerce در دسترس نیست."
+msgstr ""
+
+#: app/orders.php:1170
+msgid "ثبت روش ارسال سفارش انجام نشد."
+msgstr ""
+
+#: app/orders.php:1188
+msgid "روش‌های پرداخت WooCommerce در دسترس نیستند."
+msgstr ""
+
+#: app/orders.php:1198
+msgid "روش پرداخت انتخاب‌شده در WooCommerce ثبت نشده است."
+msgstr ""
+
+#: app/orders.php:1203
+msgid "روش پرداخت انتخاب‌شده فعال نیست."
+msgstr ""
+
+#: app/orders.php:1226
+msgid "WooCommerce فعال نیست یا API ثبت سفارش در دسترس نیست."
+msgstr ""
+
+#: app/orders.php:1353
+msgid "سفارش ساخته شد اما تکمیل پرداخت انجام نشد؛ سفارش را از فهرست بررسی کنید."
+msgstr ""
+
+#: app/orders.php:1367
+msgid "ثبت سفارش انجام نشد؛ اطلاعات کالا، کوپن و روش پرداخت را بررسی کنید."
+msgstr ""
+
+#: app/orders.php:1404
+#: app/orders.php:1479
+#: app/orders.php:2545
+#: app/orders.php:2726
+#: app/shipping.php:367
+msgid "WooCommerce فعال نیست یا API سفارش‌ها در دسترس نیست."
+msgstr ""
+
+#: app/orders.php:1415
+msgid "وضعیت سفارش در allowlist WooCommerce نیست."
+msgstr ""
+
+#: app/orders.php:1421
+msgid "یادداشت وضعیت سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:1431
+#: app/orders.php:2738
+#: app/shipping.php:373
+msgid "خواندن سفارش انجام نشد."
+msgstr ""
+
+#: app/orders.php:1434
+#: app/orders.php:1501
+#: app/orders.php:1647
+#: app/orders.php:2742
+#: app/shipping.php:377
+#: app/shipping.php:381
+msgid "سفارش پیدا نشد."
+msgstr ""
+
+#: app/orders.php:1440
+msgid "وضعیت فعلی سفارش در allowlist WooCommerce نیست."
+msgstr ""
+
+#: app/orders.php:1443
+msgid "وضعیت سفارش از زمان بارگذاری تغییر کرده است؛ جزئیات را تازه‌سازی کنید و دوباره تلاش کنید."
+msgstr ""
+
+#: app/orders.php:1458
+msgid "تغییر وضعیت سفارش انجام نشد."
+msgstr ""
+
+#: app/orders.php:1483
+msgid "بدنهٔ یادداشت سفارش باید JSON باشد."
+msgstr ""
+
+#: app/orders.php:1487
+msgid "بدنهٔ یادداشت سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:1491
+msgid "متن یادداشت سفارش باید بین یک تا هزار نویسه باشد."
+msgstr ""
+
+#: app/orders.php:1507
+msgid "ثبت یادداشت سفارش انجام نشد."
+msgstr ""
+
+#: app/orders.php:1510
+msgid "یادداشت سفارش پس از ذخیره قابل بازیابی نیست."
+msgstr ""
+
+#: app/orders.php:1528
+msgid "بدنهٔ بازپرداخت سفارش باید JSON باشد."
+msgstr ""
+
+#: app/orders.php:1533
+msgid "بدنهٔ بازپرداخت سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:1542
+msgid "مبلغ بازپرداخت معتبر نیست."
+msgstr ""
+
+#: app/orders.php:1550
+msgid "اقلام بازپرداخت معتبر نیستند."
+msgstr ""
+
+#: app/orders.php:1557
+msgid "یکی از اقلام بازپرداخت سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:1561
+msgid "تعداد بازپرداخت از تعداد سفارش بیشتر است."
+msgstr ""
+
+#: app/orders.php:1582
+msgid "مبلغ بازپرداخت از مبلغ قابل بازپرداخت سفارش بیشتر است."
+msgstr ""
+
+#: app/orders.php:1586
+msgid "دلیل بازپرداخت بیش از حد مجاز است."
+msgstr ""
+
+#: app/orders.php:1641
+msgid "امکان بازپرداخت در نسخهٔ فعلی WooCommerce در دسترس نیست."
+msgstr ""
+
+#: app/orders.php:1707
+msgid "بازپرداخت سفارش انجام نشد؛ پاسخ درگاه یا تنظیمات سفارش را بررسی کنید."
+msgstr ""
+
+#: app/orders.php:1711
+msgid "بازپرداخت سفارش انجام نشد."
+msgstr ""
+
+#: app/orders.php:1826
+msgid "تاریخ فیلتر سفارش باید با قالب YYYY-MM-DD ارسال شود."
+msgstr ""
+
+#: app/orders.php:1832
+msgid "تاریخ فیلتر سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:1851
+msgid "فیلتر مبلغ سفارش باید یک عدد مثبت یا صفر باشد."
+msgstr ""
+
+#: app/orders.php:1871
+msgid "شناسهٔ %s معتبر نیست."
+msgstr ""
+
+#: app/orders.php:1997
+#: app/orders.php:2000
+msgid "جست‌وجوی سفارش انجام نشد."
+msgstr ""
+
+#: app/orders.php:2201
+msgid "مهمان"
+msgstr ""
+
+#: app/orders.php:2553
+msgid "وضعیت‌های سفارش WooCommerce در دسترس نیستند."
+msgstr ""
+
+#: app/orders.php:2563
+msgid "فیلتر وضعیت سفارش معتبر نیست."
+msgstr ""
+
+#: app/orders.php:2570
+msgid "عبارت جست‌وجوی سفارش باید حداقل دو نویسه باشد."
+msgstr ""
+
+#: app/orders.php:2582
+msgid "تاریخ شروع نمی‌تواند بعد از تاریخ پایان باشد."
+msgstr ""
+
+#: app/orders.php:2594
+msgid "حداقل مبلغ نمی‌تواند از حداکثر مبلغ بیشتر باشد."
+msgstr ""
+
+#: app/orders.php:2599
+#: app/orders.php:2603
+msgid "شناسهٔ مشتری معتبر نیست."
+msgstr ""
+
+#: app/orders.php:2606
+msgid "روش پرداخت"
+msgstr ""
+
+#: app/orders.php:2610
+msgid "روش ارسال"
+msgstr ""
+
+#: app/orders.php:2674
+msgid "خواندن فهرست سفارش‌ها انجام نشد."
+msgstr ""
+
+#: app/orders.php:2679
+msgid "پاسخ API سفارش‌های WooCommerce معتبر نیست."
+msgstr ""
+
+#: app/orders.php:2731
+msgid "شناسهٔ سفارش معتبر نیست."
+msgstr ""
+
+#: app/products.php:76
+msgid "نشست فعلی مجوز خواندن محصولات را ندارد."
+msgstr ""
+
+#: app/products.php:82
+msgid "کاربر WordPress مجوز خواندن محصولات را ندارد."
+msgstr ""
+
+#: app/products.php:111
+msgid "نشست فعلی مجوز نوشتن محصولات را ندارد."
+msgstr ""
+
+#: app/products.php:117
+msgid "نشست فعلی مجوز افزایش گروهی و تغییرات اساسی محصولات را ندارد."
+msgstr ""
+
+#: app/products.php:121
+msgid "نشست فعلی مجوز اصلاح محصولات را ندارد."
+msgstr ""
+
+#: app/products.php:124
+msgid "نشست فعلی مجوز معرفی محصول را ندارد."
+msgstr ""
+
+#: app/products.php:130
+#: app/products.php:1435
+msgid "کاربر WordPress مجوز نوشتن محصولات را ندارد."
+msgstr ""
+
+#: app/products.php:229
+#: app/products.php:313
+msgid "WooCommerce فعال نیست یا API محصولات در دسترس نیست."
+msgstr ""
+
+#: app/products.php:244
+msgid "فیلتر وضعیت محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:320
+#: app/products.php:324
+#: app/products.php:1489
+msgid "محصول پیدا نشد."
+msgstr ""
+
+#: app/products.php:348
+msgid "کلاس‌های ارسال ووکامرس در دسترس نیستند."
+msgstr ""
+
+#: app/products.php:417
+#: app/security.php:2232
+msgid "بدنهٔ درخواست باید JSON باشد."
+msgstr ""
+
+#: app/products.php:422
+msgid "بدنهٔ درخواست محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:464
+msgid "یکی از فیلدهای محصول در allowlist مجاز نیست."
+msgstr ""
+
+#: app/products.php:482
+msgid "نوع یکی از فیلدهای متنی محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:487
+msgid "متن محصول شامل کاراکتر غیرمجاز است."
+msgstr ""
+
+#: app/products.php:491
+msgid "این فیلد محصول نباید چندخطی باشد."
+msgstr ""
+
+#: app/products.php:495
+msgid "HTML خام در فیلدهای محصول پذیرفته نمی‌شود."
+msgstr ""
+
+#: app/products.php:500
+msgid "طول یکی از فیلدهای محصول بیشتر از حد مجاز است."
+msgstr ""
+
+#: app/products.php:516
+msgid "نامک محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:521
+msgid "نامک محصول شامل مقدار غیرمجاز است."
+msgstr ""
+
+#: app/products.php:527
+msgid "نامک محصول بیش از حد طولانی است."
+msgstr ""
+
+#: app/products.php:543
+msgid "قیمت محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:552
+msgid "قیمت محصول باید عدد اعشاری مثبت با قالب معتبر باشد."
+msgstr ""
+
+#: app/products.php:564
+msgid "اندازهٔ محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:571
+msgid "اندازهٔ محصول باید عدد مثبت معتبر باشد."
+msgstr ""
+
+#: app/products.php:579
+msgid "وضعیت مالیاتی محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:586
+msgid "کلاس مالیاتی محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:598
+msgid "نحوهٔ نمایش محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:615
+msgid "کلاس ارسال محصول پیدا نشد."
+msgstr ""
+
+#: app/products.php:629
+#: app/products.php:634
+msgid "نوع کاربردی محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:642
+msgid "برای محصول اشتراکی باید افزونهٔ WooCommerce Subscriptions فعال باشد."
+msgstr ""
+
+#: app/products.php:648
+msgid "تبدیل محصول موجود به محصول اشتراکی از این مسیر مجاز نیست."
+msgstr ""
+
+#: app/products.php:678
+msgid "تنظیم پیش‌فروش محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:690
+msgid "یکی از محصولات مرتبط پیدا نشد."
+msgstr ""
+
+#: app/products.php:714
+msgid "مقدار بولی محصول باید true یا false باشد."
+msgstr ""
+
+#: app/products.php:735
+msgid "مقدار عددی محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:739
+msgid "مقدار عددی محصول خارج از محدوده است."
+msgstr ""
+
+#: app/products.php:753
+msgid "فهرست شناسه‌های محصول معتبر یا در محدوده نیست."
+msgstr ""
+
+#: app/products.php:760
+msgid "شناسهٔ یکی از موارد محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:764
+msgid "شناسه‌های تکراری در فهرست محصول مجاز نیست."
+msgstr ""
+
+#: app/products.php:788
+msgid "یکی از دسته‌بندی‌های محصول پیدا نشد."
+msgstr ""
+
+#: app/products.php:813
+msgid "شناسهٔ تصویر محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:818
+msgid "تصویر محصول باید یک فایل تصویری محلی معتبر باشد."
+msgstr ""
+
+#: app/products.php:822
+msgid "کاربر اجازهٔ استفاده از این تصویر را ندارد."
+msgstr ""
+
+#: app/products.php:835
+msgid "وضعیت محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:841
+msgid "وضعیت محصول در allowlist مجاز نیست."
+msgstr ""
+
+#: app/products.php:846
+msgid "کاربر مجوز انتشار محصول را ندارد."
+msgstr ""
+
+#: app/products.php:850
+msgid "کاربر مجوز محصول خصوصی را ندارد."
+msgstr ""
+
+#: app/products.php:870
+msgid "نوع محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:882
+msgid "ساختار محصول انتخاب‌شده توسط ووکامرس یا افزونهٔ اشتراک پشتیبانی نمی‌شود."
+msgstr ""
+
+#: app/products.php:886
+msgid "تغییر نوع محصول موجود از این مسیر مجاز نیست."
+msgstr ""
+
+#: app/products.php:903
+msgid "ویژگی‌های محصول باید یک فهرست محدود و معتبر باشند."
+msgstr ""
+
+#: app/products.php:910
+msgid "ساختار یکی از ویژگی‌های محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:915
+msgid "یکی از فیلدهای ویژگی محصول مجاز نیست."
+msgstr ""
+
+#: app/products.php:920
+#: app/products.php:925
+msgid "نام ویژگی محصول معتبر نیست."
+msgstr ""
+
+#: app/products.php:928
+msgid "یک ویژگی محصول بیش از یک‌بار تعریف شده است."
+msgstr ""
+
+#: app/products.php:935
+msgid "مقادیر ویژگی محصول معتبر نیستند."
+msgstr ""
+
+#: app/products.php:943
+msgid "یکی از مقادیر ویژگی سراسری معتبر نیست."
+msgstr ""
+
+#: app/products.php:947
+msgid "یکی از مقادیر ویژگی سراسری پیدا نشد."
+msgstr ""
+
+#: app/products.php:953
+msgid "مقدار ویژگی سفارشی معتبر نیست."
+msgstr ""
+
+#: app/products.php:961
+msgid "برای هر ویژگی حداقل یک مقدار وارد کنید."
+msgstr ""
+
+#: app/products.php:1009
+msgid "نام محصول الزامی است."
+msgstr ""
+
+#: app/products.php:1018
+msgid "نام محصول نمی‌تواند خالی باشد."
+msgstr ""
+
+#: app/products.php:1083
+#: app/variations.php:349
+msgid "این SKU قبلاً استفاده شده است."
+msgstr ""
+
+#: app/products.php:1233
+msgid "برای ساخت محصول متغیر حداقل یک ویژگی لازم است."
+msgstr ""
+
+#: app/products.php:1246
+msgid "حداقل یک ویژگی محصول متغیر باید برای variation فعال باشد."
+msgstr ""
+
+#: app/products.php:1274
+msgid "تصویر شاخص نباید هم‌زمان در گالری تکرار شود."
+msgstr ""
+
+#: app/products.php:1386
+msgid "WooCommerce داده‌های محصول را نپذیرفت."
+msgstr ""
+
+#: app/products.php:1403
+msgid "ذخیرهٔ محصول انجام نشد."
+msgstr ""
+
+#: app/products.php:1412
+msgid "محصول پس از ذخیره قابل بازیابی نیست."
+msgstr ""
+
+#: app/products.php:1451
+msgid "ساخت محصول اشتراکی به کلاس محصول افزونهٔ WooCommerce Subscriptions نیاز دارد."
+msgstr ""
+
+#: app/products.php:1493
+msgid "کاربر WordPress اجازهٔ ویرایش این محصول را ندارد."
+msgstr ""
+
+#: app/products.php:1501
+msgid "برای ویرایش محصول حداقل یک فیلد ارسال کنید."
+msgstr ""
+
+#: app/reviews.php:62
+msgid "نشست فعلی مجوز مشاهدهٔ دیدگاه‌ها را ندارد."
+msgstr ""
+
+#: app/reviews.php:66
+msgid "کاربر WordPress مجوز مشاهدهٔ دیدگاه‌ها را ندارد."
+msgstr ""
+
+#: app/reviews.php:81
+msgid "نشست فعلی مجوز مدیریت دیدگاه‌ها را ندارد."
+msgstr ""
+
+#: app/reviews.php:84
+msgid "این کاربر مجوز تغییرات اساسی و مدیریت دیدگاه‌ها را ندارد."
+msgstr ""
+
+#: app/reviews.php:88
+msgid "کاربر WordPress مجوز مدیریت دیدگاه‌ها را ندارد."
+msgstr ""
+
+#: app/reviews.php:131
+msgid "فیلتر وضعیت دیدگاه معتبر نیست."
+msgstr ""
+
+#: app/reviews.php:158
+msgid "خواندن دیدگاه‌ها انجام نشد."
+msgstr ""
+
+#: app/reviews.php:172
+msgid "بدنهٔ درخواست دیدگاه باید JSON باشد."
+msgstr ""
+
+#: app/reviews.php:176
+msgid "بدنهٔ درخواست دیدگاه معتبر نیست."
+msgstr ""
+
+#: app/reviews.php:179
+msgid "وضعیت دیدگاه معتبر نیست."
+msgstr ""
+
+#: app/reviews.php:182
+msgid "پاسخ دیدگاه معتبر نیست."
+msgstr ""
+
+#: app/reviews.php:191
+msgid "دیدگاه پیدا نشد."
+msgstr ""
+
+#: app/reviews.php:195
+msgid "وضعیت یا پاسخ دیدگاه را ارسال کنید."
+msgstr ""
+
+#: app/reviews.php:200
+msgid "تغییر وضعیت دیدگاه انجام نشد."
+msgstr ""
+
+#: app/reviews.php:221
+msgid "ثبت پاسخ دیدگاه انجام نشد."
+msgstr ""
+
+#: app/security.php:882
+#: app/security.php:2460
+msgid "کاربر هدف وجود ندارد یا مجوز استفاده از مدیریت فندوق را ندارد."
+msgstr ""
+
+#: app/security.php:909
+msgid "ساخت کد جفت‌سازی ممکن نشد."
+msgstr ""
+
+#: app/security.php:1086
+msgid "ساخت نشست امن ممکن نشد."
+msgstr ""
+
+#. translators: 1: site name, 2: user login
+#: app/security.php:1146
+msgid "[%1$s] نشست جدید Fandoogh Manager برای %2$s"
+msgstr ""
+
+#. translators: 1: display name, 2: device label, 3: Jalali datetime, 4: session id
+#: app/security.php:1154
+msgid ""
+"یک نشست جدید وب‌اپ مدیریت ساخته شد.\n"
+"\n"
+"کاربر: %1$s\n"
+"دستگاه: %2$s\n"
+"زمان: %3$s\n"
+"شناسهٔ نشست: %4$s\n"
+"\n"
+"اگر این اتصال را شما انجام نداده‌اید، فوراً از بخش «امنیت و دستگاه‌ها» وب‌اپ یا پنل افزونه نشست را باطل کنید."
+msgstr ""
+
+#: app/security.php:1356
+msgid "نشست مدیریتی فقط روی HTTPS قابل استفاده است."
+msgstr ""
+
+#: app/security.php:1360
+#: app/security.php:1366
+#: app/security.php:1379
+msgid "نشست مدیریتی معتبر نیست."
+msgstr ""
+
+#: app/security.php:1397
+msgid "نشست مدیریتی منقضی شده است."
+msgstr ""
+
+#: app/security.php:1403
+msgid "کاربر این نشست دیگر وجود ندارد."
+msgstr ""
+
+#: app/security.php:1427
+msgid "دسترسی این کاربر به وب‌اپ مدیریت حذف شده است."
+msgstr ""
+
+#: app/security.php:1537
+msgid "درخواست CSRF معتبر نیست."
+msgstr ""
+
+#: app/security.php:1541
+msgid "مبدأ درخواست معتبر نیست."
+msgstr ""
+
+#: app/security.php:1653
+msgid "نشست فعلی مجوز مشاهدهٔ دستگاه‌ها را ندارد."
+msgstr ""
+
+#: app/security.php:1659
+msgid "کاربر WordPress مجوز مشاهدهٔ دستگاه‌ها را ندارد."
+msgstr ""
+
+#: app/security.php:1681
+msgid "نشست فعلی مجوز ابطال دستگاه‌ها را ندارد."
+msgstr ""
+
+#: app/security.php:1687
+msgid "کاربر WordPress مجوز ابطال دستگاه‌ها را ندارد."
+msgstr ""
+
+#: app/security.php:1704
+msgid "نشست فعلی مجوز مشاهدهٔ گزارش رویدادها را ندارد."
+msgstr ""
+
+#: app/security.php:1709
+msgid "گزارش رویدادها فقط برای مدیر اصلی در دسترس است."
+msgstr ""
+
+#: app/security.php:1801
+#: app/security.php:1813
+msgid "دستگاه پیدا نشد."
+msgstr ""
+
+#: app/security.php:1817
+msgid "این دستگاه قبلاً غیرفعال شده است."
+msgstr ""
+
+#: app/security.php:1831
+msgid "ابطال دستگاه انجام نشد."
+msgstr ""
+
+#: app/security.php:2024
+#: app/security.php:2073
+msgid "فقط مدیر اصلی می‌تواند نشست‌ها را از پنل افزونه مدیریت کند."
+msgstr ""
+
+#: app/security.php:2029
+msgid "نشست انتخاب‌شده معتبر نیست."
+msgstr ""
+
+#: app/security.php:2040
+msgid "نشست انتخاب‌شده پیدا نشد."
+msgstr ""
+
+#: app/security.php:2057
+msgid "ابطال نشست انجام نشد؛ دوباره صفحه را تازه کنید."
+msgstr ""
+
+#: app/security.php:2078
+#: app/security.php:2114
+msgid "کاربر انتخاب‌شده پیدا نشد."
+msgstr ""
+
+#: app/security.php:2108
+msgid "فقط مدیر اصلی می‌تواند دسترسی کاربران را مدیریت کند."
+msgstr ""
+
+#: app/security.php:2117
+msgid "دسترسی administrator اصلی از این بخش قابل حذف نیست."
+msgstr ""
+
+#: app/security.php:2166
+msgid "فیلتر رویداد معتبر نیست."
+msgstr ""
+
+#: app/security.php:2227
+msgid "جفت‌سازی فقط از مبدأ هم‌سایت و روی HTTPS انجام می‌شود."
+msgstr ""
+
+#: app/security.php:2237
+msgid "تعداد تلاش‌ها زیاد است؛ بعداً دوباره امتحان کنید."
+msgstr ""
+
+#: app/security.php:2248
+msgid "نام کاربری، رمز عبور و کد جفت‌سازی الزامی است."
+msgstr ""
+
+#: app/security.php:2259
+msgid "کد جفت‌سازی معتبر نیست یا منقضی شده است."
+msgstr ""
+
+#: app/security.php:2266
+msgid "اطلاعات ورود یا کد جفت‌سازی معتبر نیست."
+msgstr ""
+
+#: app/security.php:2272
+msgid "این کاربر مجوز استفاده از مدیریت را ندارد."
+msgstr ""
+
+#: app/security.php:2277
+msgid "کد جفت‌سازی قبلاً مصرف شده است."
+msgstr ""
+
+#: app/security.php:2337
+msgid "توکن CSRF ایجاد نشد."
+msgstr ""
+
+#: app/security.php:2384
+msgid "کاربر بدون نام"
+msgstr ""
+
+#: app/security.php:2406
+msgid "اتصال امن"
+msgstr ""
+
+#: app/security.php:2406
+msgid "Secure pairing"
+msgstr ""
+
+#: app/security.php:2407
+msgid "Administrator می‌تواند کد یک‌بارمصرف را برای هر کاربر واجد شرایط بسازد. کاربر هدف باید با نام کاربری و رمز خودش وارد وب‌اپ شود؛ کد به حساب صادرکننده منتقل نمی‌شود."
+msgstr ""
+
+#: app/security.php:2412
+msgid "کاربر انتخاب‌شده"
+msgstr ""
+
+#: app/security.php:2413
+msgid "کد زیر برای کاربر هدف ساخته شد؛ آن را فقط همان کاربر وارد کند. کد پس از این پاسخ دوباره نمایش داده نمی‌شود:"
+msgstr ""
+
+#: app/security.php:2413
+msgid "کاربر هدف: "
+msgstr ""
+
+#: app/security.php:2420
+msgid "کاربر هدف"
+msgstr ""
+
+#: app/security.php:2422
+msgid "هیچ کاربر واجد شرایطی برای مدیریت فندوق پیدا نشد."
+msgstr ""
+
+#: app/security.php:2434
+msgid "Scopeها بر اساس capability فعلی کاربر هدف صادر می‌شوند و هنگام ورود دوباره بررسی خواهند شد."
+msgstr ""
+
+#: app/security.php:2435
+msgid "ساخت کد Pairing برای کاربر هدف"
+msgstr ""
+
+#: app/security.php:2454
+msgid "شما اجازهٔ ساخت کد جفت‌سازی را ندارید."
+msgstr ""
+
+#: app/shipping.php:51
+msgid "در انتظار ارسال"
+msgstr ""
+
+#: app/shipping.php:52
+msgid "آماده ارسال"
+msgstr ""
+
+#: app/shipping.php:53
+msgid "ارسال شده"
+msgstr ""
+
+#: app/shipping.php:54
+msgid "در مسیر"
+msgstr ""
+
+#: app/shipping.php:55
+msgid "در حال تحویل"
+msgstr ""
+
+#: app/shipping.php:56
+msgid "تحویل شده"
+msgstr ""
+
+#: app/shipping.php:57
+msgid "ارسال ناموفق"
+msgstr ""
+
+#: app/shipping.php:58
+msgid "مرجوع شده"
+msgstr ""
+
+#: app/shipping.php:59
+msgid "لغو شده"
+msgstr ""
+
+#: app/shipping.php:296
+msgid "نشست فعلی مجوز خواندن رهگیری ارسال را ندارد."
+msgstr ""
+
+#: app/shipping.php:301
+msgid "کاربر WordPress مجوز خواندن رهگیری ارسال را ندارد."
+msgstr ""
+
+#: app/shipping.php:323
+msgid "نشست فعلی مجوز به‌روزرسانی رهگیری ارسال را ندارد."
+msgstr ""
+
+#: app/shipping.php:326
+msgid "این کاربر مجوز تغییرات اساسی ارسال را ندارد."
+msgstr ""
+
+#: app/shipping.php:331
+msgid "کاربر WordPress مجوز به‌روزرسانی رهگیری ارسال را ندارد."
+msgstr ""
+
+#: app/shipping.php:356
+msgid "شناسه سفارش معتبر نیست."
+msgstr ""
+
+#: app/shipping.php:416
+msgid "بدنه درخواست ارسال باید JSON باشد."
+msgstr ""
+
+#: app/shipping.php:421
+msgid "بدنه درخواست ارسال معتبر نیست."
+msgstr ""
+
+#: app/shipping.php:439
+msgid "فیلد درخواست ارسال مجاز نیست."
+msgstr ""
+
+#: app/shipping.php:444
+msgid "وضعیت ارسال الزامی است."
+msgstr ""
+
+#: app/shipping.php:505
+msgid "اقلام مرسوله معتبر نیستند."
+msgstr ""
+
+#: app/shipping.php:510
+msgid "شناسه یا تعداد یکی از اقلام مرسوله معتبر نیست."
+msgstr ""
+
+#: app/shipping.php:526
+msgid "وضعیت ارسال در allowlist نیست."
+msgstr ""
+
+#: app/shipping.php:547
+msgid "شرکت حمل انتخاب‌شده معتبر نیست."
+msgstr ""
+
+#: app/shipping.php:568
+msgid "مقدار یکی از فیلدهای ارسال معتبر نیست."
+msgstr ""
+
+#: app/shipping.php:572
+msgid "HTML و NUL در اطلاعات ارسال مجاز نیست."
+msgstr ""
+
+#: app/shipping.php:576
+msgid "کاراکتر کنترل نامعتبر در اطلاعات ارسال وجود دارد."
+msgstr ""
+
+#: app/shipping.php:580
+msgid "متن اطلاعات ارسال معتبر نیست."
+msgstr ""
+
+#: app/shipping.php:585
+msgid "طول فیلد %s بیش از حد مجاز است."
+msgstr ""
+
+#: app/shipping.php:602
+#: app/shipping.php:611
+#: app/shipping.php:615
+#: app/shipping.php:622
+#: app/shipping.php:637
+#: app/shipping.php:646
+msgid "تاریخ %s معتبر نیست."
+msgstr ""
+
+#: app/shipping.php:733
+msgid "یکی از اقلام مرسوله در سفارش پیدا نشد."
+msgstr ""
+
+#: app/shipping.php:737
+msgid "تعداد مرسوله از تعداد سفارش بیشتر است."
+msgstr ""
+
+#: app/shipping.php:758
+#: app/shipping.php:762
+msgid "ذخیره رهگیری ارسال انجام نشد."
+msgstr ""
+
+#: app/taxonomy.php:86
+msgid "نشست فعلی مجوز خواندن دسته‌بندی‌ها را ندارد."
+msgstr ""
+
+#: app/taxonomy.php:91
+msgid "کاربر WordPress مجوز خواندن دسته‌بندی‌های محصول را ندارد."
+msgstr ""
+
+#: app/taxonomy.php:113
+msgid "نشست فعلی مجوز نوشتن دسته‌بندی‌ها را ندارد."
+msgstr ""
+
+#: app/taxonomy.php:116
+msgid "این کاربر مجوز تغییرات اساسی و دسته‌بندی‌ها را ندارد."
+msgstr ""
+
+#: app/taxonomy.php:121
+msgid "کاربر WordPress مجوز نوشتن دسته‌بندی‌های محصول را ندارد."
+msgstr ""
+
+#: app/taxonomy.php:162
+msgid "یکی از فیلدهای دسته‌بندی معتبر نیست."
+msgstr ""
+
+#: app/taxonomy.php:167
+msgid "HTML خام یا کاراکتر غیرمجاز در دسته‌بندی پذیرفته نمی‌شود."
+msgstr ""
+
+#: app/taxonomy.php:171
+msgid "این فیلد دسته‌بندی نباید چندخطی باشد."
+msgstr ""
+
+#: app/taxonomy.php:176
+msgid "طول یکی از فیلدهای دسته‌بندی بیشتر از حد مجاز است."
+msgstr ""
+
+#: app/taxonomy.php:193
+msgid "والد دسته‌بندی معتبر نیست."
+msgstr ""
+
+#: app/taxonomy.php:198
+msgid "والد دسته‌بندی پیدا نشد یا معتبر نیست."
+msgstr ""
+
+#: app/taxonomy.php:211
+msgid "بدنهٔ درخواست دسته‌بندی باید JSON باشد."
+msgstr ""
+
+#: app/taxonomy.php:216
+msgid "بدنهٔ درخواست دسته‌بندی معتبر نیست."
+msgstr ""
+
+#: app/taxonomy.php:221
+msgid "یکی از فیلدهای دسته‌بندی در قرارداد مجاز نیست."
+msgstr ""
+
+#: app/taxonomy.php:238
+msgid "نام دسته‌بندی الزامی است."
+msgstr ""
+
+#: app/taxonomy.php:247
+msgid "نام دسته‌بندی نمی‌تواند خالی باشد."
+msgstr ""
+
+#: app/taxonomy.php:258
+msgid "شناسهٔ دسته‌بندی معتبر نیست."
+msgstr ""
+
+#: app/taxonomy.php:278
+msgid "برای ویرایش دسته‌بندی حداقل یک فیلد ارسال کنید."
+msgstr ""
+
+#: app/taxonomy.php:305
+msgid "WooCommerce فعال نیست یا API دسته‌بندی محصول در دسترس نیست."
+msgstr ""
+
+#: app/taxonomy.php:332
+msgid "خواندن دسته‌بندی‌ها انجام نشد."
+msgstr ""
+
+#: app/taxonomy.php:366
+#: app/taxonomy.php:418
+msgid "دسته‌بندی پیدا نشد."
+msgstr ""
+
+#: app/taxonomy.php:396
+msgid "ساخت دسته‌بندی انجام نشد."
+msgstr ""
+
+#: app/taxonomy.php:401
+msgid "دسته‌بندی پس از ساخت قابل بازیابی نیست."
+msgstr ""
+
+#: app/taxonomy.php:440
+msgid "ویرایش دسته‌بندی انجام نشد."
+msgstr ""
+
+#: app/taxonomy.php:445
+msgid "دسته‌بندی پس از ویرایش قابل بازیابی نیست."
+msgstr ""
+
+#: app/variations.php:63
+#: app/variations.php:100
+msgid "محصول والد variation پیدا نشد."
+msgstr ""
+
+#: app/variations.php:68
+msgid "فقط محصول variable می‌تواند variation داشته باشد."
+msgstr ""
+
+#: app/variations.php:104
+msgid "کاربر اجازهٔ ویرایش variationهای این محصول را ندارد."
+msgstr ""
+
+#: app/variations.php:241
+msgid "variation پیدا نشد."
+msgstr ""
+
+#: app/variations.php:269
+msgid "ویژگی‌های variation معتبر نیستند."
+msgstr ""
+
+#: app/variations.php:285
+msgid "ساختار ویژگی‌های variation معتبر نیست."
+msgstr ""
+
+#: app/variations.php:290
+msgid "یکی از ویژگی‌های variation در محصول والد تعریف نشده است."
+msgstr ""
+
+#: app/variations.php:312
+msgid "بدنهٔ درخواست variation باید JSON باشد."
+msgstr ""
+
+#: app/variations.php:317
+msgid "بدنهٔ درخواست variation معتبر نیست."
+msgstr ""
+
+#: app/variations.php:322
+msgid "یکی از فیلدهای variation در قرارداد مجاز نیست."
+msgstr ""
+
+#: app/variations.php:418
+msgid "برای ویرایش variation حداقل یک فیلد ارسال کنید."
+msgstr ""
+
+#: app/variations.php:459
+msgid "WooCommerce داده‌های variation را نپذیرفت."
+msgstr ""
+
+#: app/variations.php:473
+msgid "ذخیرهٔ variation انجام نشد."
+msgstr ""
+
+#: app/variations.php:482
+msgid "variation پس از ذخیره قابل بازیابی نیست."
+msgstr ""
+
+#: fandoogh-manager.php:230
+#: fandoogh-manager.php:322
+msgid "متن روی پس‌زمینه"
+msgstr ""
+
+#: fandoogh-manager.php:237
+#: fandoogh-manager.php:323
+msgid "متن سفید روی رنگ اصلی"
+msgstr ""
+
+#: fandoogh-manager.php:244
+#: fandoogh-manager.php:324
+msgid "متن سفید روی رنگ دوم"
+msgstr ""
+
+#: fandoogh-manager.php:251
+#: fandoogh-manager.php:325
+msgid "رنگ اصلی روی پس‌زمینه"
+msgstr ""
+
+#: fandoogh-manager.php:258
+#: fandoogh-manager.php:326
+msgid "متن روی رنگ تأکیدی"
+msgstr ""
+
+#. translators: 1: pair label, 2: ratio, 3: required minimum
+#: fandoogh-manager.php:340
+msgid "ترکیب «%1$s» ناخوانا است: نسبت کنتراست %2$s است و حداقل %3$s لازم است. رنگ‌های قبلی حفظ شدند."
+msgstr ""
+
+#: fandoogh-manager.php:502
+#: fandoogh-manager.php:511
+msgid "باز کردن مدیریت"
+msgstr ""
+
+#: fandoogh-manager.php:699
+#: fandoogh-manager.php:1160
+msgid "این روش برای این نشانی مجاز نیست."
+msgstr ""
+
+#: fandoogh-manager.php:1168
+#: fandoogh-manager.php:1176
+msgid "پوستهٔ برنامه در دسترس نیست."
+msgstr ""
+
+#: fandoogh-manager.php:1254
+msgid "پیکربندی رنگ و ظاهر"
+msgstr ""
+
+#: fandoogh-manager.php:1260
+msgid "رنگ اصلی"
+msgstr ""
+
+#: fandoogh-manager.php:1261
+msgid "رنگ ثانویه"
+msgstr ""
+
+#: fandoogh-manager.php:1262
+msgid "رنگ تأکید"
+msgstr ""
+
+#: fandoogh-manager.php:1263
+msgid "رنگ پس‌زمینه"
+msgstr ""
+
+#: fandoogh-manager.php:1264
+msgid "رنگ متن"
+msgstr ""
+
+#: fandoogh-manager.php:1270
+msgid "رنگ %s"
+msgstr ""
+
+#: fandoogh-manager.php:1280
+msgid "نامک وب‌اپ"
+msgstr ""
+
+#: fandoogh-manager.php:1286
+#: fandoogh-manager.php:1622
+msgid "نشانی وب‌اپ"
+msgstr ""
+
+#: fandoogh-manager.php:1290
+msgid "تحلیل فروش WooCommerce"
+msgstr ""
+
+#: fandoogh-manager.php:1297
+msgid "فعال‌سازی داشبورد تحلیل فروش"
+msgstr ""
+
+#: fandoogh-manager.php:1305
+msgid "هشدار نشست‌های جدید"
+msgstr ""
+
+#: fandoogh-manager.php:1312
+msgid "فعال‌سازی هشدار نشست‌های جدید"
+msgstr ""
+
+#: fandoogh-manager.php:1320
+msgid "ایمیل دریافت هشدار"
+msgstr ""
+
+#: fandoogh-manager.php:1328
+msgid "محدودیت‌های پردازش تصویر"
+msgstr ""
+
+#: fandoogh-manager.php:1334
+msgid "حداکثر عرض (px)"
+msgstr ""
+
+#: fandoogh-manager.php:1335
+msgid "حداکثر ارتفاع (px)"
+msgstr ""
+
+#: fandoogh-manager.php:1336
+msgid "کیفیت (۱ تا ۱۰۰)"
+msgstr ""
+
+#: fandoogh-manager.php:1337
+msgid "حداکثر حجم فایل (بایت)"
+msgstr ""
+
+#: fandoogh-manager.php:1353
+msgid "نگهداری نسخهٔ اصلی"
+msgstr ""
+
+#: fandoogh-manager.php:1361
+msgid "فهرست مجاز فونت‌های محلی"
+msgstr ""
+
+#: fandoogh-manager.php:1368
+msgid "مسیرهای مجاز فونت"
+msgstr ""
+
+#: fandoogh-manager.php:1387
+msgid "این مقادیر عمومی و پاک‌سازی‌شده از طریق مسیر /config در اختیار وب‌اپ قرار می‌گیرند."
+msgstr ""
+
+#: fandoogh-manager.php:1388
+msgid "پالت باید حداقل نسبت کنتراست WCAG را رعایت کند؛ پالت ناخوانا در زمان ذخیره رد می‌شود و رنگ‌های قبلی حفظ می‌شوند."
+msgstr ""
+
+#: fandoogh-manager.php:1394
+msgid "ترکیب"
+msgstr ""
+
+#: fandoogh-manager.php:1394
+msgid "نمونه"
+msgstr ""
+
+#: fandoogh-manager.php:1394
+msgid "نسبت"
+msgstr ""
+
+#: fandoogh-manager.php:1394
+msgid "حداقل"
+msgstr ""
+
+#: fandoogh-manager.php:1394
+#: fandoogh-manager.php:1871
+msgid "وضعیت"
+msgstr ""
+
+#: fandoogh-manager.php:1412
+msgid "تحلیل فروش فقط از داده‌های داخلی WooCommerce ساخته می‌شود و هیچ سرویس یا API خارجی ندارد. برای جلوگیری از پردازش اضافه، این بخش پیش‌فرض خاموش است."
+msgstr ""
+
+#: fandoogh-manager.php:1419
+msgid "هشدار نشست جدید کدام مقصد را دارد و چه چیزی گزارش می‌شود؟ این هشدار اختیاری است و می‌توانید آن را خاموش کنید."
+msgstr ""
+
+#: fandoogh-manager.php:1431
+msgid "ارسال ایمیل به مدیر هنگام هر جفت‌سازی موفق و ساخت نشست جدید"
+msgstr ""
+
+#: fandoogh-manager.php:1433
+msgid "با هر اتصال دستگاه جدید، ایمیلی شامل نام کاربر، برچسب دستگاه و زمان اتصال ارسال می‌شود. نشست‌های جدید در بخش «امنیت و دستگاه‌ها» وب‌اپ هم مشخص می‌شوند."
+msgstr ""
+
+#: fandoogh-manager.php:1443
+msgid "خالی = ایمیل مدیریت سایت"
+msgstr ""
+
+#: fandoogh-manager.php:1444
+msgid "اگر خالی بماند، هشدار به ایمیل مدیریت سایت (Administration Email Address) ارسال می‌شود."
+msgstr ""
+
+#: fandoogh-manager.php:1456
+msgid "نمایش داشبورد فروش و نمودار وضعیت سفارش‌ها در وب‌اپ"
+msgstr ""
+
+#: fandoogh-manager.php:1458
+msgid "دسترسی همچنان با Session، scope analytics.read و capability واقعی WooCommerce کنترل می‌شود."
+msgstr ""
+
+#: fandoogh-manager.php:1465
+msgid "تصاویر مجاز از مسیر امن Media با این حدود به WebP تبدیل می‌شوند. اجرای واقعی به پشتیبانی GD یا Imagick و مجوز upload_files نیاز دارد."
+msgstr ""
+
+#: fandoogh-manager.php:1472
+msgid "فونت‌های محلی فقط با فرمت‌های woff، woff2، ttf یا otf پذیرفته می‌شوند و در مسیر uploads هم‌مبدأ ذخیره خواهند شد. CSS و JavaScript قابل آپلود نیستند."
+msgstr ""
+
+#: fandoogh-manager.php:1495
+msgid "این نامک فقط یک نام مستعار است؛ مسیر پایدار /manager/ همچنان در دسترس است."
+msgstr ""
+
+#: fandoogh-manager.php:1520
+msgid "نسخهٔ اصلی تصویر در کنار نسخهٔ پردازش‌شده حفظ شود."
+msgstr ""
+
+#: fandoogh-manager.php:1542
+msgid "فونت‌های فهرست‌شده با خانوادهٔ FandooghLocal در پوستهٔ PWA استفاده می‌شوند."
+msgstr ""
+
+#: fandoogh-manager.php:1590
+#: fandoogh-manager.php:1591
+msgid "Fandoogh Manager"
+msgstr ""
+
+#: fandoogh-manager.php:1601
+msgid "تنظیمات Fandoogh Manager"
+msgstr ""
+
+#: fandoogh-manager.php:1602
+msgid "تنظیمات"
+msgstr ""
+
+#: fandoogh-manager.php:1624
+msgid "نسخهٔ افزونه"
+msgstr ""
+
+#: fandoogh-manager.php:1625
+msgid "نسخهٔ وردپرس"
+msgstr ""
+
+#: fandoogh-manager.php:1626
+msgid "وضعیت WooCommerce"
+msgstr ""
+
+#: fandoogh-manager.php:1626
+#: fandoogh-manager.php:1627
+msgid "بله"
+msgstr ""
+
+#: fandoogh-manager.php:1626
+msgid "خیر — حالت محدود بدون ووکامرس"
+msgstr ""
+
+#: fandoogh-manager.php:1627
+msgid "پشتیبانی WebP"
+msgstr ""
+
+#: fandoogh-manager.php:1627
+msgid "خیر"
+msgstr ""
+
+#: fandoogh-manager.php:1632
+msgid "سلامت و وضعیت بستر"
+msgstr ""
+
+#: fandoogh-manager.php:1660
+msgid "امنیت و دسترسی"
+msgstr ""
+
+#: fandoogh-manager.php:1660
+msgid "اتصال‌های فعلی وب‌اپ"
+msgstr ""
+
+#: fandoogh-manager.php:1660
+msgid "مدیریت نشست‌ها"
+msgstr ""
+
+#: fandoogh-manager.php:1662
+msgid "دستگاه متصل"
+msgstr ""
+
+#: fandoogh-manager.php:1663
+msgid "کاربر فعال"
+msgstr ""
+
+#: fandoogh-manager.php:1664
+msgid "نشست ثبت‌شده"
+msgstr ""
+
+#: fandoogh-manager.php:1667
+msgid "در حال حاضر دستگاه متصل فعالی ثبت نشده است."
+msgstr ""
+
+#: fandoogh-manager.php:1744
+msgid "برای مدیریت نشست‌ها و دسترسی کاربران مجوز کافی ندارید."
+msgstr ""
+
+#: fandoogh-manager.php:1754
+msgid "این نشست قبلاً غیرفعال شده است."
+msgstr ""
+
+#: fandoogh-manager.php:1754
+msgid "نشست انتخاب‌شده با موفقیت حذف شد."
+msgstr ""
+
+#: fandoogh-manager.php:1762
+msgid "%s نشست از دستگاه‌های این کاربر حذف شد."
+msgstr ""
+
+#: fandoogh-manager.php:1770
+msgid "دسترسی وب‌اپ کاربر دوباره فعال شد؛ برای اتصال جدید کد جفت‌سازی بسازید."
+msgstr ""
+
+#: fandoogh-manager.php:1770
+msgid "دسترسی وب‌اپ کاربر حذف شد و کدهای جفت‌سازی و نشست‌های او باطل شدند."
+msgstr ""
+
+#: fandoogh-manager.php:1775
+msgid "این کاربر برای ویرایش سیاست دسترسی قابل انتخاب نیست."
+msgstr ""
+
+#: fandoogh-manager.php:1794
+msgid "محدودیت‌های دسترسی ذخیره شد و %s نشست برای اعمال فوری تنظیمات باطل شد."
+msgstr ""
+
+#: fandoogh-manager.php:1814
+msgid "کنترل دسترسی"
+msgstr ""
+
+#: fandoogh-manager.php:1814
+msgid "دستگاه‌ها و نشست‌ها"
+msgstr ""
+
+#: fandoogh-manager.php:1814
+msgid "مجوزهای کاربران"
+msgstr ""
+
+#: fandoogh-manager.php:1814
+msgid "دستگاه متصل در فهرست"
+msgstr ""
+
+#: fandoogh-manager.php:1815
+msgid "حداکثر ۵۰۰ نشست اخیر نمایش داده می‌شود. ابطال نشست، دسترسی همان دستگاه را قطع می‌کند؛ توکن خام، کوکی و کدهای محرمانه نمایش داده نمی‌شوند."
+msgstr ""
+
+#: fandoogh-manager.php:1815
+msgid "دسترسی‌های حساس وب‌اپ را برای هر کاربر مدیریت کنید. administrator اصلی برای جلوگیری از قفل‌شدن پنل، پروفایل محافظت‌شده دارد."
+msgstr ""
+
+#: fandoogh-manager.php:1825
+msgid "کاربر مدیری برای اتصال به وب‌اپ پیدا نشد."
+msgstr ""
+
+#: fandoogh-manager.php:1834
+#: fandoogh-manager.php:1873
+msgid "متصل"
+msgstr ""
+
+#: fandoogh-manager.php:1834
+msgid "نشست"
+msgstr ""
+
+#: fandoogh-manager.php:1836
+msgid "این حساب در WordPress مجوز مدیریت محصول/فروشگاه ندارد و فعلاً واجد شرایط جفت‌سازی نیست."
+msgstr ""
+
+#: fandoogh-manager.php:1839
+msgid "دسترسی کامل administrator اصلی محافظت‌شده است."
+msgstr ""
+
+#: fandoogh-manager.php:1841
+msgid "با ذخیرهٔ محدودیت‌ها، نشست‌های فعلی این کاربر برای اعمال فوری تنظیمات حذف می‌شوند. ادامه می‌دهید؟"
+msgstr ""
+
+#: fandoogh-manager.php:1844
+msgid "مجوزهای وب‌اپ"
+msgstr ""
+
+#: fandoogh-manager.php:1844
+msgid "معرفی محصول"
+msgstr ""
+
+#: fandoogh-manager.php:1844
+msgid "اصلاح محصول"
+msgstr ""
+
+#: fandoogh-manager.php:1844
+msgid "نمایش گردش مالی و تحلیل‌ها"
+msgstr ""
+
+#: fandoogh-manager.php:1844
+msgid "تغییرات اساسی و عملیات حساس"
+msgstr ""
+
+#: fandoogh-manager.php:1845
+msgid "ذخیرهٔ محدودیت‌ها"
+msgstr ""
+
+#: fandoogh-manager.php:1848
+msgid "دسترسی وب‌اپ، کدهای جفت‌سازی و نشست‌های این کاربر حذف می‌شوند. ادامه می‌دهید؟"
+msgstr ""
+
+#: fandoogh-manager.php:1850
+msgid "حذف دسترسی وب‌اپ"
+msgstr ""
+
+#: fandoogh-manager.php:1854
+msgid "فعال‌سازی دسترسی وب‌اپ"
+msgstr ""
+
+#: fandoogh-manager.php:1856
+msgid "همهٔ نشست‌های این کاربر از همهٔ دستگاه‌ها حذف می‌شوند. ادامه می‌دهید؟"
+msgstr ""
+
+#: fandoogh-manager.php:1858
+msgid "حذف همهٔ نشست‌ها"
+msgstr ""
+
+#: fandoogh-manager.php:1867
+msgid "فهرست دستگاه‌های متصل و نشست‌ها"
+msgstr ""
+
+#: fandoogh-manager.php:1867
+msgid "نشست‌های فعال اول نمایش داده می‌شوند؛ حذف یک نشست، دسترسی همان دستگاه را فوراً قطع می‌کند."
+msgstr ""
+
+#: fandoogh-manager.php:1869
+msgid "هنوز هیچ نشست مدیریتی ثبت نشده است."
+msgstr ""
+
+#: fandoogh-manager.php:1871
+msgid "نشست‌های کاربران و دستگاه‌های متصل"
+msgstr ""
+
+#: fandoogh-manager.php:1871
+msgid "کاربر"
+msgstr ""
+
+#: fandoogh-manager.php:1871
+msgid "دستگاه"
+msgstr ""
+
+#: fandoogh-manager.php:1871
+msgid "آخرین فعالیت"
+msgstr ""
+
+#: fandoogh-manager.php:1871
+msgid "عملیات"
+msgstr ""
+
+#: fandoogh-manager.php:1873
+msgid "حذف‌شده"
+msgstr ""
+
+#: fandoogh-manager.php:1873
+msgid "منقضی‌شده"
+msgstr ""
+
+#: fandoogh-manager.php:1875
+msgid "مرورگر ناشناس"
+msgstr ""
+
+#: fandoogh-manager.php:1877
+msgid "دسترسی این دستگاه فوراً قطع می‌شود. ادامه می‌دهید؟"
+msgstr ""
+
+#: fandoogh-manager.php:1879
+msgid "حذف نشست"
+msgstr ""
+
+#: fandoogh-manager.php:1881
+msgid "بدون عملیات"
+msgstr ""
+
+#: fandoogh-manager.php:1900
+msgid "WooCommerce فعال نیست؛ Fandoogh Manager در حالت محدود کار می‌کند و برای پشتیبان فعلی به API ووکامرس نیازی ندارد."
+msgstr ""
